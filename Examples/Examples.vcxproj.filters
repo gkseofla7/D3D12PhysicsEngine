@@ -1,0 +1,586 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{c1747f1e-74c3-4eb4-adb9-3c1c631770e2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples">
+      <UniqueIdentifier>{055b646d-b150-48ec-9294-31de6d343ac7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex14">
+      <UniqueIdentifier>{a0dd2eeb-e9aa-4748-a93d-bf615c7c3094}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex15">
+      <UniqueIdentifier>{0d0e8fd0-c559-4a9a-9e66-d836c993a7a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16">
+      <UniqueIdentifier>{1250225e-7740-42e5-a8d5-1dfc16b9ceea}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Simulation">
+      <UniqueIdentifier>{d6fbb95a-bba8-430a-96ab-9f7c9b5ce872}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16\Ex1601_StableFluids">
+      <UniqueIdentifier>{b3a56db6-bad3-4e23-8e73-b39a495a635b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16\Ex1602_CurlNoise">
+      <UniqueIdentifier>{218511d6-5f35-4691-a422-50ee0b0332e7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16\Ex1603_Cloud">
+      <UniqueIdentifier>{2f4452f6-fb4e-4595-9422-497468654730}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16\Ex1606_HybridWater">
+      <UniqueIdentifier>{9470ffde-55db-4a31-b904-f57b382c0610}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex17">
+      <UniqueIdentifier>{706228ff-0d56-410b-b312-eb7dc4aeae7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex18">
+      <UniqueIdentifier>{7cce7597-2d43-430e-90fb-a8da7ea26bf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Models">
+      <UniqueIdentifier>{a8937444-57ee-4df7-b748-5b326a465eca}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex19">
+      <UniqueIdentifier>{984bbebe-0248-4c91-8d74-707aa6856fda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex20">
+      <UniqueIdentifier>{06a507a4-29c7-4a92-bc92-02d1ffebe2b3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Actors">
+      <UniqueIdentifier>{9d937cec-b479-41e9-b8a8-95cbb8ccc19c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16\Ex1604_RealtimeSmoke">
+      <UniqueIdentifier>{3a9f84e8-3d02-42bd-85f9-31acddf4a1c5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\Ex16\Ex1605_SmokeCpu">
+      <UniqueIdentifier>{7f2ee40b-925f-4e57-ad5a-d4e0eda243b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Examples\DaerimsProject">
+      <UniqueIdentifier>{13bc5708-4b99-4bec-b271-f3995a1045e2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="AppBase.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="D3D11Utils.cpp" />
+    <ClCompile Include="GeometryGenerator.cpp" />
+    <ClCompile Include="GraphicsCommon.cpp" />
+    <ClCompile Include="GraphicsPSO.cpp" />
+    <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="PostProcess.cpp" />
+    <ClCompile Include="ExampleApp.cpp">
+      <Filter>Examples</Filter>
+    </ClCompile>
+    <ClCompile Include="Example_TEMPLATE.cpp">
+      <Filter>Examples</Filter>
+    </ClCompile>
+    <ClCompile Include="BitonicSort.cpp" />
+    <ClCompile Include="Ex1401_Basic.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1402_Blur.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1403_MatVecMult.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1404_StructuredBuffer.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1405_ConsumeAppendBuffer.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1406_DensityField.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1407_IndirectArguments.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1408_BitonicSort.cpp">
+      <Filter>Examples\Ex14</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1501_ParticleSystem.cpp">
+      <Filter>Examples\Ex15</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1502_SpriteFireEffect.cpp">
+      <Filter>Examples\Ex15</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1503_SphWater.cpp">
+      <Filter>Examples\Ex15</Filter>
+    </ClCompile>
+    <ClCompile Include="FluidSimulationCPU.cpp">
+      <Filter>Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="SphSimulation.cpp">
+      <Filter>Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="StableFluids.cpp">
+      <Filter>Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="UniformGrid.cpp">
+      <Filter>Simulation</Filter>
+    </ClCompile>
+    <ClCompile Include="Noise.cpp" />
+    <ClCompile Include="Ex1601_StableFluids.cpp">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1602_CurlNoise.cpp">
+      <Filter>Examples\Ex16\Ex1602_CurlNoise</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1603_Cloud.cpp">
+      <Filter>Examples\Ex16\Ex1603_Cloud</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1605_SmokeCpu.cpp">
+      <Filter>Examples\Ex16\Ex1605_SmokeCpu</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1604_RealtimeSmoke.cpp">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1606_HybridWater.cpp">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1701_SkeletalAnimation.cpp">
+      <Filter>Examples\Ex17</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1801_Tree.cpp">
+      <Filter>Examples\Ex18</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1803_Landscape.cpp">
+      <Filter>Examples\Ex18</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1802_Grass.cpp">
+      <Filter>Examples\Ex18</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex1901_Physx.cpp">
+      <Filter>Examples\Ex19</Filter>
+    </ClCompile>
+    <ClCompile Include="Ex2001_GamePlay.cpp">
+      <Filter>Examples\Ex20</Filter>
+    </ClCompile>
+    <ClCompile Include="BillboardModel.cpp">
+      <Filter>Models</Filter>
+    </ClCompile>
+    <ClCompile Include="DaerimGTA.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="AppBase.h" />
+    <ClInclude Include="ConstantBuffers.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="D3D11Utils.h" />
+    <ClInclude Include="GeometryGenerator.h" />
+    <ClInclude Include="GraphicsCommon.h" />
+    <ClInclude Include="GraphicsPSO.h" />
+    <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshData.h" />
+    <ClInclude Include="ModelInstance.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="PostProcess.h" />
+    <ClInclude Include="Vertex.h" />
+    <ClInclude Include="ExampleApp.h">
+      <Filter>Examples</Filter>
+    </ClInclude>
+    <ClInclude Include="ComputePSO.h" />
+    <ClInclude Include="Example_TEMPLATE.h">
+      <Filter>Examples</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h" />
+    <ClInclude Include="BitonicSort.h" />
+    <ClInclude Include="Ex1401_Basic.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1402_Blur.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1403_MatVecMult.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1404_StructuredBuffer.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1405_ConsumeAppendBuffer.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1406_DensityField.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1407_IndirectArguments.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1408_BitonicSort.h">
+      <Filter>Examples\Ex14</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1501_ParticleSystem.h">
+      <Filter>Examples\Ex15</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1502_SpriteFireEffect.h">
+      <Filter>Examples\Ex15</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1503_SphWater.h">
+      <Filter>Examples\Ex15</Filter>
+    </ClInclude>
+    <ClInclude Include="Texture2D.h" />
+    <ClInclude Include="Texture3D.h" />
+    <ClInclude Include="FluidSimulationCPU.h">
+      <Filter>Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="SphSimulation.h">
+      <Filter>Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="StableFluids.h">
+      <Filter>Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="UniformGrid.h">
+      <Filter>Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="SphKernels.h">
+      <Filter>Simulation</Filter>
+    </ClInclude>
+    <ClInclude Include="Noise.h" />
+    <ClInclude Include="StructuredBuffer.h" />
+    <ClInclude Include="Buffers.h" />
+    <ClInclude Include="Ex1601_StableFluids.h">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1602_CurlNoise.h">
+      <Filter>Examples\Ex16\Ex1602_CurlNoise</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1603_Cloud.h">
+      <Filter>Examples\Ex16\Ex1603_Cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1605_SmokeCpu.h">
+      <Filter>Examples\Ex16\Ex1605_SmokeCpu</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1604_RealtimeSmoke.h">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1606_HybridWater.h">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </ClInclude>
+    <ClInclude Include="MarchingCubes.h" />
+    <ClInclude Include="Ex1701_SkeletalAnimation.h">
+      <Filter>Examples\Ex17</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimationClip.h" />
+    <ClInclude Include="Ex1801_Tree.h">
+      <Filter>Examples\Ex18</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1803_Landscape.h">
+      <Filter>Examples\Ex18</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1802_Grass.h">
+      <Filter>Examples\Ex18</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="GrassModel.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="SkinnedMeshModel.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="OceanModel.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex1901_Physx.h">
+      <Filter>Examples\Ex19</Filter>
+    </ClInclude>
+    <ClInclude Include="Ex2001_GamePlay.h">
+      <Filter>Examples\Ex20</Filter>
+    </ClInclude>
+    <ClInclude Include="RigidBodyActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="SkeletalMeshActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="FireballActor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="Actor.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="BillboardModel.h">
+      <Filter>Models</Filter>
+    </ClInclude>
+    <ClInclude Include="DaerimGTA.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".clang-format" />
+    <None Include="Common.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="example_class_maker.py">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="DiskSamples.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="TileableNoise.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="Ex1606_Common.hlsli">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </None>
+    <None Include="Quaternion.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="BasicPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BasicVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomDownPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomUpPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CombinePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyboxPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SkyboxVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SamplingPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SamplingVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthOnlyPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="DepthOnlyVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="PostEffectsPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BitonicSortCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VolumeSmokePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CloudLightingCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CloudDensityCS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="ColorPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1401_CS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1402_BlurXCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1402_BlurXGroupCacheCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1402_BlurXPS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1402_BlurYCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1402_BlurYGroupCacheCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1402_BlurYPS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1403_MatVecMultCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1404_StructuredBufferCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1404_StructuredBufferPS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1404_StructuredBufferVS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1405_ConsumeAppendCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1406_DensityDissipationCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1406_DensitySourcingCS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1406_SpriteGS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1406_SpritePS.hlsl">
+      <Filter>Examples\Ex14</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1501_ParticleSystemGS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1501_ParticleSystemPS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1501_ParticleSystemVS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1502_SpriteFireEffectPS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1502_SpriteFireEffectVS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1503_SphWaterPS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1503_SphWaterVS.hlsl">
+      <Filter>Examples\Ex15</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_AdvectionCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_ApplyPressureCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_ComputeVorticityCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_ConfineVorticityCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_DiffuseCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_DivergenceCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_JacobiCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1601_SourcingCS.hlsl">
+      <Filter>Examples\Ex16\Ex1601_StableFluids</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1602_CurlNoiseCS.hlsl">
+      <Filter>Examples\Ex16\Ex1602_CurlNoise</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_AdvectionCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_ApplyPressureCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_DiffUpSampleCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_DivergenceCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_DownSampleCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_JacobiCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_SourcingCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1604_VorticityConfinementCS.hlsl">
+      <Filter>Examples\Ex16\Ex1604_RealtimeSmoke</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_ApplyPressureCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_DiffUpSampleCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_DivergenceCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_FirstIndexCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_JacobiCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_ParticleToGridCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_StructuredBufferPS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_StructuredBufferVS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_ParticleStepCS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_MarchingCubesGS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_MarchingCubesVS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1606_SignedDistancePS.hlsl">
+      <Filter>Examples\Ex16\Ex1606_HybridWater</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1802_GrassVS.hlsl">
+      <Filter>Examples\Ex18</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1802_GrassPS.hlsl">
+      <Filter>Examples\Ex18</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1803_OceanPS.hlsl">
+      <Filter>Examples\Ex18</Filter>
+    </FxCompile>
+    <FxCompile Include="FireballPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BillboardGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BillboardVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="VolumetricFirePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="GameExplosionPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="Ex1408_BitonicSortCS.hlsl" />
+  </ItemGroup>
+</Project>
