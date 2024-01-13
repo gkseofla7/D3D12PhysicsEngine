@@ -27,6 +27,7 @@
 #include "Ex1803_Landscape.h"
 #include "Ex1901_PhysX.h"
 #include "Ex2001_GamePlay.h"
+#include "DaerimGTA.h"
 
 using namespace std;
 
@@ -114,6 +115,9 @@ int main(int argc, char *argv[]) {
         break;
     case 2001:
         app = make_unique<hlab::Ex2001_GamePlay>();
+        break;
+    case 9999:
+        app = make_unique<hlab::DaerimGTA>();
         break;
     default:
         cout << argv[1] << " is not a valid example number" << endl;

@@ -2,8 +2,10 @@
 #include "AppBase.h"
 #include "BillboardModel.h"
 #include "SkinnedMeshModel.h"
+#include "bullet/btBulletDynamicsCommon.h"
 namespace hlab
 {
+
 class DaerimGTA : public AppBase
 {
 public:
@@ -17,6 +19,8 @@ public:
 	void UpdateGUI() override;
 	void Update(float dt) override;
 	void Render() override;
+
+	void StepSimulation(float deltaTime);
 	void createEmptyDynamicsWorld();
 	btBoxShape* createBoxShape(const btVector3& halfExtents);
 	btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping = 0, const btVector4& color = btVector4(1, 0, 0, 1));

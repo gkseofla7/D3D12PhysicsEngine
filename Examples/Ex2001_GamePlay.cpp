@@ -14,7 +14,7 @@ using namespace DirectX::SimpleMath;
 Ex2001_GamePlay::Ex2001_GamePlay() : AppBase() {}
 
 bool Ex2001_GamePlay::InitScene() {
-
+     
     AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
     AppBase::m_globalConstsCPU.lodBias = 0.0f;
 
@@ -158,7 +158,7 @@ void Ex2001_GamePlay::InitPhysics(bool interactive) {
     PxRigidStatic *groundPlane =
         PxCreatePlane(*gPhysics, PxPlane(0, 1, 0, 0), *gMaterial);
     gScene->addActor(*groundPlane);
-
+     
     for (PxU32 i = 0; i < 5; i++)
         CreateStack(PxTransform(PxVec3(0, 0, stackZ -= 15.0f)), 8, 20, 2.5f);
 }
@@ -228,7 +228,7 @@ void Ex2001_GamePlay::Update(float dt) {
                                       m_simToRenderScale),
                           PxSphereGeometry(5), PxVec3(dir.x,dir.y,dir.z));
         }
-    }
+    } 
      
 
     m_character->UpdateAnimation(m_context, state, frameCount);

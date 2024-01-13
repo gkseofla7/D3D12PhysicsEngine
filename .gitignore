@@ -40,3 +40,7 @@
 *.ilk
 *.tlog
 *.cso
+*.log
+*.ipdb
+*.vsidx
+

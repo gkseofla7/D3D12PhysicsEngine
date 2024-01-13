@@ -356,7 +356,7 @@ void Model::UpdateWorldRow(const Matrix &worldRow) {
     this->m_worldITRow = worldRow;
     m_worldITRow.Translation(Vector3(0.0f));
     m_worldITRow = m_worldITRow.Invert().Transpose();
-
+     
     // 바운딩스피어 위치 업데이트
     // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
     // 구(sphere)라서 회전은 고려할 필요 없음

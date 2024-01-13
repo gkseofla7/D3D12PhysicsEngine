@@ -1,6 +1,6 @@
 #include "DaerimGTA.h"
 
-#include "bullet/btBulletDynamicsCommon.h"
+
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
 #include "bullet/BulletDynamics/btBulletDynamicsCommon.h"
@@ -102,7 +102,7 @@ bool DaerimGTA::InitScene()
 
 void DaerimGTA::InitPhysics(bool interactive)
 {
-	void createEmptyDynamicsWorld();
+	createEmptyDynamicsWorld();
 	//m_dynamicsWorld->setGravity(btVector3(0,0,0));
 
 	if (m_dynamicsWorld->getDebugDrawer())
@@ -227,47 +227,78 @@ void DaerimGTA::Update(float dt) {
     frameCount += 1;
 
     // 이하 물리엔진 관련
-
-    gScene->simulate(1.0f / 60.0f);
-    gScene->fetchResults(true);
-
-    // PxGeometryType::eBOX: , case PxGeometryType::eSPHERE:
-
-    PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
-        PxActorTypeFlag::eRIGID_STATIC);
-    std::vector<PxRigidActor*> actors(nbActors);
-    gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC |
-        PxActorTypeFlag::eRIGID_STATIC,
-        reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-
-    PxShape* shapes[MAX_NUM_ACTOR_SHAPES];
-
+    StepSimulation(dt);
     int count = 0;
+    int numCollisionObjects = m_dynamicsWorld->getNumCollisionObjects();
+    {
+        for (int i = 0; i < numCollisionObjects; i++)
+        {
+            btCollisionObject* colObj = m_dynamicsWorld->getCollisionObjectArray()[i];
+            if (colObj == nullptr)
+            {
+                continue;
+            }
 
-    for (PxU32 i = 0; i < nbActors; i++) {
-        const PxU32 nbShapes = actors[i]->getNbShapes();
-        PX_ASSERT(nbShapes <= MAX_NUM_ACTOR_SHAPES);
-        actors[i]->getShapes(shapes, nbShapes);
-        for (PxU32 j = 0; j < nbShapes; j++) {
-            const PxMat44 shapePose(
-                PxShapeExt::getGlobalPose(*shapes[j], *actors[i]));
-
-            if (actors[i]->is<PxRigidDynamic>()) {
-
-                // bool speeping = actors[i]->is<PxRigidDynamic>() &&
-                //                 actors[i]->is<PxRigidDynamic>()->isSleeping();
-
-                m_objects[count]->UpdateWorldRow(
-                    Matrix(shapePose.front()) *
-                    Matrix::CreateScale(
-                        m_simToRenderScale) // PhysX to Render 스케일
-                );
+            if (!colObj->isStaticObject())
+            {
+                btCollisionShape* collisionShape = colObj->getCollisionShape();
+                btVector3 pos = colObj->getWorldTransform().getOrigin();
+                btQuaternion orn = colObj->getWorldTransform().getRotation();
+                //Matrix::CreateFromQuaternion(orn.get128())*
+                //    Matrix::CreateTranslation(pos.get128())*
+                m_objects[count]->UpdateWorldRow(Matrix::CreateTranslation(pos.get128())*
+                    Matrix::CreateScale(m_simToRenderScale)); // PhysX to Render 스케일
                 m_objects[count]->UpdateConstantBuffers(m_device, m_context);
-
                 count++;
             }
+
+            
+
         }
     }
+
+
+
+    //gScene->simulate(1.0f / 60.0f);
+    //gScene->fetchResults(true);
+
+    //// PxGeometryType::eBOX: , case PxGeometryType::eSPHERE:
+
+    //PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
+    //    PxActorTypeFlag::eRIGID_STATIC);
+    //std::vector<PxRigidActor*> actors(nbActors);
+    //gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC |
+    //    PxActorTypeFlag::eRIGID_STATIC,
+    //    reinterpret_cast<PxActor**>(&actors[0]), nbActors);
+
+    //PxShape* shapes[MAX_NUM_ACTOR_SHAPES];
+
+    //int count = 0;
+
+    //for (PxU32 i = 0; i < nbActors; i++) {
+    //    const PxU32 nbShapes = actors[i]->getNbShapes();
+    //    PX_ASSERT(nbShapes <= MAX_NUM_ACTOR_SHAPES);
+    //    actors[i]->getShapes(shapes, nbShapes);
+    //    for (PxU32 j = 0; j < nbShapes; j++) {
+    //        const PxMat44 shapePose(
+    //            PxShapeExt::getGlobalPose(*shapes[j], *actors[i]));
+
+    //        if (actors[i]->is<PxRigidDynamic>()) {
+
+    //            // bool speeping = actors[i]->is<PxRigidDynamic>() &&
+    //            //                 actors[i]->is<PxRigidDynamic>()->isSleeping();
+
+    //            m_objects[count]->UpdateWorldRow(
+    //                Matrix(shapePose.front()) *
+    //                Matrix::CreateScale(
+    //                    m_simToRenderScale) // PhysX to Render 스케일
+    //            );
+    //            m_objects[count]->UpdateConstantBuffers(m_device, m_context);
+
+    //            count++;
+    //        }
+    //    }
+    //}
 
     /* PxContactPair 추출 하면 내 캐릭터가 어디에 닿았는지 찾을 수 있음
     * void onContact(const PxContactPairHeader& pairHeader, const PxContactPair*
@@ -312,7 +343,7 @@ btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
     this->m_objects.push_back(m_fireball);
 
     btRigidBody* dynamic =
-        createRigidBody(1.0, t, shape, 0.5f);
+        createRigidBody(5.0, t, shape, 0.5f);
     dynamic->setLinearVelocity(velocity);
 
     return dynamic;
@@ -498,7 +529,7 @@ btBoxShape* DaerimGTA::createBoxShape(const btVector3& halfExtents)
 	btBoxShape* box = new btBoxShape(halfExtents);
 	return box;
 }
-btRigidBody* DaerimGTA::createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping = 0, const btVector4& color = btVector4(1, 0, 0, 1))
+btRigidBody* DaerimGTA::createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping, const btVector4& color)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 
@@ -533,8 +564,6 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	int numWidth, btScalar halfExtent) {
 
 	vector<MeshData> box = { GeometryGenerator::MakeBox(halfExtent) };
-
-	btBoxShape* boxShape = createBoxShape(btVector3(btScalar(halfExtent), btScalar(halfExtent), btScalar(halfExtent)));
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0, -50, 0));
@@ -559,17 +588,18 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	btVector3 localInertia(0, 0, 0);
 	if (isDynamic)
 		colShape->calculateLocalInertia(mass, localInertia);
-
+     
 	for (int i = 0; i < numStacks; i++) 
-	{
+	{ 
 		for (int j = 0; j < numWidth - i; j++) 
 		{
 			btTransform localTm;
 			localTm.setOrigin(btVector3(btScalar(j * 2) - btScalar(numWidth - i),
-				btScalar(i * 2 + 1), 0) *
+				btScalar(i * 2 + 1) + 5, 0) *
 				halfExtent);
-			btRigidBody* body = createRigidBody(mass, localTm, colShape);
-
+            btTransform Tm;
+            Tm.mult(t, localTm);
+			btRigidBody* body = createRigidBody(mass, Tm, colShape);
 
 			auto m_newObj = std::make_shared<Model>(
 				m_device, m_context, box); // <- 우리 렌더러에 추가
@@ -579,4 +609,13 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 		}
 	}
 }
+
+void DaerimGTA::StepSimulation(float deltaTime)
+{
+    if (m_dynamicsWorld)
+    {
+        m_dynamicsWorld->stepSimulation(deltaTime);
+    }
+}
+
 }
