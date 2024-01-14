@@ -20,7 +20,7 @@ bool DaerimGTA::InitScene()
 
 	AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
 	AppBase::m_globalConstsCPU.lodBias = 0.0f;
-
+     
 	//카메라를 부착하는 기능도 필요하다.
 	AppBase::m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
 		0.0654498f);
@@ -83,16 +83,21 @@ bool DaerimGTA::InitScene()
         }
 
         Vector3 center(0.0f, 0.1f, 1.0f);
-        m_character =
+        shared_ptr<SkinnedMeshModel> characterModel =
             make_shared<SkinnedMeshModel>(m_device, m_context, meshes, aniData);
-        m_character->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-        m_character->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-        m_character->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+        characterModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+        characterModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+        characterModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+
+        m_character = make_shared< SkeletalMeshActor>();
+        m_character->m_skinnedMeshModel = characterModel;
         m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
             Matrix::CreateTranslation(center));
+        // 인풋을 받는 Actor
+        m_activateActor = m_character;
 
-        m_basicList.push_back(m_character); // 리스트에 등록
-        m_pickedModel = m_character;
+        m_actorList.push_back(m_character); // 리스트에 등록
+        //m_pickedModel = m_character;
     }
 
     InitPhysics(true);
@@ -130,52 +135,6 @@ void DaerimGTA::InitPhysics(bool interactive)
 	{
 		CreateStack(btTransform(btQuaternion(),btVector3(0, 0, stackZ -= 15.0f)), 8, 20, 2.5f);
 	}
-
-	{
-		//{
-		//	btScalar mass(0.);
-		//	createRigidBody(mass, groundTransform, groundShape, btVector4(0, 0, 1, 1));
-		//}
-
-		//{
-		//	//create a few dynamic rigidbodies
-		//	// Re-using the same collision is better for memory usage and performance
-
-		//	btBoxShape* colShape = createBoxShape(btVector3(.1, .1, .1));
-
-		//	//btCollisionShape* colShape = new btSphereShape(btScalar(1.));
-		//	m_collisionShapes.push_back(colShape);
-
-		//	/// Create Dynamic Objects
-		//	btTransform startTransform;
-		//	startTransform.setIdentity();
-
-		//	btScalar mass(1.f);
-
-		//	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-		//	bool isDynamic = (mass != 0.f);
-
-		//	btVector3 localInertia(0, 0, 0);
-		//	if (isDynamic)
-		//		colShape->calculateLocalInertia(mass, localInertia);
-
-		//	for (int k = 0; k < ARRAY_SIZE_Y; k++)
-		//	{
-		//		for (int i = 0; i < ARRAY_SIZE_X; i++)
-		//		{
-		//			for (int j = 0; j < ARRAY_SIZE_Z; j++)
-		//			{
-		//				startTransform.setOrigin(btVector3(
-		//					btScalar(0.2 * i),
-		//					btScalar(2 + .2 * k),
-		//					btScalar(0.2 * j)));
-
-		//				createRigidBody(mass, startTransform, colShape);
-		//			}
-		//		}
-		//	}
-		//}
-	}
 }
 void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 
@@ -183,48 +142,7 @@ void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
 
-    static int frameCount = 0;
-    static int state = 0;
-
-    // TODO:
-    if (state == 0) {
-        if (AppBase::m_keyPressed[VK_SPACE]) {
-            state = 1;
-            frameCount = 0;
-        }
-    }
-    else if (state == 1) {
-        if (frameCount ==
-            m_character->m_aniData.clips[1].keys[0].size()) {
-            frameCount = 0;
-            state = 0;
-
-        }
-        if (frameCount == 115) {
-            Vector3 handPos = (m_character->m_worldRow).Translation();
-            Vector4 offset = Vector4::Transform(
-                Vector4(0.0f, 0.0f, -0.1f, 0.0f),
-                m_character->m_worldRow *
-                m_character->m_aniData.accumulatedRootTransform);
-            handPos += Vector3(offset.x, offset.y, offset.z);
-
-            Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
-            dir = Vector4::Transform(
-                dir, m_character->m_worldRow *
-                m_character->m_aniData.accumulatedRootTransform);
-            dir.Normalize();
-            dir *= 1.5f / m_simToRenderScale;
-            btSphereShape* SphereShape = new btSphereShape(5.0);
-            CreateDynamic(btTransform(btQuaternion(), btVector3(handPos.x, handPos.y, handPos.z) /
-                m_simToRenderScale),
-                SphereShape, btVector3(dir.x, dir.y, dir.z));
-        }
-    }
-
-
-    m_character->UpdateAnimation(m_context, state, frameCount);
-
-    frameCount += 1;
+  
 
     // 이하 물리엔진 관련
     StepSimulation(dt);
@@ -253,72 +171,6 @@ void DaerimGTA::Update(float dt) {
             }
         }
     }
-
-    //gScene->simulate(1.0f / 60.0f);
-    //gScene->fetchResults(true);
-
-    //// PxGeometryType::eBOX: , case PxGeometryType::eSPHERE:
-
-    //PxU32 nbActors = gScene->getNbActors(PxActorTypeFlag::eRIGID_DYNAMIC |
-    //    PxActorTypeFlag::eRIGID_STATIC);
-    //std::vector<PxRigidActor*> actors(nbActors);
-    //gScene->getActors(PxActorTypeFlag::eRIGID_DYNAMIC |
-    //    PxActorTypeFlag::eRIGID_STATIC,
-    //    reinterpret_cast<PxActor**>(&actors[0]), nbActors);
-
-    //PxShape* shapes[MAX_NUM_ACTOR_SHAPES];
-
-    //int count = 0;
-
-    //for (PxU32 i = 0; i < nbActors; i++) {
-    //    const PxU32 nbShapes = actors[i]->getNbShapes();
-    //    PX_ASSERT(nbShapes <= MAX_NUM_ACTOR_SHAPES);
-    //    actors[i]->getShapes(shapes, nbShapes);
-    //    for (PxU32 j = 0; j < nbShapes; j++) {
-    //        const PxMat44 shapePose(
-    //            PxShapeExt::getGlobalPose(*shapes[j], *actors[i]));
-
-    //        if (actors[i]->is<PxRigidDynamic>()) {
-
-    //            // bool speeping = actors[i]->is<PxRigidDynamic>() &&
-    //            //                 actors[i]->is<PxRigidDynamic>()->isSleeping();
-
-    //            m_objects[count]->UpdateWorldRow(
-    //                Matrix(shapePose.front()) *
-    //                Matrix::CreateScale(
-    //                    m_simToRenderScale) // PhysX to Render 스케일
-    //            );
-    //            m_objects[count]->UpdateConstantBuffers(m_device, m_context);
-
-    //            count++;
-    //        }
-    //    }
-    //}
-
-    /* PxContactPair 추출 하면 내 캐릭터가 어디에 닿았는지 찾을 수 있음
-    * void onContact(const PxContactPairHeader& pairHeader, const PxContactPair*
-    pairs, PxU32 nbPairs)
-    {
-        PX_UNUSED((pairHeader));
-        std::vector<PxContactPairPoint> contactPoints;
-
-        for(PxU32 i=0;i<nbPairs;i++)
-        {
-            PxU32 contactCount = pairs[i].contactCount;
-            if(contactCount)
-            {
-                contactPoints.resize(contactCount);
-                pairs[i].extractContacts(&contactPoints[0], contactCount);
-
-                for(PxU32 j=0;j<contactCount;j++)
-                {
-                    gContactPositions.push_back(contactPoints[j].position);
-                    gContactImpulses.push_back(contactPoints[j].impulse);
-                }
-            }
-        }
-    }
-    */
 }
 
 btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,

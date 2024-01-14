@@ -26,7 +26,7 @@ void Camera::UpdateViewDir() {
 }
 
 void Camera::UpdateKeyboard(const float dt, bool const keyPressed[256]) {
-    if (m_useFirstPersonView) {
+    if (m_useFirstPersonView && m_isAttached==false) {
         if (keyPressed['W'])
             MoveForward(dt);
         if (keyPressed['S'])
@@ -43,7 +43,7 @@ void Camera::UpdateKeyboard(const float dt, bool const keyPressed[256]) {
 }
 
 void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
-    if (m_useFirstPersonView) {
+    if (m_useFirstPersonView&& m_isAttached == false) {
         // 얼마나 회전할지 계산
         m_yaw = mouseNdcX * DirectX::XM_2PI;       // 좌우 360도
         m_pitch = -mouseNdcY * DirectX::XM_PIDIV2; // 위 아래 90도
@@ -83,6 +83,14 @@ Matrix Camera::GetProjRow() {
                                           m_aspect, m_nearZ, m_farZ)
                : XMMatrixOrthographicOffCenterLH(-m_aspect, m_aspect, -1.0f,
                                                  1.0f, m_nearZ, m_farZ);
+}
+
+void Camera::UpdatePosDir(Matrix InCameraMatrix)
+{
+    m_position = InCameraMatrix.Translation();
+    m_yaw = atan2(InCameraMatrix(2, 1), InCameraMatrix(1, 1));
+    UpdateViewDir();
+    m_isAttached = true;
 }
 
 } // namespace hlab

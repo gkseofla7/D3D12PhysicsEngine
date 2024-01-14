@@ -31,6 +31,7 @@ class Camera {
     void SetAspectRatio(float aspect);
     void PrintView();
 
+    void UpdatePosDir(Matrix InCameraMatrix);
   public:
     bool m_useFirstPersonView = false;
 
@@ -52,6 +53,7 @@ class Camera {
     float m_farZ = 100.0f;
     float m_aspect = 16.0f / 9.0f;
     bool m_usePerspectiveProjection = true;
+    bool m_isAttached = false;
 };
 
 } // namespace hlab

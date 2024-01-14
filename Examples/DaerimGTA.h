@@ -2,6 +2,7 @@
 #include "AppBase.h"
 #include "BillboardModel.h"
 #include "SkinnedMeshModel.h"
+#include "SkeletalMeshActor.h"
 #include "bullet/btBulletDynamicsCommon.h"
 namespace hlab
 {
@@ -33,7 +34,7 @@ public:
 	vector<shared_ptr<Model>>
 		m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
 	shared_ptr<BillboardModel> m_fireball;
-	shared_ptr<SkinnedMeshModel> m_character;
+	shared_ptr<SkeletalMeshActor> m_character;
 
 	btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
 	btDefaultCollisionConfiguration* m_collisionConfiguration;

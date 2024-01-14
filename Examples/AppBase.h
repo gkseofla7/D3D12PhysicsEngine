@@ -13,8 +13,10 @@
 #include "D3D11Utils.h"
 #include "GraphicsPSO.h"
 #include "Model.h"
+#include "Actor.h"
 #include "PostProcess.h"
 #include "Timer.h"
+//#include "Delegate.h"
 
 namespace hlab {
 
@@ -178,6 +180,10 @@ class AppBase {
 
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
     vector<shared_ptr<Model>> m_basicList;
+    vector<shared_ptr<Actor>> m_actorList;
+    
+    //셋팅 했을 경우 해당 액터에 키가 바인딩 돼있다면 액터가 먹음
+    shared_ptr<Actor> m_activateActor;
 };
 
 } // namespace hlab
