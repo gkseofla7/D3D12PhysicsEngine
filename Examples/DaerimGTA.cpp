@@ -251,13 +251,8 @@ void DaerimGTA::Update(float dt) {
                 m_objects[count]->UpdateConstantBuffers(m_device, m_context);
                 count++;
             }
-
-            
-
         }
     }
-
-
 
     //gScene->simulate(1.0f / 60.0f);
     //gScene->fetchResults(true);
@@ -570,12 +565,12 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 
 	//	//create a few dynamic rigidbodies
 //	// Re-using the same collision is better for memory usage and performance
-
-	btBoxShape* colShape = createBoxShape(btVector3(btScalar(halfExtent), btScalar(halfExtent), btScalar(halfExtent)));
+     
+	btBoxShape* colShape = createBoxShape(btVector3(halfExtent, halfExtent, halfExtent));
 
 	//btCollisionShape* colShape = new btSphereShape(btScalar(1.));
 	m_collisionShapes.push_back(colShape);
-
+ 
 	/// Create Dynamic Objects
 	btTransform startTransform;
 	startTransform.setIdentity();
@@ -588,18 +583,17 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	btVector3 localInertia(0, 0, 0);
 	if (isDynamic)
 		colShape->calculateLocalInertia(mass, localInertia);
-     
+      
 	for (int i = 0; i < numStacks; i++) 
 	{ 
 		for (int j = 0; j < numWidth - i; j++) 
 		{
-			btTransform localTm;
+            btTransform localTm;
 			localTm.setOrigin(btVector3(btScalar(j * 2) - btScalar(numWidth - i),
-				btScalar(i * 2 + 1) + 5, 0) *
+				btScalar(i * 2 + 1) + 5.0, 0.0) *
 				halfExtent);
-            btTransform Tm;
-            Tm.mult(t, localTm);
-			btRigidBody* body = createRigidBody(mass, Tm, colShape);
+            localTm.setBasis(btMatrix3x3::getIdentity());
+			btRigidBody* body = createRigidBody(mass, t*localTm, colShape);
 
 			auto m_newObj = std::make_shared<Model>(
 				m_device, m_context, box); // <- 우리 렌더러에 추가

@@ -921,7 +921,7 @@ bool AppBase::InitMainWindow() {
                      NULL,
                      NULL,
                      NULL,
-                     L"HongLabGraphics", // lpszClassName, L-string
+                     L"Daerim'sGTA", // lpszClassName, L-string
                      NULL};
 
     if (!RegisterClassEx(&wc)) {
@@ -931,7 +931,7 @@ bool AppBase::InitMainWindow() {
 
     RECT wr = {0, 0, m_screenWidth, m_screenHeight};
     AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, false);
-    m_mainWindow = CreateWindow(wc.lpszClassName, L"HongLabGraphics Example",
+    m_mainWindow = CreateWindow(wc.lpszClassName, L"Daerim'sGTA",
                                 WS_OVERLAPPEDWINDOW,
                                 100, // 윈도우 좌측 상단의 x 좌표
                                 100, // 윈도우 좌측 상단의 y 좌표
@@ -947,7 +947,7 @@ bool AppBase::InitMainWindow() {
     ShowWindow(m_mainWindow, SW_SHOWDEFAULT);
     UpdateWindow(m_mainWindow);
 
-    return true;
+    return true; 
 }
 
 bool AppBase::InitDirect3D() {
