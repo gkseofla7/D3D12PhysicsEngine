@@ -558,9 +558,12 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         m_rightButton = false;
         break;
     case WM_KEYDOWN:
-        if (m_activateActor != nullptr)
+        if (m_activateActor!=nullptr)
         {
-
+            if (m_activateActor->MsgProc(wParam))
+            {
+                return true;
+            }
         }
         m_keyPressed[wParam] = true;
         if (wParam == VK_ESCAPE) { // ESC키 종료

@@ -107,7 +107,7 @@ bool DaerimGTA::InitScene()
 
 void DaerimGTA::InitPhysics(bool interactive)
 {
-	createEmptyDynamicsWorld();
+    DaerimsEngineBase::CreateEmptyDynamicsWorld(m_collisionConfiguration,m_dispatcher,m_broadphase,m_solver, m_dynamicsWorld);
 	//m_dynamicsWorld->setGravity(btVector3(0,0,0));
 
 	if (m_dynamicsWorld->getDebugDrawer())
@@ -128,7 +128,7 @@ void DaerimGTA::InitPhysics(bool interactive)
 
 	{
 		btScalar mass(0.);
-		createRigidBody(mass, groundTransform, groundShape, 0.0f, btVector4(0, 0, 1, 1));
+        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld, mass, groundTransform, groundShape, 0.0f, btVector4(0, 0, 1, 1));
 	}
 
 	for (unsigned int i = 0; i < 5; i++)
@@ -141,8 +141,6 @@ void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
-
-  
 
     // 이하 물리엔진 관련
     StepSimulation(dt);
@@ -190,7 +188,7 @@ btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
     this->m_objects.push_back(m_fireball);
 
     btRigidBody* dynamic =
-        createRigidBody(5.0, t, shape, 0.5f);
+        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f);
     dynamic->setLinearVelocity(velocity);
 
     return dynamic;
@@ -350,63 +348,6 @@ void DaerimGTA::UpdateGUI() {
         ImGui::TreePop();
     }
 }
-
-void DaerimGTA::createEmptyDynamicsWorld()
-{
-	///collision configuration contains default setup for memory, collision setup
-	m_collisionConfiguration = new btDefaultCollisionConfiguration();
-	//m_collisionConfiguration->setConvexConvexMultipointIterations();
-
-	///use the default collision dispatcher. For parallel processing you can use a diffent dispatcher (see Extras/BulletMultiThreaded)
-	m_dispatcher = new btCollisionDispatcher(m_collisionConfiguration);
-
-	m_broadphase = new btDbvtBroadphase();
-
-	///the default constraint solver. For parallel processing you can use a different solver (see Extras/BulletMultiThreaded)
-	btSequentialImpulseConstraintSolver* sol = new btSequentialImpulseConstraintSolver;
-	m_solver = sol;
-
-	m_dynamicsWorld = new btDiscreteDynamicsWorld(m_dispatcher, m_broadphase, m_solver, m_collisionConfiguration);
-
-	m_dynamicsWorld->setGravity(btVector3(0, -10, 0));
-}
-
-btBoxShape* DaerimGTA::createBoxShape(const btVector3& halfExtents)
-{
-	btBoxShape* box = new btBoxShape(halfExtents);
-	return box;
-}
-btRigidBody* DaerimGTA::createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping, const btVector4& color)
-{
-	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
-
-	//rigidbody is dynamic if and only if mass is non zero, otherwise static
-	bool isDynamic = (mass != 0.f);
-
-	btVector3 localInertia(0, 0, 0);
-	if (isDynamic)
-		shape->calculateLocalInertia(mass, localInertia);
-
-	//using motionstate is recommended, it provides interpolation capabilities, and only synchronizes 'active' objects
-
-#define USE_MOTIONSTATE 1
-#ifdef USE_MOTIONSTATE
-	btDefaultMotionState* myMotionState = new btDefaultMotionState(startTransform);
-
-	btRigidBody::btRigidBodyConstructionInfo cInfo(mass, myMotionState, shape, localInertia);
-    cInfo.m_angularDamping = m_angularDamping;
-	btRigidBody* body = new btRigidBody(cInfo);
-	//body->setContactProcessingThreshold(m_defaultContactProcessingThreshold);
-
-#else
-	btRigidBody* body = new btRigidBody(mass, 0, shape, localInertia);
-	body->setWorldTransform(startTransform);
-#endif  //
-
-	body->setUserIndex(-1);
-	m_dynamicsWorld->addRigidBody(body);
-	return body;
-}
 void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	int numWidth, btScalar halfExtent) {
 
@@ -418,7 +359,7 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	//	//create a few dynamic rigidbodies
 //	// Re-using the same collision is better for memory usage and performance
      
-	btBoxShape* colShape = createBoxShape(btVector3(halfExtent, halfExtent, halfExtent));
+	btBoxShape* colShape = DaerimsEngineBase::CreateBoxShape(btVector3(halfExtent, halfExtent, halfExtent));
 
 	//btCollisionShape* colShape = new btSphereShape(btScalar(1.));
 	m_collisionShapes.push_back(colShape);
@@ -445,7 +386,7 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 				btScalar(i * 2 + 1) + 5.0, 0.0) *
 				halfExtent);
             localTm.setBasis(btMatrix3x3::getIdentity());
-			btRigidBody* body = createRigidBody(mass, t*localTm, colShape);
+			btRigidBody* body = DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,mass, t*localTm, colShape);
 
 			auto m_newObj = std::make_shared<Model>(
 				m_device, m_context, box); // <- 우리 렌더러에 추가

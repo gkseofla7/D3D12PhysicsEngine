@@ -47,6 +47,8 @@ struct AnimationData {
     vector<Matrix> offsetMatrices;
     vector<Matrix> boneTransforms;
     vector<AnimationClip> clips;
+    //새로 추가, 완성되면 clips를 제거
+    map<int, AnimationClip> clipMaps;
     Matrix defaultTransform;
     Matrix rootTransform = Matrix();
     Matrix accumulatedRootTransform = Matrix();

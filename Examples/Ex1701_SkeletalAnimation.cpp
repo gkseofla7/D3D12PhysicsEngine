@@ -19,7 +19,7 @@ using namespace DirectX::SimpleMath;
 Ex1701_SkeletalAnimation::Ex1701_SkeletalAnimation() : AppBase() {}
 
 bool Ex1701_SkeletalAnimation::InitScene() {
-
+      
     AppBase::m_globalConstsCPU.strengthIBL = 1.0f;
     m_walkingState = WalkingAnimState::Idle;
     m_specialState = SpecialAnimState::None;
@@ -106,7 +106,7 @@ bool Ex1701_SkeletalAnimation::InitScene() {
                 aniData.clips.push_back(ani.clips.front());
             }
         }
-
+          
         Vector3 center(0.0f, 0.5f, 2.0f);
         m_character =
             make_shared<SkinnedMeshModel>(m_device, m_context, meshes, aniData);

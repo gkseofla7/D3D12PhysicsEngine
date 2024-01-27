@@ -1,7 +1,23 @@
 #include "Actor.h"
 #include "Camera.h"
 namespace hlab {
-
+    Actor::Actor()
+    {
+        Initialize();
+    }
+    void Actor::Initialize()
+    {
+        InitBoundingKey();
+    }
+    bool Actor::MsgProc(WPARAM wParam, shared_ptr<Actor> InActivateActore)
+    {
+        if (m_keyBinding.find(wParam) != m_keyBinding.end())
+        {
+            m_keyBinding[wParam](InActivateActore);
+            return true;
+        }
+        return false;
+    }
     //Camera ฐüทร
 	void Actor::ActiveCaemera()
 	{ 

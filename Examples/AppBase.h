@@ -16,6 +16,7 @@
 #include "Actor.h"
 #include "PostProcess.h"
 #include "Timer.h"
+#include "bullet/btBulletDynamicsCommon.h"
 //#include "Delegate.h"
 
 namespace hlab {
@@ -184,6 +185,14 @@ class AppBase {
     
     //셋팅 했을 경우 해당 액터에 키가 바인딩 돼있다면 액터가 먹음
     shared_ptr<Actor> m_activateActor;
+
+    // Physics Engine
+    btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
+    btDefaultCollisionConfiguration* m_collisionConfiguration;
+    btBroadphaseInterface* m_broadphase;
+    btCollisionDispatcher* m_dispatcher;
+    btConstraintSolver* m_solver;
+    btDiscreteDynamicsWorld* m_dynamicsWorld;
 };
 
 } // namespace hlab

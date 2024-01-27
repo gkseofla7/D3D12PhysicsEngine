@@ -3,7 +3,7 @@
 #include "BillboardModel.h"
 #include "SkinnedMeshModel.h"
 #include "SkeletalMeshActor.h"
-#include "bullet/btBulletDynamicsCommon.h"
+#include "DaerimsEngineBase.h"
 namespace hlab
 {
 
@@ -22,9 +22,6 @@ public:
 	void Render() override;
 
 	void StepSimulation(float deltaTime);
-	void createEmptyDynamicsWorld();
-	btBoxShape* createBoxShape(const btVector3& halfExtents);
-	btRigidBody* createRigidBody(float mass, const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping = 0, const btVector4& color = btVector4(1, 0, 0, 1));
 	void CreateStack(const btTransform& t, int numStacks, int numSlices,
 		btScalar halfExtent);
 	btRigidBody* CreateDynamic(const btTransform& t,
@@ -36,12 +33,7 @@ public:
 	shared_ptr<BillboardModel> m_fireball;
 	shared_ptr<SkeletalMeshActor> m_character;
 
-	btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
-	btDefaultCollisionConfiguration* m_collisionConfiguration;
-	btBroadphaseInterface* m_broadphase;
-	btCollisionDispatcher* m_dispatcher;
-	btConstraintSolver* m_solver;
-	btDiscreteDynamicsWorld* m_dynamicsWorld;
+
 	btScalar stackZ = 10.0f;
 
 	float m_simToRenderScale = 0.01f; // 시뮬레이션 물체가 너무 작으면 불안정
