@@ -1,5 +1,9 @@
 #include "Wizard.h"
 namespace hlab {
+Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
+{
+	m_skinnedMeshModel
+}
 void Wizard::InitBoundingKey()
 {
 	std::function<void(shared_ptr<Actor>)> ShotFireballFunc = &Wizard::ShotFireball;

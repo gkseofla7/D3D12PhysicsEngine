@@ -65,7 +65,17 @@ struct AnimationData {
         // 수도 있습니다. 여기는 교육용 예제라서 좌표계 변환 사례로 참고하시라고
         // 남겨놨습니다.
     }
+    Matrix GetAnimationTransform(int clipId, int boneId, int frame) {
 
+        return defaultTransform.Invert() * offsetMatrices[boneId] *
+            boneTransforms[boneId] * defaultTransform;
+
+        // defaultTransform은 모델을 읽어들일때 GeometryGenerator::Normalize()
+        // 에서 계산 defaultTransform.Invert() * offsetMatrices[boneId]를 미리
+        // 계산해서 합치고 defaultTransform * rootTransform을 미리 계산해놓을
+        // 수도 있습니다. 여기는 교육용 예제라서 좌표계 변환 사례로 참고하시라고
+        // 남겨놨습니다.
+    }
     void Update(int clipId, int frame, int type =0) {
 
         auto &clip = clips[clipId];

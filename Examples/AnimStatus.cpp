@@ -2,7 +2,7 @@
 #include <thread>
 
 #include "AnimStatus.h"
-#include "Actor.h"
+#include "SkeletalMeshActor.h"
 namespace hlab {
 void AnimStatus::AddAnimPath(int InActorId, string InPathName)
 {
@@ -13,54 +13,55 @@ void AnimStatus::AddAnimStateToAnim(int InActorId,int InState, string InAnimName
 	// 내 생각엔 단 한번 해주는게
 	m_animStateToAnim[InActorId].insert({ InState,InAnimName});
 }
-void AnimStatus::PlayAnimation(string InAnimName)
-{
-
-}
 AnimationData ReadAnimationFromFile(string path,string name)
 {
 	auto [_, ani] =
 		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
-void AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, Actor* InActor,int InState,
+bool AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, SkeletalMeshActor* InActor,int InState,
 	int frame, int type = 0)
 {
 	//비동기 로딩하도록 한다.
-	static std::future<AnimationData> AnimDataFuture;
-	int ActorId = InActor->getActorId();
-	if (m_aniData.find(ActorId) == m_aniData.end())
+	int ActorId = InActor->getActorId();		const string& path = m_pathMap[ActorId];
+	const string& name = m_animStateToAnim[ActorId][InState];
+	if (m_animDatas.find(ActorId) == m_animDatas.end())
 	{
-		const string& path = m_pathMap[ActorId];
-		const string& name = m_animStateToAnim[ActorId][InState];
-		auto [_, ani] =
-			GeometryGenerator::ReadAnimationFromFile(path, name);
-		AnimDataFuture =
-			std::async(std::launch::async, ReadAnimationFromFile, path, name);
-		//일단 빈값 저장
-		m_aniData[ActorId] = AnimationData();
-		AnimDataFuture._Is_ready();
-		if (aniData.clips.empty()) {
-			aniData = ani;
-		}
-		else {
-			aniData.clips.push_back(ani.clips.front());
-		}
-		return;
+		m_animDatas[ActorId] = AnimationBlock();
 	}
-	if (m_aniData[ActorId].clipMaps.find(InState) == m_aniData[ActorId].clipMaps.end())
+	AnimationBlock& AnimBlock =m_animDatas[ActorId];
+	if (AnimBlock.AniData.clipMaps.find(InState) == AnimBlock.AniData.clipMaps.end())
 	{
+		if (AnimBlock.IsLoading == true&& AnimBlock.Loader._Is_ready())
+		{
+			AnimBlock.IsLoading = false;
+			if (AnimBlock.IsFirstSetting == true)
+			{
+				AnimBlock.IsFirstSetting = false;
+				AnimBlock.AniData = AnimBlock.Loader.get();
+			}
 
-		return;
+			AnimationData AniData =AnimBlock.Loader.get();
+			AnimBlock.AniData.clipMaps[InState] = AniData.clips.front();
+			
+		}
+		else if (AnimBlock.IsLoading == false)
+		{
+			m_animDatas[ActorId].Loader =
+				std::async(std::launch::async, ReadAnimationFromFile, path, name);
+			m_animDatas[ActorId].IsLoading = true;
+		}
+		return false;
 	}
 	m_aniData[ActorId].Update(InState, frame, type);
-	// 함수로 업데이트하는게..ㅎ
+
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
-		m_boneTransforms.m_cpu[i] =
-			m_aniData.Get(InState, i, frame).Transpose();
+		InActor->m_boneTransforms.m_cpu[i] =
+			m_aniData[ActorId].GetAnimationTransform(InState, i, frame).Transpose();
 	}
 
-	m_boneTransforms.Upload(context);
+	InActor->m_boneTransforms.Upload(context);
+	return true;
 }
 
 }

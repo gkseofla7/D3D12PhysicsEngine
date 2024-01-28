@@ -49,5 +49,18 @@ namespace hlab {
 
         frameCount += 1;
 	}
+    void SkeletalMeshActor::InitAnimationData(ComPtr<ID3D11Device>& device,
+        const AnimationData& aniData) {
+        if (!aniData.clips.empty()) {
 
+            // 여기서는 AnimationClip이 SkinnedMesh라고 가정하겠습니다.
+            // 일반적으로는 모든 Animation이 SkinnedMesh Animation은 아닙니다.
+            m_boneTransforms.m_cpu.resize(aniData.clips.front().keys.size());
+
+            // 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
+            for (int i = 0; i < aniData.clips.front().keys.size(); i++)
+                m_boneTransforms.m_cpu[i] = Matrix();
+            m_boneTransforms.Initialize(device);
+        }
+    }
 }

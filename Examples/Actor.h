@@ -1,4 +1,5 @@
 #pragma once
+#include "GeometryGenerator.h"
 #include "Model.h"
 #include <map>
 namespace hlab {
@@ -42,6 +43,10 @@ protected:
 	std::map<WPARAM, function<void(shared_ptr<Actor>)>> m_keyBinding;
 	ActorState m_actorState;
 	int m_actorId = 0;
+
+public:
+	// ConstantBuffer<SkinnedConsts> m_skinnedConsts;
+
 };
 
 } // namespace hlab
