@@ -10,7 +10,7 @@ using namespace std;
 class SkeletalMeshActor;
 struct AnimationBlock
 {
-	map<int, string > AnimStateToAnimName;
+	//map<int, string > AnimStateToAnimName;
 	string PathName;
 	AnimationData AniData;
 	std::future<AnimationData> Loader;

@@ -1,13 +1,20 @@
 #include "Actor.h"
 #include "Camera.h"
+#include "ModelLoadHelper.h"
 namespace hlab {
-    Actor::Actor()
+    Actor::Actor() {}
+    Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+        const string& basePath, const string& filename)
     {
-        Initialize();
+        Initialize(device, context, basePath, filename);
     }
-    void Actor::Initialize()
+    void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+        const string& basePath, const string& filename)
     {
         InitBoundingKey();
+        m_isInitialized = ModelLoadHelper::LoadModelData(device, context, basePath, filename, m_model);
+        m_basePath = basePath;
+        m_filename = filename;
     }
     bool Actor::MsgProc(WPARAM wParam, shared_ptr<Actor> InActivateActore)
     {
@@ -53,4 +60,18 @@ namespace hlab {
             m_actorConsts.Upload(context);
         }
     }
+    void Actor::Render(ComPtr<ID3D11DeviceContext>& context)
+    {
+        if (m_isInitialized == false)
+        {
+            m_isInitialized = ModelLoadHelper::GetModelData( m_basePath, m_filename, m_model);
+        }
+        if (m_model != nullptr && m_isInitialized == true)
+        {
+            m_model->Render(context);
+        }
+
+    }
+
+
 }

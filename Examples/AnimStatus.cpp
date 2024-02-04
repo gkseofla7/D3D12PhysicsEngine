@@ -3,6 +3,7 @@
 
 #include "AnimStatus.h"
 #include "SkeletalMeshActor.h"
+#include "ThreadPool.h"
 namespace hlab {
 void AnimStatus::AddAnimPath(int InActorId, string InPathName)
 {
@@ -23,7 +24,8 @@ bool AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, SkeletalM
 	int frame, int type = 0)
 {
 	//비동기 로딩하도록 한다.
-	int ActorId = InActor->getActorId();		const string& path = m_pathMap[ActorId];
+	int ActorId = InActor->getActorId();		
+	const string& path = m_pathMap[ActorId];
 	const string& name = m_animStateToAnim[ActorId][InState];
 	if (m_animDatas.find(ActorId) == m_animDatas.end())
 	{
@@ -47,8 +49,8 @@ bool AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, SkeletalM
 		}
 		else if (AnimBlock.IsLoading == false)
 		{
-			m_animDatas[ActorId].Loader =
-				std::async(std::launch::async, ReadAnimationFromFile, path, name);
+			ThreadPool& tPool =ThreadPool::getInstance();
+			AnimBlock.Loader = tPool.EnqueueJob(ReadAnimationFromFile, path, name);
 			m_animDatas[ActorId].IsLoading = true;
 		}
 		return false;
