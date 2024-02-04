@@ -3,7 +3,7 @@
 #include "Model.h"
 #include "GeometryGenerator.h"
 #include <filesystem>
-#include "MeshLoadHelper.h"
+#include "ModelLoadHelper.h"
 #include "ThreadPool.h"
 
 namespace hlab {

@@ -1,15 +1,15 @@
 #include <future>
 #include <thread>
 
-#include "AnimStatus.h"
+#include "AnimHelper.h"
 #include "SkeletalMeshActor.h"
 #include "ThreadPool.h"
 namespace hlab {
-void AnimStatus::AddAnimPath(int InActorId, string InPathName)
+void AnimHelper::AddAnimPath(int InActorId, string InPathName)
 {
 	m_pathMap[InActorId] = InPathName;
 }
-void AnimStatus::AddAnimStateToAnim(int InActorId,int InState, string InAnimName)
+void AnimHelper::AddAnimStateToAnim(int InActorId,int InState, string InAnimName)
 {
 	// 내 생각엔 단 한번 해주는게
 	m_animStateToAnim[InActorId].insert({ InState,InAnimName});
@@ -20,7 +20,7 @@ AnimationData ReadAnimationFromFile(string path,string name)
 		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
-bool AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, SkeletalMeshActor* InActor,int InState,
+bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, SkeletalMeshActor* InActor,int InState,
 	int frame, int type = 0)
 {
 	//비동기 로딩하도록 한다.
@@ -41,6 +41,11 @@ bool AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, SkeletalM
 			{
 				AnimBlock.IsFirstSetting = false;
 				AnimBlock.AniData = AnimBlock.Loader.get();
+				InActor->m_boneTransforms.m_cpu.resize(AnimBlock.AniData.clips.front().keys.size());
+				// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
+				for (int i = 0; i < AnimBlock.AniData.clips.front().keys.size(); i++)
+					InActor->m_boneTransforms.m_cpu[i] = Matrix();
+				InActor->m_boneTransforms.Initialize(device);
 			}
 
 			AnimationData AniData =AnimBlock.Loader.get();
@@ -55,11 +60,13 @@ bool AnimStatus::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, SkeletalM
 		}
 		return false;
 	}
-	m_aniData[ActorId].Update(InState, frame, type);
+	//m_aniData[ActorId].Update(InState, frame, type);
+	vector<Matrix> BoneTransform;
+	m_aniData[ActorId].GetBoneTransform(InState, frame, InActor->accumulatedRootTransform, BoneTransform, type);
 
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
 		InActor->m_boneTransforms.m_cpu[i] =
-			m_aniData[ActorId].GetAnimationTransform(InState, i, frame).Transpose();
+			m_aniData[ActorId].GetAnimationTransform(i, BoneTransform[i]).Transpose();
 	}
 
 	InActor->m_boneTransforms.Upload(context);

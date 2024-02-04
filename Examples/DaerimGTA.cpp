@@ -188,7 +188,7 @@ btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
     this->m_objects.push_back(m_fireball);
 
     btRigidBody* dynamic =
-        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f);
+        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f, btVector4(0, 0, 1, 1));
     dynamic->setLinearVelocity(velocity);
 
     return dynamic;
@@ -386,7 +386,7 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 				btScalar(i * 2 + 1) + 5.0, 0.0) *
 				halfExtent);
             localTm.setBasis(btMatrix3x3::getIdentity());
-			btRigidBody* body = DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,mass, t*localTm, colShape);
+			btRigidBody* body = DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,mass, t*localTm, colShape, 0.0f, btVector4(0, 0, 1, 1));
 
 			auto m_newObj = std::make_shared<Model>(
 				m_device, m_context, box); // <- 우리 렌더러에 추가

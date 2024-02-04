@@ -37,7 +37,8 @@ btBoxShape* DaerimsEngineBase::CreateBoxShape(const btVector3& halfExtents)
 	return box;
 }
 
-btRigidBody* DaerimsEngineBase::CreateRigidBody(btDiscreteDynamicsWorld* InDynamicsWorld,float mass, const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping, const btVector4& color)
+btRigidBody* DaerimsEngineBase::CreateRigidBody(btDiscreteDynamicsWorld* InDynamicsWorld,float mass,
+	const btTransform& startTransform, btCollisionShape* shape, const btScalar m_angularDamping, const btVector4& color)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
 

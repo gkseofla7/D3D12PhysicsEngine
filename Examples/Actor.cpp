@@ -20,7 +20,7 @@ namespace hlab {
     {
         if (m_keyBinding.find(wParam) != m_keyBinding.end())
         {
-            m_keyBinding[wParam](InActivateActore);
+            m_keyBinding[wParam]();
             return true;
         }
         return false;

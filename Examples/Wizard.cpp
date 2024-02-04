@@ -1,26 +1,29 @@
 #include "Wizard.h"
 namespace hlab {
-Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
+
+Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+	const string& basePath, const string& filename)
 {
-	m_skinnedMeshModel
+	Initialize(device, context, basePath, filename);
+}
+void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+	const string& basePath, const string& filename)
+{
+	SkeletalMeshActor::Initialize(device, context, basePath, filename);
+	// 애니메이션 등록
 }
 void Wizard::InitBoundingKey()
 {
-	std::function<void(shared_ptr<Actor>)> ShotFireballFunc = &Wizard::ShotFireball;
+	std::function<void()> ShotFireballFunc = [this]() { this->ShotFireball();};
 	m_keyBinding.insert({ VK_SPACE, ShotFireballFunc });
 }
 
-void Wizard::ShotFireball(shared_ptr<Actor> InActiveActor)
+void Wizard::ShotFireball()
 {
-	if (Wizard* WizardActor = dynamic_cast<Wizard*>(InActiveActor.get()))
+	if (GetActorState() == ActorState::SpecialState)
 	{
-		if (WizardActor->GetActorState() == ActorState::SpecialState)
-		{
-			return;
-		}
-		cout << "Fireball" << endl;
+		return;
 	}
-	
+	cout << "Fireball" << endl;
 }
-
 }

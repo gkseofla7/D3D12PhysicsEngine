@@ -9,6 +9,7 @@ namespace hlab {
 		AnimNum,
 	};
 	using std::function;
+	class DModel;
 	//using std::map;
 class Actor {
 public:
@@ -23,7 +24,7 @@ public:
 	void UpdateConstantBuffers(ComPtr<ID3D11Device>& device,
 		ComPtr<ID3D11DeviceContext>& context);
 	void UpdateCemeraCorrection(Vector3 deltaPos);
-	void Render(ComPtr<ID3D11DeviceContext>& context);
+	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 	const int getActorId() const { return m_actorId; }
 public:
 	ActorState GetActorState() { return m_actorState; }
@@ -44,7 +45,7 @@ protected:
 	
 	Matrix m_cameraCorrection;
 
-	std::map<WPARAM, function<void(shared_ptr<Actor>)>> m_keyBinding;
+	std::map<WPARAM, function<void()>> m_keyBinding;
 	ActorState m_actorState;
 	int m_actorId = 0;
 	string m_basePath;

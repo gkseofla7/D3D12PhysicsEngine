@@ -76,6 +76,11 @@ struct AnimationData {
         // 수도 있습니다. 여기는 교육용 예제라서 좌표계 변환 사례로 참고하시라고
         // 남겨놨습니다.
     }
+    Matrix GetAnimationTransform(int InBoneId, Matrix InBoneTransform)
+    {
+        return defaultTransform.Invert() * offsetMatrices[InBoneId] *
+            InBoneTransform * defaultTransform;
+    }
     void Update(int clipId, int frame, int type =0) {
 
         auto &clip = clips[clipId];
@@ -127,6 +132,61 @@ struct AnimationData {
             // TODO: parentMatrix 사용
             // boneTransforms[boneId] = ...;
             boneTransforms[boneId] = key.GetTransform()*  parentMatrix;
+        }
+    }
+
+     bool GetBoneTransform(int clipId, int frame, Matrix InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
+
+        auto& clip = clips[clipId];
+
+        for (int boneId = 0; boneId < boneTransforms.size(); boneId++) {
+            // 1일때 상체
+            if (type == 1) {
+                std::set<int>::iterator itr = lowerBodyBones.find(boneId);
+                if (itr != lowerBodyBones.end()) {
+                    continue;
+                }
+            }
+            else if (type == 2) {
+                std::set<int>::iterator itr = lowerBodyBones.find(boneId);
+                if (itr == lowerBodyBones.end()) {
+                    continue;
+                }
+            }
+            auto& keys = clip.keys[boneId];
+
+            // 주의: 모든 채널(뼈)이 frame 개수가 동일하진 않음
+
+            const int parentIdx = boneParents[boneId];
+            const Matrix parentMatrix = parentIdx >= 0
+                ? OutBoneTransform[parentIdx]
+                : InRootTransform;
+
+            // keys.size()가 0일 경우에는 Identity 변환
+            auto key = keys.size() > 0
+                ? keys[frame % keys.size()]
+                : AnimationClip::Key(); // key가 reference 아님
+
+            // Root일 경우
+            if (parentIdx < 0) {
+                if (frame != 0) {
+                    InRootTransform =
+                        Matrix::CreateTranslation(key.pos - prevPos) *
+                        InRootTransform;
+                }
+                else {
+                    auto temp = InRootTransform.Translation();
+                    temp.y = key.pos.y; // 높이 방향만 첫 프레임으로 보정
+                    InRootTransform.Translation(temp);
+                }
+
+                prevPos = key.pos;
+                key.pos = Vector3(0.0f); // 대신에 이동 취소
+            }
+
+            // TODO: parentMatrix 사용
+            // boneTransforms[boneId] = ...;
+            OutBoneTransform[boneId] = key.GetTransform() * parentMatrix;
         }
     }
 };
