@@ -1,6 +1,6 @@
 #pragma once
 #include "GeometryGenerator.h"
-#include "Model.h"
+#include "DModel.h"
 #include <map>
 namespace hlab {
 	enum ActorState {
@@ -37,11 +37,6 @@ protected:
 	ConstantBuffer<MeshConstants> m_actorConsts;
 protected:
 	DModel* m_model = nullptr;
-
-	Matrix m_worldRow = Matrix();   // Model(Object) To World За·Д
-	Matrix m_worldITRow = Matrix(); // InverseTranspose
-	DirectX::BoundingSphere m_boundingSphere;
-	bool m_isVisible = true;
 	
 	Matrix m_cameraCorrection;
 

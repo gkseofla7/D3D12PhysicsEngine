@@ -1,5 +1,6 @@
 #include "DaerimGTA.h"
-
+#include "AnimHelper.h"
+#include "Wizard.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
@@ -64,7 +65,7 @@ bool DaerimGTA::InitScene()
         vector<string> clipNames = { "FightingIdleOnMichelle2.fbx",
                                     "Fireball.fbx" };
         string path = "../Assets/Characters/Mixamo/";
-
+        string characterName = "character.fbx";
         AnimationData aniData;
 
         auto [meshes, _] =
@@ -93,18 +94,30 @@ bool DaerimGTA::InitScene()
         m_character->m_skinnedMeshModel = characterModel;
         m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
             Matrix::CreateTranslation(center));
+
+
         // 인풋을 받는 Actor
         m_activateActor = m_character;
-
         m_actorList.push_back(m_character); // 리스트에 등록
-        //m_pickedModel = m_character;
+
+        shared_ptr<Wizard> wizardActor =
+            make_shared<Wizard>(m_device, m_context, path, characterName);
     }
 
     InitPhysics(true);
 
     return true;
 }
+void DaerimGTA::InitAnimation()
+{
+    //Wizard
+    // TODO 테스트를 위해 하드 코딩, 동작 확인후 변경 예정
+    string path = "../Assets/Characters/Mixamo/";
+    AnimHelper::AddAnimPath(1, path);
+    AnimHelper::AddAnimStateToAnim(1, 0, "FightingIdleOnMichelle2.fbx");
+    AnimHelper::AddAnimStateToAnim(1, 1, "Fireball.fbx");
 
+}
 void DaerimGTA::InitPhysics(bool interactive)
 {
     DaerimsEngineBase::CreateEmptyDynamicsWorld(m_collisionConfiguration,m_dispatcher,m_broadphase,m_solver, m_dynamicsWorld);

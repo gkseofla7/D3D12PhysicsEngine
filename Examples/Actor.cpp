@@ -4,12 +4,12 @@
 namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& basePath, const string& filename)
+         const string& basePath, const string & filename)
     {
         Initialize(device, context, basePath, filename);
     }
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& basePath, const string& filename)
+         const string&basePath, const string & filename)
     {
         InitBoundingKey();
         m_isInitialized = ModelLoadHelper::LoadModelData(device, context, basePath, filename, m_model);

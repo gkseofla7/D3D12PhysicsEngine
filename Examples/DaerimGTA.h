@@ -15,6 +15,7 @@ public:
 	{
     }
 	bool InitScene() override;
+	void InitAnimation();
 	void InitPhysics(bool interactive);
 	void UpdateLights(float dt) override;
 	void UpdateGUI() override;

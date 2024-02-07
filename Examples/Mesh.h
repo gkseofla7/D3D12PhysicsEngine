@@ -19,7 +19,7 @@ using Microsoft::WRL::ComPtr;
 struct Mesh {
     ComPtr<ID3D11Buffer> vertexBuffer;
     ComPtr<ID3D11Buffer> indexBuffer;
-
+    // DModel에서는 Mesh내에서 쓰지 않을 값들이다.
     ComPtr<ID3D11Buffer> meshConstsGPU;
     ComPtr<ID3D11Buffer> materialConstsGPU;
 

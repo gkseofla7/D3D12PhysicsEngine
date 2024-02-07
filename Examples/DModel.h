@@ -1,4 +1,5 @@
 #pragma once
+
 #include "ConstantBuffers.h"
 #include "D3D11Utils.h"
 #include "GraphicsCommon.h"
@@ -7,6 +8,10 @@
 #include "StructuredBuffer.h"
 
 #include <directxtk/SimpleMath.h>
+
+// 참고: DirectX-Graphics-Sampels
+// https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Model/Model.h
+
 namespace hlab {
 
     using std::cout;
@@ -19,8 +24,6 @@ namespace hlab {
         DModel() {}
         DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
             const string& basePath, const string& filename);
-        DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-            const vector<MeshData>& meshes);
 
         virtual void Initialize(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context);
@@ -33,10 +36,7 @@ namespace hlab {
             ComPtr<ID3D11DeviceContext>& context,
             const string& basePath, const string& filename);
 
-        void Initialize(ComPtr<ID3D11Device>& device,
-            ComPtr<ID3D11DeviceContext>& context,
-            const vector<MeshData>& meshes);
-
+        void InitializeAfterMesh(ComPtr<ID3D11Device>& device, vector<MeshData>* meshDatas);
         void UpdateConstantBuffers(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context);
 
@@ -47,7 +47,6 @@ namespace hlab {
         virtual void Render(ComPtr<ID3D11DeviceContext>& context);
         virtual void UpdateAnimation(ComPtr<ID3D11DeviceContext>& context,
             int clipId, int frame, int type);
-        virtual void RenderNormals(ComPtr<ID3D11DeviceContext>& context);
         virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext>& context);
         virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>& context);
         void UpdateWorldRow(const Matrix& worldRow);
@@ -61,7 +60,7 @@ namespace hlab {
         bool m_castShadow = true;
         bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
 
-        vector<shared_ptr<Mesh>> m_meshes;
+        vector<Mesh>* m_meshes;
 
         ConstantBuffer<MeshConstants> m_meshConsts;
         ConstantBuffer<MaterialConstants> m_materialConsts;
@@ -70,9 +69,15 @@ namespace hlab {
         DirectX::BoundingSphere m_boundingSphere;
 
         string m_name = "NoName";
+
     private:
+        string m_basePath;
+        string m_filename;
+
         shared_ptr<Mesh> m_boundingBoxMesh;
         shared_ptr<Mesh> m_boundingSphereMesh;
+        bool m_initializeMesh = false;
+        bool m_initializeBoundingVolume = false;
     };
 
 } // namespace hlab
