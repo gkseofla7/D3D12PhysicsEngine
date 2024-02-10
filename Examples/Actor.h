@@ -33,19 +33,14 @@ protected:
 protected:
 	shared_ptr<class Camera> m_camera;
 
-	//Model Constant를 모두 actorConst에서 하도록
-	ConstantBuffer<MeshConstants> m_actorConsts;
 protected:
-	DModel* m_model = nullptr;
+	DModel m_model;
 	
 	Matrix m_cameraCorrection;
 
 	std::map<WPARAM, function<void()>> m_keyBinding;
 	ActorState m_actorState;
 	int m_actorId = 0;
-	string m_basePath;
-	string m_filename;
-	bool m_isInitialized = false;
 public:
 	// ConstantBuffer<SkinnedConsts> m_skinnedConsts;
 

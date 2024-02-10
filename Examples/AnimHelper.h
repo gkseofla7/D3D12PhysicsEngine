@@ -23,7 +23,7 @@ class AnimHelper
 public:
 	static void AddAnimPath(int InActorId, string InPathName);
 	static void AddAnimStateToAnim(int InActorId, int InState, string InAnimName);
-	static bool UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, SkeletalMeshActor* InActor, int InState,
+	static bool UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, DSkinnedMeshModel* InActor, int InState,
 		int frame, int type = 0);
 private:
 	static map<int ,map<int, string>> m_animStateToAnim;

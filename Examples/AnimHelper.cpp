@@ -2,7 +2,7 @@
 #include <thread>
 
 #include "AnimHelper.h"
-#include "SkeletalMeshActor.h"
+#include "DSkinnedMeshModel.h"
 #include "ThreadPool.h"
 namespace hlab {
 void AnimHelper::AddAnimPath(int InActorId, string InPathName)
@@ -20,11 +20,11 @@ AnimationData ReadAnimationFromFile(string path,string name)
 		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
-bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, SkeletalMeshActor* InActor,int InState,
+bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, DSkinnedMeshModel* InActor,int InState,
 	int frame, int type = 0)
 {
 	//비동기 로딩하도록 한다.
-	int ActorId = InActor->getActorId();		
+	int ActorId = InActor->m_modelId;
 	const string& path = m_pathMap[ActorId];
 	const string& name = m_animStateToAnim[ActorId][InState];
 	if (m_animDatas.find(ActorId) == m_animDatas.end())

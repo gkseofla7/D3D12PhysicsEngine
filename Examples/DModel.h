@@ -27,14 +27,16 @@ namespace hlab {
 
         virtual void Initialize(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context);
+        virtual void Initialize(ComPtr<ID3D11Device>& device,
+            ComPtr<ID3D11DeviceContext>& context,
+            const string& basePath,
+            const string& filename);
 
         virtual void InitMeshBuffers(ComPtr<ID3D11Device>& device,
             const MeshData& meshData,
             shared_ptr<Mesh>& newMesh);
 
-        void Initialize(ComPtr<ID3D11Device>& device,
-            ComPtr<ID3D11DeviceContext>& context,
-            const string& basePath, const string& filename);
+
 
         void InitializeAfterMesh(ComPtr<ID3D11Device>& device, vector<MeshData>* meshDatas);
         void UpdateConstantBuffers(ComPtr<ID3D11Device>& device,

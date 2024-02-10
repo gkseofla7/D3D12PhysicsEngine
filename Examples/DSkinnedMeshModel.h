@@ -1,27 +1,37 @@
 #pragma once
 
 #include "GeometryGenerator.h"
-#include "Model.h"
+#include "DModel.h"
+#include "AnimHelper.h"
 
 namespace hlab {
 
     using std::make_shared;
-
-    class DSkinnedMeshModel : public Model {
+    // DModel에서는 Mesh Loading
+    // DSkinnedMeshModel에서는 Animation Loading
+    class DSkinnedMeshModel : public DModel {
     public:
         DSkinnedMeshModel(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
-            const vector<MeshData>& meshes,
-            const AnimationData& aniData) {
-            Initialize(device, context, meshes, aniData);
+            const string& basePath,
+            const string& filename)
+        {
+            Initialize(device, context, basePath, filename);
         }
-
-        void Initialize(ComPtr<ID3D11Device>& device,
+        DSkinnedMeshModel(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
-            const vector<MeshData>& meshes,
-            const AnimationData& aniData) {
-            InitAnimationData(device, aniData);
-            Model::Initialize(device, context, meshes);
+            const string& basePath,
+            const string& filename,
+            const string& animPath,
+            const string& animFilename)
+        {
+            Initialize(device, context, basePath, filename);
+        }
+        virtual void Initialize(ComPtr<ID3D11Device>& device,
+            ComPtr<ID3D11DeviceContext>& context,
+            const string& basePath, const string& filename)override
+        {
+            DModel::Initialize(device, context, basePath, filename);
         }
 
         GraphicsPSO& GetPSO(const bool wired) override {
@@ -48,33 +58,10 @@ namespace hlab {
                 newMesh->indexBuffer);
         }
 
-        void InitAnimationData(ComPtr<ID3D11Device>& device,
-            const AnimationData& aniData) {
-            if (!aniData.clips.empty()) {
-                m_aniData = aniData;
-
-                // 여기서는 AnimationClip이 SkinnedMesh라고 가정하겠습니다.
-                // 일반적으로는 모든 Animation이 SkinnedMesh Animation은 아닙니다.
-                m_boneTransforms.m_cpu.resize(aniData.clips.front().keys.size());
-
-                // 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
-                for (int i = 0; i < aniData.clips.front().keys.size(); i++)
-                    m_boneTransforms.m_cpu[i] = Matrix();
-                m_boneTransforms.Initialize(device);
-            }
-        }
-
-        void UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, int clipId,
-            int frame, int type = 0) override {
-
-            m_aniData.Update(clipId, frame, type);
-
-            for (int i = 0; i < m_boneTransforms.m_cpu.size(); i++) {
-                m_boneTransforms.m_cpu[i] =
-                    m_aniData.Get(clipId, i, frame).Transpose();
-            }
-
-            m_boneTransforms.Upload(context);
+        void UpdateAnimation(ComPtr<ID3D11Device>& device, 
+            ComPtr<ID3D11DeviceContext>& context,
+            int clipId, int frame, int type = 0){
+            AnimHelper::UpdateAnimation(device, context, this, clipId, frame);
         }
 
         void Render(ComPtr<ID3D11DeviceContext>& context) override {
@@ -88,25 +75,26 @@ namespace hlab {
             // Skinned VS/PS는 GetPSO()를 통해서 지정되기 때문에
             // Model::Render(.)를 같이 사용 가능
 
-            Model::Render(context);
+            DModel::Render(context);
         };
 
         // SkinnedMesh는 BoundingBox를 그릴 때 Root의 Transform을 반영해야 합니다.
         // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
         // virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>
         // &context);
-        void UpdateVelocity(float dt) {
-            Vector3 prevPos = m_prevRootTransform.Translation();
-            Vector3 curPos = m_aniData.accumulatedRootTransform.Translation();
+        void UpdateVelocity(float dt) 
+        {
+            //Vector3 prevPos = m_prevRootTransform.Translation();
+            //Vector3 curPos = m_aniData.accumulatedRootTransform.Translation();
 
-            m_velocity = (curPos - prevPos).Length() / dt;
-            m_prevRootTransform = m_aniData.accumulatedRootTransform;
+            //m_velocity = (curPos - prevPos).Length() / dt;
+            //m_prevRootTransform = m_aniData.accumulatedRootTransform;
         }
     public:
         // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
         StructuredBuffer<Matrix> m_boneTransforms;
-
-        AnimationData m_aniData;
+        int m_modelId;
+        AnimationData* m_aniData = nullptr;
         float m_velocity = 0.0f;
         Matrix m_prevRootTransform;
     };
