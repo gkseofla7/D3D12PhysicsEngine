@@ -6,8 +6,6 @@
 namespace hlab {
 	map<int, map<int, string>> AnimHelper::m_animStateToAnim;
 	map<int, string> AnimHelper::m_pathMap;
-	map<int, AnimationData> AnimHelper::m_aniData;
-	map<int, std::future<AnimationData>> AnimHelper::m_asyncLoader;
 	map<int, AnimationBlock> AnimHelper::m_animDatas;
 void AnimHelper::AddAnimPath(int InActorId, string InPathName)
 {
@@ -51,10 +49,11 @@ bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Devi
 					InActor->m_boneTransforms.m_cpu[i] = Matrix();
 				InActor->m_boneTransforms.Initialize(device);
 			}
-
-			AnimationData AniData =AnimBlock.Loader.get();
-			AnimBlock.AniData.clipMaps[InState] = AniData.clips.front();
-			
+			else 
+			{
+				AnimationData AniData = AnimBlock.Loader.get();
+				AnimBlock.AniData.clipMaps[InState] = AniData.clips.front();
+			}
 		}
 		else if (AnimBlock.IsLoading == false)
 		{
@@ -66,11 +65,12 @@ bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Devi
 	}
 	//m_aniData[ActorId].Update(InState, frame, type);
 	vector<Matrix> BoneTransform;
-	m_aniData[ActorId].GetBoneTransform(InState, frame, InActor->m_accumulatedRootTransform, BoneTransform, type);
+	BoneTransform.resize(m_animDatas[ActorId].AniData.boneTransforms.size());
+	m_animDatas[ActorId].AniData.GetBoneTransform(InState, frame, InActor->m_accumulatedRootTransform, BoneTransform, type);
 
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
 		InActor->m_boneTransforms.m_cpu[i] =
-			m_aniData[ActorId].GetAnimationTransform(i, BoneTransform[i]).Transpose();
+			m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
 	}
 
 	InActor->m_boneTransforms.Upload(context);

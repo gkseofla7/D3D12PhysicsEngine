@@ -28,8 +28,6 @@ public:
 private:
 	static map<int ,map<int, string>> m_animStateToAnim;
 	static map<int, string> m_pathMap;
-	static map<int, AnimationData> m_aniData;
-	static map<int, std::future<AnimationData>> m_asyncLoader;
 	static map<int, AnimationBlock> m_animDatas;
 
 };

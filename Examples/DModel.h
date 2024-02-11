@@ -69,7 +69,7 @@ namespace hlab {
         DirectX::BoundingSphere m_boundingSphere;
 
         string m_name = "NoName";
-
+        int m_modelId = -1;
     private:
         string m_basePath;
         string m_filename;

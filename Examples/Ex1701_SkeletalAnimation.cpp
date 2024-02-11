@@ -33,7 +33,7 @@ bool Ex1701_SkeletalAnimation::InitScene() {
     AppBase::InitScene();
 
     // 조명 설정
-    {
+    { 
         // 조명 0은 고정
         m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
         m_globalConstsCPU.lights[0].position = Vector3(0.0f, 2.0f, 2.0f);

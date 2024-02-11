@@ -9,9 +9,9 @@
 
 namespace hlab{
 
-void DaerimsEngineBase::CreateEmptyDynamicsWorld(btDefaultCollisionConfiguration* OutCollisionCofiguration,
-		btCollisionDispatcher* OutCollisionDispatcher, btBroadphaseInterface* OutBroadphaseInterface,
-		btConstraintSolver* OutSolver, btDiscreteDynamicsWorld* OutDynamicsWorld)
+void DaerimsEngineBase::CreateEmptyDynamicsWorld(btDefaultCollisionConfiguration*& OutCollisionCofiguration,
+		btCollisionDispatcher* &OutCollisionDispatcher, btBroadphaseInterface*& OutBroadphaseInterface,
+		btConstraintSolver* &OutSolver, btDiscreteDynamicsWorld*& OutDynamicsWorld)
 {
 	///collision configuration contains default setup for memory, collision setup
 	OutCollisionCofiguration = new btDefaultCollisionConfiguration();

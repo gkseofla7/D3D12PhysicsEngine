@@ -5,13 +5,14 @@ namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
+        :m_model(InModel)
     {
-        Initialize(device, context, InModel);
+        m_model = InModel;
     }
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
     {
-        m_model = InModel;
+
     }
     bool Actor::MsgProc(WPARAM wParam)
     {

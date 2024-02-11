@@ -4,21 +4,24 @@ namespace hlab {
 
 Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
 	shared_ptr<DModel> InModel)
+    :SkeletalMeshActor(device, context, InModel)
 {
 	Initialize(device, context, InModel);
 }
 void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
 	shared_ptr<DModel> InModel)
 {
+    m_model->m_modelId = 1;
 	InitBoundingKey();
 	// TODO. 애니메이션 등록
 }
-
+ 
 void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
 {
-	SkeletalMeshActor::Update(device, context, dt);
     static int frameCount = 0;
     static int state = 0;
+	SkeletalMeshActor::Update(device, context, dt);
+
 
     // TODO:
     //if (state == 0) {

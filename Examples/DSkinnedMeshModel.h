@@ -61,7 +61,6 @@ namespace hlab {
     public:
         // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
         StructuredBuffer<Matrix> m_boneTransforms;
-        int m_modelId;
         AnimationData* m_aniData = nullptr;
         float m_velocity = 0.0f;
         Matrix m_prevRootTransform;

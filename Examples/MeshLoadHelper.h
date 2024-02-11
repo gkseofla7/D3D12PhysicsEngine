@@ -10,6 +10,7 @@ using namespace std;
 struct MeshBlock
 {
 	string PathName;
+	string FileName;
 	vector<Mesh> Meshes;
 	// Actor에 전달할 값들
 	bool useAlbedoMap = false;
@@ -31,7 +32,7 @@ struct MeshBlock
 class MeshLoadHelper
 {
 public:
-	static bool GetMesh( const string& InPath, const string& InName, vector<Mesh>* OutMesh);
+	static bool GetMesh( const string& InPath, const string& InName, vector<Mesh>*& OutMesh);
 	static bool LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& InPath, const string& InName, vector<Mesh>* OutModel);
 public:
 	static map<string, MeshBlock> MeshMap;

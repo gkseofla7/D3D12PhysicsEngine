@@ -32,7 +32,7 @@ protected:
 	shared_ptr<class Camera> m_camera;
 
 protected:
-	shared_ptr<DModel> m_model;
+
 	
 	Matrix m_cameraCorrection;
 
@@ -40,7 +40,7 @@ protected:
 	ActorState m_actorState;
 public:
 	// ConstantBuffer<SkinnedConsts> m_skinnedConsts;
-
+	shared_ptr<DModel> m_model;
 };
 
 } // namespace hlab

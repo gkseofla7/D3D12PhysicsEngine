@@ -10,7 +10,7 @@
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.h"
 
 namespace hlab{
-
+     
 using namespace std;
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
@@ -19,7 +19,6 @@ DaerimGTA::DaerimGTA() :AppBase(){}
 
 bool DaerimGTA::InitScene()
 {
-
 	AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
 	AppBase::m_globalConstsCPU.lodBias = 0.0f;
      
@@ -32,7 +31,7 @@ bool DaerimGTA::InitScene()
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
 	AppBase::InitScene();
-
+    InitAnimation();
     // ¹Ù´Ú(°Å¿ï)
     {
         // https://freepbr.com/materials/stringy-marble-pbr/
@@ -108,7 +107,6 @@ bool DaerimGTA::InitScene()
         wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
         wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
             Matrix::CreateTranslation(center));
-
         m_wizardActor =
             make_shared<Wizard>(m_device, m_context, wizardModel);
         m_activateActor = m_wizardActor;
@@ -158,7 +156,7 @@ void DaerimGTA::InitPhysics(bool interactive)
 	for (unsigned int i = 0; i < 5; i++)
 	{
 		CreateStack(btTransform(btQuaternion(),btVector3(0, 0, stackZ -= 15.0f)), 8, 20, 2.5f);
-	}
+	} 
 }
 void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 

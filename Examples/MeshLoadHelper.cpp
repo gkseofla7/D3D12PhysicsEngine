@@ -41,11 +41,11 @@ namespace hlab {
         outBox.Extents = maxCorner - outBox.Center;
     }
 
-vector<Mesh> CreateMeshData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, string path, string name, 
+vector<Mesh> CreateMeshData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, 
     MeshBlock& OutMeshBlock)
 {
 	auto [mesheDatas, _] =
-		GeometryGenerator::ReadAnimationFromFile(path, name);
+		GeometryGenerator::ReadAnimationFromFile(OutMeshBlock.PathName, OutMeshBlock.FileName);
     vector<Mesh> meshes;
     for (const auto& meshData : mesheDatas) {
         auto newMesh = Mesh();
@@ -221,8 +221,15 @@ bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
 	{
 		MeshMap[key] = MeshBlock();
 
+        MeshBlock& meshBlocks = MeshMap[key];
+        meshBlocks.PathName = InPath;
+        meshBlocks.FileName = InName;
+
 		ThreadPool& tPool =  ThreadPool::getInstance();
-		//MeshMap[key].Loader = tPool.EnqueueJob(CreateMeshData, device, context, InPath, InName, MeshMap[key]);
+        //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
+        auto func = [&device, &context, &meshBlocks]() {
+            return CreateMeshData(device, context, meshBlocks); };
+		MeshMap[key].Loader = tPool.EnqueueJob(func);
 		MeshMap[key].IsLoading = true;
 		return false;
 	}
@@ -239,7 +246,7 @@ bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
 	return true;
 }
 
-bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<Mesh>* OutMesh)
+bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<Mesh>*& OutMesh)
 {
     string key = InPath + InName;
     if (MeshMap.find(key) == MeshMap.end())

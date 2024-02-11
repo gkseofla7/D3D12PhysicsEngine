@@ -234,6 +234,9 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
+    for (auto& i : m_actorList) {
+        i->m_model->UpdateConstantBuffers(m_device, m_context);
+    }
 }
 
 void AppBase::UpdateLights(float dt) {
@@ -311,7 +314,10 @@ void AppBase::RenderDepthOnly() {
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
-
+    for (const auto& actor : m_actorList) {
+        AppBase::SetPipelineState(actor->m_model->GetDepthOnlyPSO());
+        actor->Render(m_context);
+    }
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
         m_skybox->Render(m_context);
@@ -340,7 +346,13 @@ void AppBase::RenderShadowMaps() {
                     model->Render(m_context);
                 }
             }
-
+            for (const auto& actor : m_actorList) {
+                shared_ptr<DModel> model = actor->m_model;
+                if (model->m_castShadow && model->m_isVisible) {
+                    AppBase::SetPipelineState(model->GetDepthOnlyPSO());
+                    model->Render(m_context);
+                }
+            }
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);
         }
@@ -380,7 +392,11 @@ void AppBase::RenderOpaqueObjects() {
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
-
+    for (const auto& actor : m_actorList) {
+        shared_ptr<DModel> model = actor->m_model;
+        AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
+        model->Render(m_context);
+    }
     // 거울 반사를 그릴 필요가 없으면 불투명 거울만 그리기
     if (m_mirrorAlpha == 1.0f && m_mirror) {
         AppBase::SetPipelineState(m_drawAsWire ? Graphics::defaultWirePSO
@@ -424,6 +440,10 @@ void AppBase::RenderMirror() {
         for (auto &model : m_basicList) {
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
             model->Render(m_context);
+        }
+        for (const auto& actor : m_actorList) {
+            AppBase::SetPipelineState(actor->m_model->GetReflectPSO(m_drawAsWire));
+            actor->Render(m_context);
         }
 
         AppBase::SetPipelineState(m_drawAsWire
