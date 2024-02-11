@@ -6,7 +6,7 @@
 #include "DaerimsEngineBase.h"
 namespace hlab
 {
-
+class Wizard;
 class DaerimGTA : public AppBase
 {
 public:
@@ -33,7 +33,7 @@ public:
 		m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
 	shared_ptr<BillboardModel> m_fireball;
 	shared_ptr<SkeletalMeshActor> m_character;
-
+	shared_ptr<Wizard> m_wizardActor;
 
 	btScalar stackZ = 10.0f;
 

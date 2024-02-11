@@ -4,21 +4,23 @@
 
 namespace hlab {
     SkeletalMeshActor::SkeletalMeshActor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& basePath,const string& filename)
+        shared_ptr<DModel> InModel)
     {
-        Initialize(device, context, basePath, filename);
+        Initialize(device, context, InModel);
     }
     void SkeletalMeshActor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-         const string& basePath, const string& filename)
+        shared_ptr<DModel>  InModel)
     {
-        //InitAnimationData(device, aniData);
-        Actor::Initialize(device, context, basePath, filename);
+        //Actor::Initialize(device, context, InModel);
     }
-
-    void SkeletalMeshActor::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, int clipId,
-        int frame, int type = 0) 
+    void SkeletalMeshActor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
     {
-        AnimHelper::UpdateAnimation(device,context, this, clipId, frame, type);
+        UpdateAnimation(device, context, m_state, m_curFrame);
+    }
+    void SkeletalMeshActor::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, int clipId,
+        int frame, int type) 
+    {          
+        m_model->UpdateAnimation(device,context,frame, type);
     }
 
     void SkeletalMeshActor::Render(ComPtr<ID3D11DeviceContext>& context)

@@ -1,14 +1,14 @@
 #include "MeshLoadHelper.h"
 #include "Actor.h"
-#include "ThreadPool.h"
+
 #include "GeometryGenerator.h"
 #include "ConstantBuffers.h"
-
-
+#include "ThreadPool.h"
 #include <filesystem>
 namespace hlab {
     using namespace DirectX;
-    BoundingBox GetBoundingBox(const vector<hlab::Vertex>& vertices) {
+    map<string, MeshBlock> MeshLoadHelper::MeshMap;
+    BoundingBox GetBoundingBoxFromVertices(const vector<hlab::Vertex>& vertices) {
 
         if (vertices.size() == 0)
             return BoundingBox();
@@ -27,7 +27,7 @@ namespace hlab {
         return BoundingBox(center, extents);
     }
 
-    void ExtendBoundingBox(const BoundingBox& inBox, BoundingBox& outBox) {
+    void GetExtendBoundingBox(const BoundingBox& inBox, BoundingBox& outBox) {
 
         Vector3 minCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
         Vector3 maxCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
@@ -163,10 +163,10 @@ vector<Mesh> CreateMeshData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceCon
     }
     // Initialize Bounding Box
     {
-        OutMeshBlock.boundingBox = GetBoundingBox(mesheDatas[0].vertices);
+        OutMeshBlock.boundingBox = GetBoundingBoxFromVertices(mesheDatas[0].vertices);
         for (size_t i = 1; i < mesheDatas.size(); i++) {
-            auto bb = GetBoundingBox(mesheDatas[0].vertices);
-            ExtendBoundingBox(bb, OutMeshBlock.boundingBox);
+            auto bb = GetBoundingBoxFromVertices(mesheDatas[0].vertices);
+            GetExtendBoundingBox(bb, OutMeshBlock.boundingBox);
         }
         auto meshData = GeometryGenerator::MakeWireBox(
             OutMeshBlock.boundingBox.Center,
@@ -195,7 +195,7 @@ vector<Mesh> CreateMeshData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceCon
         OutMeshBlock.boundingSphere = BoundingSphere(OutMeshBlock.boundingBox.Center, maxRadius);
         auto meshData = GeometryGenerator::MakeWireSphere(
             OutMeshBlock.boundingSphere.Center, OutMeshBlock.boundingSphere.Radius);
-        OutMeshBlock.boundingSphere = std::make_shared<Mesh>();
+        OutMeshBlock.boundingSphereMesh = std::make_shared<Mesh>();
         D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
             OutMeshBlock.boundingSphereMesh->vertexBuffer);
         OutMeshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
@@ -222,7 +222,7 @@ bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
 		MeshMap[key] = MeshBlock();
 
 		ThreadPool& tPool =  ThreadPool::getInstance();
-		MeshMap[key].Loader = tPool.EnqueueJob(CreateMeshData, device, context, InPath, InName, MeshMap[key]);
+		//MeshMap[key].Loader = tPool.EnqueueJob(CreateMeshData, device, context, InPath, InName, MeshMap[key]);
 		MeshMap[key].IsLoading = true;
 		return false;
 	}

@@ -1,6 +1,7 @@
 #include "DaerimGTA.h"
 #include "AnimHelper.h"
 #include "Wizard.h"
+#include "DSkinnedMeshModel.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
@@ -62,46 +63,56 @@ bool DaerimGTA::InitScene()
 
     // Main Object
     {
-        vector<string> clipNames = { "FightingIdleOnMichelle2.fbx",
-                                    "Fireball.fbx" };
+        //vector<string> clipNames = { "FightingIdleOnMichelle2.fbx",
+        //                            "Fireball.fbx" };
+       // string path = "../Assets/Characters/Mixamo/";
+        //string characterName = "character.fbx";
+        //AnimationData aniData;
+
+        //auto [meshes, _] =
+        //    GeometryGenerator::ReadAnimationFromFile(path, "character.fbx");
+
+        //for (auto& name : clipNames) {
+        //    auto [_, ani] =
+        //        GeometryGenerator::ReadAnimationFromFile(path, name);
+
+        //    if (aniData.clips.empty()) {
+        //        aniData = ani;
+        //    }
+        //    else {
+        //        aniData.clips.push_back(ani.clips.front());
+        //    }
+        //}
+
+        //Vector3 center(0.0f, 0.1f, 1.0f);
+        //shared_ptr<SkinnedMeshModel> characterModel =
+        //    make_shared<SkinnedMeshModel>(m_device, m_context, meshes, aniData);
+        //characterModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+        //characterModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+        //characterModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+
+        //m_character = make_shared< SkeletalMeshActor>();
+        //m_character->m_skinnedMeshModel = characterModel;
+        //m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+        //    Matrix::CreateTranslation(center));
+
+
+        //// 인풋을 받는 Actor
+
         string path = "../Assets/Characters/Mixamo/";
         string characterName = "character.fbx";
-        AnimationData aniData;
-
-        auto [meshes, _] =
-            GeometryGenerator::ReadAnimationFromFile(path, "character.fbx");
-
-        for (auto& name : clipNames) {
-            auto [_, ani] =
-                GeometryGenerator::ReadAnimationFromFile(path, name);
-
-            if (aniData.clips.empty()) {
-                aniData = ani;
-            }
-            else {
-                aniData.clips.push_back(ani.clips.front());
-            }
-        }
-
         Vector3 center(0.0f, 0.1f, 1.0f);
-        shared_ptr<SkinnedMeshModel> characterModel =
-            make_shared<SkinnedMeshModel>(m_device, m_context, meshes, aniData);
-        characterModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-        characterModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-        characterModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-
-        m_character = make_shared< SkeletalMeshActor>();
-        m_character->m_skinnedMeshModel = characterModel;
-        m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+        shared_ptr<DSkinnedMeshModel> wizardModel = make_shared<DSkinnedMeshModel>(m_device, m_context, path, characterName);
+        wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+        wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+        wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+        wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
             Matrix::CreateTranslation(center));
 
-
-        // 인풋을 받는 Actor
-        m_activateActor = m_character;
-        m_actorList.push_back(m_character); // 리스트에 등록
-
-        shared_ptr<Wizard> wizardActor =
-            make_shared<Wizard>(m_device, m_context, path, characterName);
+        m_wizardActor =
+            make_shared<Wizard>(m_device, m_context, wizardModel);
+        m_activateActor = m_wizardActor;
+        m_actorList.push_back(m_wizardActor); // 리스트에 등록, 이거 왜..?
     }
 
     InitPhysics(true);
@@ -154,6 +165,8 @@ void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
+
+    m_wizardActor->Update(m_device,m_context,dt);
 
     // 이하 물리엔진 관련
     StepSimulation(dt);

@@ -1,14 +1,14 @@
 #pragma once
 #include <map>
 #include <string>
+#include <future>
 #include "GeometryGenerator.h"
 #include "D3D11Utils.h"
 #include "GraphicsCommon.h"
-#include <future>
 
 namespace hlab {
 using namespace std;
-class SkeletalMeshActor;
+class DSkinnedMeshModel;
 struct AnimationBlock
 {
 	//map<int, string > AnimStateToAnimName;

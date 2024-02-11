@@ -188,6 +188,7 @@ struct AnimationData {
             // boneTransforms[boneId] = ...;
             OutBoneTransform[boneId] = key.GetTransform() * parentMatrix;
         }
+        return true;
     }
 };
 

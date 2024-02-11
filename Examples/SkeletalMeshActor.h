@@ -23,9 +23,10 @@ public:
 public:
     SkeletalMeshActor() {}
     SkeletalMeshActor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& basePath,  const string& filename);
-    virtual void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-         const string& basePath, const string& filename);
+        shared_ptr<DModel>  InModel);
+    void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+        shared_ptr<DModel>  InModel);
+    virtual void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt) override;
     virtual void InitializeAnimation() {}
     //TODO. UpdateAnimation에서 쓸때 비동기 로딩을 하기 때문에(defered..) 
     // 초기화 마저 UpdateAnimation내부에서 하게된다.
@@ -53,6 +54,9 @@ public:
     Matrix accumulatedRootTransform = Matrix();
     float m_velocity = 0.0f;
     Matrix m_prevRootTransform;
+
+    //Anim 관련
+    int m_curFrame;
 private:
     int m_state = 0;
 };

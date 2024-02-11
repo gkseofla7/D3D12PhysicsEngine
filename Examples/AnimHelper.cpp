@@ -1,10 +1,14 @@
 #include <future>
-#include <thread>
 
+#include "ThreadPool.h"
 #include "AnimHelper.h"
 #include "DSkinnedMeshModel.h"
-#include "ThreadPool.h"
 namespace hlab {
+	map<int, map<int, string>> AnimHelper::m_animStateToAnim;
+	map<int, string> AnimHelper::m_pathMap;
+	map<int, AnimationData> AnimHelper::m_aniData;
+	map<int, std::future<AnimationData>> AnimHelper::m_asyncLoader;
+	map<int, AnimationBlock> AnimHelper::m_animDatas;
 void AnimHelper::AddAnimPath(int InActorId, string InPathName)
 {
 	m_pathMap[InActorId] = InPathName;
@@ -14,14 +18,14 @@ void AnimHelper::AddAnimStateToAnim(int InActorId,int InState, string InAnimName
 	// 내 생각엔 단 한번 해주는게
 	m_animStateToAnim[InActorId].insert({ InState,InAnimName});
 }
-AnimationData ReadAnimationFromFile(string path,string name)
+AnimationData GetAnimationFromFile(string path,string name)
 {
 	auto [_, ani] =
 		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
 bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, DSkinnedMeshModel* InActor,int InState,
-	int frame, int type = 0)
+	int frame, int type)
 {
 	//비동기 로딩하도록 한다.
 	int ActorId = InActor->m_modelId;
@@ -55,14 +59,14 @@ bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Devi
 		else if (AnimBlock.IsLoading == false)
 		{
 			ThreadPool& tPool =ThreadPool::getInstance();
-			AnimBlock.Loader = tPool.EnqueueJob(ReadAnimationFromFile, path, name);
+			AnimBlock.Loader = tPool.EnqueueJob(GetAnimationFromFile, path, name);
 			m_animDatas[ActorId].IsLoading = true;
 		}
 		return false;
 	}
 	//m_aniData[ActorId].Update(InState, frame, type);
 	vector<Matrix> BoneTransform;
-	m_aniData[ActorId].GetBoneTransform(InState, frame, InActor->accumulatedRootTransform, BoneTransform, type);
+	m_aniData[ActorId].GetBoneTransform(InState, frame, InActor->m_accumulatedRootTransform, BoneTransform, type);
 
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
 		InActor->m_boneTransforms.m_cpu[i] =

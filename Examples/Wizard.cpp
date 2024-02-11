@@ -3,20 +3,60 @@
 namespace hlab {
 
 Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-	const string& basePath, const string& filename)
+	shared_ptr<DModel> InModel)
 {
-	//TODO Actor마다 고유 번호 갖도록 한다.
-	m_actorId = 1;
-	Initialize(device, context, basePath, filename);
+	Initialize(device, context, InModel);
 }
 void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-	const string& basePath, const string& filename)
+	shared_ptr<DModel> InModel)
 {
-	SkeletalMeshActor::Initialize(device, context, basePath, filename);
-	// 애니메이션 등록
+	InitBoundingKey();
+	// TODO. 애니메이션 등록
 }
 
+void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
+{
+	SkeletalMeshActor::Update(device, context, dt);
+    static int frameCount = 0;
+    static int state = 0;
 
+    // TODO:
+    //if (state == 0) {
+
+    //}
+    //// 델리게이트로 끝났을 경우 쏴주는게,,,ㅋㅋ or 그냥 마무리 됐다고 알려주는
+    //else if (state == 1) {
+    //    //if (frameCount ==
+    //        //m_character->m_aniData.clips[1].keys[0].size()) {
+    //    //    frameCount = 0;
+    //    //    state = 0;
+
+    //    //}
+    //    if (frameCount == 115) {
+    //        Vector3 handPos = (m_character->m_worldRow).Translation();
+    //        Vector4 offset = Vector4::Transform(
+    //            Vector4(0.0f, 0.0f, -0.1f, 0.0f),
+    //            m_character->m_worldRow *
+    //            m_character->m_aniData.accumulatedRootTransform);
+    //        handPos += Vector3(offset.x, offset.y, offset.z);
+
+    //        Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
+    //        dir = Vector4::Transform(
+    //            dir, m_character->m_worldRow *
+    //            m_character->m_aniData.accumulatedRootTransform);
+    //        dir.Normalize();
+    //        dir *= 1.5f / m_simToRenderScale;
+    //        CreateDynamic(PxTransform(PxVec3(handPos.x, handPos.y, handPos.z) /
+    //            m_simToRenderScale),
+    //            PxSphereGeometry(5), PxVec3(dir.x, dir.y, dir.z));
+    //    }
+    //}
+
+
+    //m_character->UpdateAnimation(m_context, state, frameCount);
+
+    frameCount += 1;
+}
 void Wizard::InitBoundingKey()
 {
 	std::function<void()> ShotFireballFunc = [this]() { this->ShotFireball();};

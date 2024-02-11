@@ -4,18 +4,16 @@
 namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& basePath, const string& filename)
+        shared_ptr<DModel> InModel)
     {
-        Initialize(device, context, basePath, filename);
+        Initialize(device, context, InModel);
     }
-
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& basePath, const string& filename)
+        shared_ptr<DModel> InModel)
     {
-        InitBoundingKey();
-        m_model = DModel(device, context, basePath, filename);
+        m_model = InModel;
     }
-    bool Actor::MsgProc(WPARAM wParam, shared_ptr<Actor> InActivateActore)
+    bool Actor::MsgProc(WPARAM wParam)
     {
         if (m_keyBinding.find(wParam) != m_keyBinding.end())
         {
@@ -36,7 +34,7 @@ namespace hlab {
 
     void Actor::Render(ComPtr<ID3D11DeviceContext>& context)
     {
-        m_model.Render(context);
+        m_model->Render(context);
     }
 
 

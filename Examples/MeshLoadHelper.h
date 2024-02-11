@@ -2,8 +2,6 @@
 #include <map>
 #include <string>
 #include <future>
-#include <thread>
-#include "MeshData.h"
 #include "dModel.h"
 #include <directxtk/SimpleMath.h>
 
@@ -22,8 +20,8 @@ struct MeshBlock
 	bool useMetalicMap = false;
 	bool useRoughnessMap = false;
 	// BoundingVolume
-	BoundingBox boundingBox;
-	BoundingSphere boundingSphere;
+	DirectX::BoundingBox boundingBox;
+	DirectX::BoundingSphere boundingSphere;
 	shared_ptr<Mesh> boundingBoxMesh;
 	shared_ptr<Mesh> boundingSphereMesh;
 
