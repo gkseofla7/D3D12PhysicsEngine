@@ -31,8 +31,8 @@ namespace hlab {
         // ConstBuffer 대신 StructuredBuffer 사용
         // context->VSSetConstantBuffers(3, 1, m_skinnedConsts.GetAddressOf());
 
-        context->VSSetShaderResources(
-            9, 1, m_boneTransforms.GetAddressOfSRV()); // 항상 slot index 주의
+        //context->VSSetShaderResources(
+        //    9, 1, m_boneTransforms.GetAddressOfSRV()); // 항상 slot index 주의
 
         // Skinned VS/PS는 GetPSO()를 통해서 지정되기 때문에
         // Model::Render(.)를 같이 사용 가능

@@ -25,6 +25,8 @@ namespace hlab {
             const string& basePath, const string& filename)override;
 
         GraphicsPSO& GetPSO(const bool wired) override {
+            //defaultSolidPSO
+            //skinnedSolidPSO
             return wired ? Graphics::skinnedWirePSO : Graphics::skinnedSolidPSO;
         }
 

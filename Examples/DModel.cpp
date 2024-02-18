@@ -49,7 +49,10 @@ namespace hlab {
         m_meshConsts.Initialize(device);
         m_materialConsts.Initialize(device);
 
-        m_initializeMesh = MeshLoadHelper::LoadModelData(device, context, basePath, filename, m_meshes);
+        if (m_initializeMesh = MeshLoadHelper::LoadModelData(device, context, basePath, filename, m_meshes))
+        {
+            MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
+        }
     }
     
 
@@ -75,10 +78,17 @@ namespace hlab {
     void DModel::Render(ComPtr<ID3D11DeviceContext>& context) {
         if (m_initializeMesh == false)
         {
-            m_initializeMesh = MeshLoadHelper::GetMesh(m_basePath, m_filename, m_meshes);
-            return;
-        }
-        if (m_isVisible) {
+            if (m_initializeMesh = MeshLoadHelper::GetMesh(m_basePath, m_filename, m_meshes))
+            {
+                MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
+            }
+            else
+            {
+                return;
+            }
+
+        } 
+        if (m_isVisible) { 
             for (auto& mesh : *m_meshes) {
                 //TODO mesh Consts를 없애자, Model 공용으로 사용
                 ID3D11Buffer* constBuffers[2] = { m_meshConsts.Get(),

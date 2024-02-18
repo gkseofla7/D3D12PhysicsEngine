@@ -30,7 +30,7 @@ namespace hlab {
         {
             DModel::Initialize(device, context, basePath, filename);
         }
-
+         
         void DSkinnedMeshModel::InitMeshBuffers(ComPtr<ID3D11Device>& device, const MeshData& meshData,
             shared_ptr<Mesh>& newMesh) {
             D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
@@ -55,7 +55,7 @@ namespace hlab {
 
             context->VSSetShaderResources(
                 9, 1, m_boneTransforms.GetAddressOfSRV()); // 항상 slot index 주의
-
+            
             // Skinned VS/PS는 GetPSO()를 통해서 지정되기 때문에
             // Model::Render(.)를 같이 사용 가능
 

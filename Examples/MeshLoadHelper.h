@@ -26,14 +26,17 @@ struct MeshBlock
 	shared_ptr<Mesh> boundingBoxMesh;
 	shared_ptr<Mesh> boundingSphereMesh;
 
-	std::future<vector<Mesh>> Loader;
+	std::future<vector<MeshData>> Loader;
 	bool IsLoading = false;
 };
 class MeshLoadHelper
 {
 public:
+	static void LoadUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	static bool GetMesh( const string& InPath, const string& InName, vector<Mesh>*& OutMesh);
 	static bool LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& InPath, const string& InName, vector<Mesh>* OutModel);
+	static void LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& key);
+	static bool SetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants);
 public:
 	static map<string, MeshBlock> MeshMap;
 };

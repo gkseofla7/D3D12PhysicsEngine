@@ -67,7 +67,7 @@ bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Devi
 	vector<Matrix> BoneTransform;
 	BoneTransform.resize(m_animDatas[ActorId].AniData.boneTransforms.size());
 	m_animDatas[ActorId].AniData.GetBoneTransform(InState, frame, InActor->m_accumulatedRootTransform, BoneTransform, type);
-
+	return true;
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
 		InActor->m_boneTransforms.m_cpu[i] =
 			m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();

@@ -25,6 +25,8 @@ class SkinnedMeshModel : public Model {
     }
 
     GraphicsPSO &GetPSO(const bool wired) override {
+        //defaultSolidPSO
+        //skinnedSolidPSO
         return wired ? Graphics::skinnedWirePSO : Graphics::skinnedSolidPSO;
     }
 

@@ -2,6 +2,7 @@
 #include "AnimHelper.h"
 #include "Wizard.h"
 #include "DSkinnedMeshModel.h"
+#include "MeshLoadHelper.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
@@ -14,7 +15,7 @@ namespace hlab{
 using namespace std;
 using namespace DirectX;
 using namespace DirectX::SimpleMath;
-
+ 
 DaerimGTA::DaerimGTA() :AppBase(){}
 
 bool DaerimGTA::InitScene()
@@ -95,9 +96,8 @@ bool DaerimGTA::InitScene()
         //m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
         //    Matrix::CreateTranslation(center));
 
-
-        //// 인풋을 받는 Actor
-
+         
+        //// 인풋을 받는 Actor 
         string path = "../Assets/Characters/Mixamo/";
         string characterName = "character.fbx";
         Vector3 center(0.0f, 0.1f, 1.0f);
@@ -112,7 +112,7 @@ bool DaerimGTA::InitScene()
         m_activateActor = m_wizardActor;
         m_actorList.push_back(m_wizardActor); // 리스트에 등록, 이거 왜..?
     }
-
+     
     InitPhysics(true);
 
     return true;
@@ -141,7 +141,7 @@ void DaerimGTA::InitPhysics(bool interactive)
 
 	//groundShape->initializePolyhedralFeatures();
 	//btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),50);
-
+     
 	m_collisionShapes.push_back(groundShape);
 
 	btTransform groundTransform;
@@ -163,9 +163,10 @@ void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
-
+    
+    MeshLoadHelper::LoadUnloadedModel(m_device, m_context);
     m_wizardActor->Update(m_device,m_context,dt);
-
+   
     // 이하 물리엔진 관련
     StepSimulation(dt);
     int count = 0;
@@ -192,7 +193,7 @@ void DaerimGTA::Update(float dt) {
                 count++;
             }
         }
-    }
+    } 
 }
 
 btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
@@ -269,7 +270,7 @@ void DaerimGTA::UpdateGUI() {
 
         ImGui::TreePop();
     }
-
+      
     if (ImGui::TreeNode("Post Processing")) {
         int flag = 0;
         flag += ImGui::SliderFloat(
