@@ -95,7 +95,6 @@ bool DaerimGTA::InitScene()
         //m_character->m_skinnedMeshModel = characterModel;
         //m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
         //    Matrix::CreateTranslation(center));
-
          
         //// 인풋을 받는 Actor 
         string path = "../Assets/Characters/Mixamo/";

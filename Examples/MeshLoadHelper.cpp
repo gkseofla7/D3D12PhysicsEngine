@@ -119,7 +119,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
     {
         return;
     }
-     
+
     std::vector<MeshData> MeshDatas;
     MeshMap[key].IsLoading = false;
     MeshDatas = MeshMap[key].Loader.get();
@@ -129,11 +129,12 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
     for (const auto& meshData : MeshDatas) {
         Mesh newMesh = Mesh();
 
-        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+        //TODO. Skinned일때만, 아닌경우 조건문 추가 예정
+        D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
             newMesh.vertexBuffer);
         newMesh.indexCount = UINT(meshData.indices.size());
-        newMesh.vertexCount = UINT(meshData.vertices.size());
-        newMesh.stride = UINT(sizeof(Vertex));
+        newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
+        newMesh.stride = UINT(sizeof(SkinnedVertex));
         D3D11Utils::CreateIndexBuffer(device, meshData.indices,
             newMesh.indexBuffer);
 

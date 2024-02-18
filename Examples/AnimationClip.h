@@ -52,6 +52,7 @@ struct AnimationData {
     Matrix defaultTransform;
     Matrix rootTransform = Matrix();
     Matrix accumulatedRootTransform = Matrix();
+    //TODO 이거 값 Actor나 Model로 보내는게..ㅎ
     Vector3 prevPos = Vector3(0.0f);
     set<int> lowerBodyBones;
     Matrix Get(int clipId, int boneId, int frame) {
@@ -135,8 +136,8 @@ struct AnimationData {
         }
     }
 
-     bool GetBoneTransform(int clipId, int frame, Matrix InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
-
+     bool GetBoneTransform(int clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
+         //TODO 제거
         auto& clip = clips[clipId];
 
         for (int boneId = 0; boneId < boneTransforms.size(); boneId++) {

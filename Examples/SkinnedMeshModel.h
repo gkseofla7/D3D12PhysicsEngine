@@ -68,7 +68,6 @@ class SkinnedMeshModel : public Model {
 
     void UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, int clipId,
                          int frame, int type = 0) override {
-
         m_aniData.Update(clipId, frame, type);
 
         for (int i = 0; i < m_boneTransforms.m_cpu.size(); i++) {
@@ -78,12 +77,11 @@ class SkinnedMeshModel : public Model {
 
         m_boneTransforms.Upload(context);
     }
-
+     
     void Render(ComPtr<ID3D11DeviceContext> &context) override {
 
         // ConstBuffer 대신 StructuredBuffer 사용
         // context->VSSetConstantBuffers(3, 1, m_skinnedConsts.GetAddressOf());
-
         context->VSSetShaderResources(
             9, 1, m_boneTransforms.GetAddressOfSRV()); // 항상 slot index 주의
 

@@ -24,7 +24,7 @@ AnimationData GetAnimationFromFile(string path,string name)
 }
 bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, DSkinnedMeshModel* InActor,int InState,
 	int frame, int type)
-{
+{ 
 	//비동기 로딩하도록 한다.
 	int ActorId = InActor->m_modelId;
 	const string& path = m_pathMap[ActorId];
@@ -49,12 +49,12 @@ bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Devi
 					InActor->m_boneTransforms.m_cpu[i] = Matrix();
 				InActor->m_boneTransforms.Initialize(device);
 			}
-			else 
-			{
+			else
+			{ 
 				AnimationData AniData = AnimBlock.Loader.get();
 				AnimBlock.AniData.clipMaps[InState] = AniData.clips.front();
 			}
-		}
+		} 
 		else if (AnimBlock.IsLoading == false)
 		{
 			ThreadPool& tPool =ThreadPool::getInstance();
@@ -62,17 +62,17 @@ bool AnimHelper::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Devi
 			m_animDatas[ActorId].IsLoading = true;
 		}
 		return false;
-	}
+	}   
 	//m_aniData[ActorId].Update(InState, frame, type);
+	InActor->m_maxFrame = AnimBlock.AniData.clips[0].keys[0].size();
 	vector<Matrix> BoneTransform;
 	BoneTransform.resize(m_animDatas[ActorId].AniData.boneTransforms.size());
 	m_animDatas[ActorId].AniData.GetBoneTransform(InState, frame, InActor->m_accumulatedRootTransform, BoneTransform, type);
-	return true;
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
-		InActor->m_boneTransforms.m_cpu[i] =
+		InActor->m_boneTransforms.m_cpu[i] = 
 			m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
 	}
-
+	 
 	InActor->m_boneTransforms.Upload(context);
 	return true;
 }

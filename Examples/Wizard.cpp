@@ -18,15 +18,21 @@ void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext
  
 void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
 {
-    static int frameCount = 0;
     static int state = 0;
 	SkeletalMeshActor::Update(device, context, dt);
 
 
     // TODO:
-    //if (state == 0) {
+    if (state == 0) {
+        if (m_model != nullptr)
+        {
+            if (m_curFrame == m_model->m_maxFrame) {
+                m_curFrame = 0;
 
-    //}
+            }
+        }
+
+    }
     //// 델리게이트로 끝났을 경우 쏴주는게,,,ㅋㅋ or 그냥 마무리 됐다고 알려주는
     //else if (state == 1) {
     //    //if (frameCount ==
@@ -54,11 +60,7 @@ void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& c
     //            PxSphereGeometry(5), PxVec3(dir.x, dir.y, dir.z));
     //    }
     //}
-
-
-    //m_character->UpdateAnimation(m_context, state, frameCount);
-
-    frameCount += 1;
+    m_curFrame += 1;
 }
 void Wizard::InitBoundingKey()
 {

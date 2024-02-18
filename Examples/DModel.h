@@ -70,6 +70,8 @@ namespace hlab {
 
         string m_name = "NoName";
         int m_modelId = -1;
+        //TODO юс╫ц
+        int m_maxFrame = 0;
     private:
         string m_basePath;
         string m_filename;

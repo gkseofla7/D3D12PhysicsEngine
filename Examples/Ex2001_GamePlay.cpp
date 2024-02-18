@@ -230,7 +230,7 @@ void Ex2001_GamePlay::Update(float dt) {
         }
     } 
      
-    //m_character->UpdateAnimation(m_context, state, frameCount);
+    m_character->UpdateAnimation(m_context, state, frameCount);
 
     frameCount += 1;
 

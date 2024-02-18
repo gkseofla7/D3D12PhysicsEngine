@@ -52,7 +52,6 @@ namespace hlab {
 
             // ConstBuffer 대신 StructuredBuffer 사용
             // context->VSSetConstantBuffers(3, 1, m_skinnedConsts.GetAddressOf());
-
             context->VSSetShaderResources(
                 9, 1, m_boneTransforms.GetAddressOfSRV()); // 항상 slot index 주의
             

@@ -56,7 +56,7 @@ public:
     Matrix m_prevRootTransform;
 
     //Anim ฐüทร
-    int m_curFrame;
+    int m_curFrame = 0;
 private:
     int m_state = 0;
 };

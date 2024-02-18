@@ -46,7 +46,7 @@ namespace hlab {
             ComPtr<ID3D11DeviceContext>& context,
             int clipId, int frame, int type = 0) override;
 
-        void Render(ComPtr<ID3D11DeviceContext>& context) override;
+        virtual void Render(ComPtr<ID3D11DeviceContext>& context) override;
 
         // SkinnedMesh는 BoundingBox를 그릴 때 Root의 Transform을 반영해야 합니다.
         // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
@@ -67,6 +67,7 @@ namespace hlab {
         float m_velocity = 0.0f;
         Matrix m_prevRootTransform;
         Matrix m_accumulatedRootTransform;
+
     };
 
 } // namespace hlab
