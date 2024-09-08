@@ -8,7 +8,7 @@
 #include <vector>
 #include <windows.h>
 #include <wrl/client.h> // ComPtr
-
+#include <unordered_map>
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
 // Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만
@@ -21,6 +21,14 @@ using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
 using std::vector;
 using std::wstring;
+
+struct ImageInfo
+{
+    int width = 0;
+    int height = 0;
+    std::vector<uint8_t> image;
+    DXGI_FORMAT pixelFormat;
+};
 
 inline void ThrowIfFailed(HRESULT hr) {
     if (FAILED(hr)) {
@@ -180,13 +188,15 @@ class D3D11Utils {
                   ComPtr<ID3D11DeviceContext> &context,
                   const std::string filename, const bool usSRGB,
                   ComPtr<ID3D11Texture2D> &texture,
-                  ComPtr<ID3D11ShaderResourceView> &textureResourceView);
+                  ComPtr<ID3D11ShaderResourceView> &textureResourceView,
+                    bool onlyCpu = false);
 
     static void CreateTexture(
-        ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+        ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         const std::string albedoFilename, const std::string opacityFilename,
-        const bool usSRGB, ComPtr<ID3D11Texture2D> &texture,
-        ComPtr<ID3D11ShaderResourceView> &textureResourceView);
+        const bool usSRGB, ComPtr<ID3D11Texture2D>& texture,
+        ComPtr<ID3D11ShaderResourceView>& textureResourceView,
+        bool onlyCpu = false);
 
     static void CreateUATexture(ComPtr<ID3D11Device> &device, const int width,
                                 const int height, const DXGI_FORMAT pixelFormat,
@@ -248,7 +258,7 @@ class D3D11Utils {
         ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
         const std::string metallicFiilename,
         const std::string roughnessFilename, ComPtr<ID3D11Texture2D> &texture,
-        ComPtr<ID3D11ShaderResourceView> &srv);
+        ComPtr<ID3D11ShaderResourceView> &srv, bool onlyCpu = false);
 
     static void
     CreateTextureArray(ComPtr<ID3D11Device> &device,
@@ -279,5 +289,7 @@ class D3D11Utils {
                                const std::string filename);
 
     static size_t GetPixelSize(DXGI_FORMAT pixelFormat);
+private:
+    static std::unordered_map<std::string, ImageInfo> imageMap;
 };
 } // namespace hlab

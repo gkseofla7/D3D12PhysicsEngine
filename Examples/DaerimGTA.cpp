@@ -162,7 +162,7 @@ void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
 void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
-    
+     
     MeshLoadHelper::LoadUnloadedModel(m_device, m_context);
     m_wizardActor->Update(m_device,m_context,dt);
    
@@ -211,7 +211,7 @@ btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
     AppBase::m_basicList.push_back(m_fireball);
     this->m_objects.push_back(m_fireball);
 
-    btRigidBody* dynamic =
+    btRigidBody* dynamic = 
         DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f, btVector4(0, 0, 1, 1));
     dynamic->setLinearVelocity(velocity);
 

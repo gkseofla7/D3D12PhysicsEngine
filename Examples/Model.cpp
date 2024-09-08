@@ -249,6 +249,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
 void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                   ComPtr<ID3D11DeviceContext> &context) {
+
     if (m_isVisible) {
         m_meshConsts.Upload(context);
         m_materialConsts.Upload(context);

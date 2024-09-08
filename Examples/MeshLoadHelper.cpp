@@ -5,6 +5,7 @@
 #include "ConstantBuffers.h"
 #include "ThreadPool.h"
 #include <filesystem>
+#include <mutex>
 namespace hlab {
     using namespace DirectX;
     map<string, MeshBlock> MeshLoadHelper::MeshMap;
@@ -61,7 +62,22 @@ void MeshLoadHelper::LoadUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D
         MeshBlock& mBloock = Pair.second;
         if (mBloock.IsLoading == true && mBloock.Loader._Is_ready() == true)
         {
-            LoadModel(device, context, Pair.first);
+            ThreadPool& tPool = ThreadPool::getInstance();
+            //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
+            auto func = [&device,&context, &Pair]() {
+                return LoadModel(device, nullptr, Pair.first); };
+            mBloock.LoadCommandList = tPool.EnqueueJob(func);
+        } 
+        else if (mBloock.IsModelLoading == true && mBloock.LoadCommandList._Is_ready() == true)
+        { 
+            // 4. 주 스레드에서 Immediate Context를 사용해 명령 리스트 실행
+            ID3D11CommandList* CommandList = mBloock.LoadCommandList.get();
+            context->ExecuteCommandList(CommandList, FALSE);
+            CommandList->Release();
+            mBloock.deferredContext = nullptr; 
+            //mBloock.deferredContext->Release();
+            LoadModel(device, context, Pair.first); 
+            mBloock.IsModelLoading = false;
         }
     }
 }
@@ -104,52 +120,89 @@ bool MeshLoadHelper::SetMaterial(const string& InPath, const string& InName, Mat
     InConstants.useMetallicMap = MeshMap[key].useMetalicMap;
     InConstants.useNormalMap = MeshMap[key].useNormalMap;
     InConstants.useRoughnessMap = MeshMap[key].useRoughnessMap;
+    return true;
 }
-void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& key)
+ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, const string& key)
 {
-    if (MeshMap.find(key) == MeshMap.end())
+    bool deferred = context == nullptr;
+    if (deferred)
     {
-        return;
+        if (MeshMap.find(key) == MeshMap.end())
+        {
+            return nullptr;
+        }
+        // MeshData 로드 안됨
+        if (MeshMap[key].IsLoading == false)
+        {
+            return nullptr;
+        }
+        // MeshData 로딩중
+        if (MeshMap[key].IsLoading == true && MeshMap[key].Loader._Is_ready() == false)
+        {
+            return nullptr;
+        }
+        // 이미 모델 로딩중
+        if (MeshMap[key].IsModelLoading)
+        {
+            return nullptr;
+        }
     }
-    if (MeshMap[key].IsLoading == false)
-    {
-        return;
-    }
-    if (MeshMap[key].IsLoading == true && MeshMap[key].Loader._Is_ready() == false)
-    {
-        return;
-    }
-
-    std::vector<MeshData> MeshDatas;
+    
+    // 1. Deferred Context 생성
+    std::vector<MeshData>& MeshDatas = MeshMap[key].MeshDatas;
     MeshMap[key].IsLoading = false;
-    MeshDatas = MeshMap[key].Loader.get();
-
+    
+    ComPtr<ID3D11DeviceContext> deferredContext = nullptr;
+    if (deferred)
+    {
+        MeshMap[key].IsModelLoading = true;
+        device->CreateDeferredContext(0, &deferredContext); 
+        MeshMap[key].deferredContext = deferredContext;
+        MeshDatas = MeshMap[key].Loader.get();
+    }
+    else
+    {
+        deferredContext = context; 
+    }
+    
+    
+    // 이 부분도 따로 멀티스레딩으로 뺄수없을까?
     MeshBlock& MeshBlock = MeshMap[key];
     vector<Mesh>& meshes = MeshBlock.Meshes;
-    for (const auto& meshData : MeshDatas) {
-        Mesh newMesh = Mesh();
-
+    int index = 0;
+    for (const auto& meshData : MeshDatas) { 
+        if (meshes.size()<= index)
+        {
+            meshes.push_back(Mesh());
+            
+        }
+        Mesh& newMesh = meshes[index];
+         
         //TODO. Skinned일때만, 아닌경우 조건문 추가 예정
-        D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
-            newMesh.vertexBuffer);
-        newMesh.indexCount = UINT(meshData.indices.size());
-        newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
-        newMesh.stride = UINT(sizeof(SkinnedVertex));
-        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-            newMesh.indexBuffer);
+        if (deferred)
+        {
+            D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
+                newMesh.vertexBuffer);
+            newMesh.indexCount = UINT(meshData.indices.size());
+            newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
+            newMesh.stride = UINT(sizeof(SkinnedVertex));
+            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                newMesh.indexBuffer);
+        }
+
 
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
                 if (!meshData.opacityTextureFilename.empty()) {
                     D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename,
+                        device, deferredContext, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, false,
-                        newMesh.albedoTexture, newMesh.albedoSRV);
+                        newMesh.albedoTexture, newMesh.albedoSRV, deferred);
                 }
                 else {
                     D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename, true,
-                        newMesh.albedoTexture, newMesh.albedoSRV);
+                        device, deferredContext, meshData.albedoTextureFilename, true,
+                        newMesh.albedoTexture, newMesh.albedoSRV, deferred);
                 }
                 MeshBlock.useAlbedoMap = true;
             }
@@ -162,8 +215,8 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         if (!meshData.emissiveTextureFilename.empty()) {
             if (filesystem::exists(meshData.emissiveTextureFilename)) {
                 D3D11Utils::CreateTexture(
-                    device, context, meshData.emissiveTextureFilename, true,
-                    newMesh.emissiveTexture, newMesh.emissiveSRV);
+                    device, deferredContext, meshData.emissiveTextureFilename, true,
+                    newMesh.emissiveTexture, newMesh.emissiveSRV, deferred);
                 MeshBlock.useEmissiveMap = true;
             }
             else {
@@ -175,8 +228,8 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         if (!meshData.normalTextureFilename.empty()) {
             if (filesystem::exists(meshData.normalTextureFilename)) {
                 D3D11Utils::CreateTexture(
-                    device, context, meshData.normalTextureFilename, false,
-                    newMesh.normalTexture, newMesh.normalSRV);
+                    device, deferredContext, meshData.normalTextureFilename, false,
+                    newMesh.normalTexture, newMesh.normalSRV, deferred);
                 MeshBlock.useNormalMap = true;
             }
             else {
@@ -188,8 +241,8 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         if (!meshData.heightTextureFilename.empty()) {
             if (filesystem::exists(meshData.heightTextureFilename)) {
                 D3D11Utils::CreateTexture(
-                    device, context, meshData.heightTextureFilename, false,
-                    newMesh.heightTexture, newMesh.heightSRV);
+                    device, deferredContext, meshData.heightTextureFilename, false,
+                    newMesh.heightTexture, newMesh.heightSRV, deferred);
                 MeshBlock.useHeightMap = true;
             }
             else {
@@ -197,12 +250,12 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                     << " does not exists. Skip texture reading." << endl;
             }
         }
-
+         
         if (!meshData.aoTextureFilename.empty()) {
             if (filesystem::exists(meshData.aoTextureFilename)) {
-                D3D11Utils::CreateTexture(device, context,
+                D3D11Utils::CreateTexture(device, deferredContext,
                     meshData.aoTextureFilename, false,
-                    newMesh.aoTexture, newMesh.aoSRV);
+                    newMesh.aoTexture, newMesh.aoSRV, deferred);
                 MeshBlock.useAOMap = true;
             }
             else {
@@ -220,10 +273,10 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                 filesystem::exists(meshData.roughnessTextureFilename)) {
 
                 D3D11Utils::CreateMetallicRoughnessTexture(
-                    device, context, meshData.metallicTextureFilename,
+                    device, deferredContext, meshData.metallicTextureFilename,
                     meshData.roughnessTextureFilename,
                     newMesh.metallicRoughnessTexture,
-                    newMesh.metallicRoughnessSRV);
+                    newMesh.metallicRoughnessSRV, deferred);
             }
             else {
                 cout << meshData.metallicTextureFilename << " or "
@@ -239,8 +292,8 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         if (!meshData.roughnessTextureFilename.empty()) {
             MeshBlock.useRoughnessMap = true;
         }
-        meshes.push_back(newMesh);
-    }
+        index++;
+    } 
     // Initialize Bounding Box
     {
         MeshBlock.boundingBox = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
@@ -284,6 +337,19 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         D3D11Utils::CreateIndexBuffer(device, meshData.indices,
             MeshBlock.boundingSphereMesh->indexBuffer);
     }
+
+    // 3. 명령 리스트로 마무리
+    if (deferred)
+    {
+        ID3D11CommandList* commandList = nullptr;
+        deferredContext->FinishCommandList(FALSE, &commandList);
+        // 4. 주 스레드에서 Immediate Context를 사용해 명령 리스트 실행
+        return commandList;
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<Mesh>*& OutMesh)
@@ -293,7 +359,7 @@ bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<
     {
         return false;
     }
-    if (MeshMap[key].IsLoading == true)
+    if (MeshMap[key].IsLoading == true || MeshMap[key].IsModelLoading == true)
     {
         return false;
     }

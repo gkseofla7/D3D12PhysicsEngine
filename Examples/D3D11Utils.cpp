@@ -21,8 +21,8 @@
 namespace hlab {
 
 using namespace std;
-using namespace DirectX;
-
+using namespace DirectX; 
+    unordered_map<string, ImageInfo> D3D11Utils::imageMap;
 void CheckResult(HRESULT hr, ID3DBlob *errorBlob) {
     if (FAILED(hr)) {
         // 파일이 없을 경우
@@ -262,7 +262,6 @@ void ReadEXRImage(const std::string filename, std::vector<uint8_t> &image,
 
 void ReadImage(const std::string filename, std::vector<uint8_t> &image,
                int &width, int &height) {
-
     int channels;
 
     unsigned char *img =
@@ -441,49 +440,62 @@ void CreateTextureHelper(ComPtr<ID3D11Device> &device,
 void D3D11Utils::CreateMetallicRoughnessTexture(
     ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
     const std::string metallicFilename, const std::string roughnessFilename,
-    ComPtr<ID3D11Texture2D> &texture, ComPtr<ID3D11ShaderResourceView> &srv) {
+    ComPtr<ID3D11Texture2D> &texture, ComPtr<ID3D11ShaderResourceView> &srv, bool onlyCpu) 
+{
+    string filename = metallicFilename + '_' + roughnessFilename;
+    if (imageMap.find(filename) == imageMap.end())
+    {
+        imageMap[filename] = ImageInfo();
+        // GLTF 방식은 이미 합쳐져 있음
+        if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
+            CreateTexture(device, context, metallicFilename, false, texture, srv);
+        }
+        else {
+            // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
 
-    // GLTF 방식은 이미 합쳐져 있음
-    if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
-        CreateTexture(device, context, metallicFilename, false, texture, srv);
-    } else {
-        // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
+            // ReadImage()를 활용하기 위해서 두 이미지들을 각각 4채널로 변환 후 다시
+            // 3채널로 합치는 방식으로 구현
+            int mWidth = 0, mHeight = 0;
+            int rWidth = 0, rHeight = 0;
+            std::vector<uint8_t> mImage;
+            std::vector<uint8_t> rImage;
 
-        // ReadImage()를 활용하기 위해서 두 이미지들을 각각 4채널로 변환 후 다시
-        // 3채널로 합치는 방식으로 구현
-        int mWidth = 0, mHeight = 0;
-        int rWidth = 0, rHeight = 0;
-        std::vector<uint8_t> mImage;
-        std::vector<uint8_t> rImage;
+            // (거의 없겠지만) 둘 중 하나만 있을 경우도 고려하기 위해 각각 파일명
+            // 확인
+            if (!metallicFilename.empty()) {
+                ReadImage(metallicFilename, mImage, mWidth, mHeight);
+            }
 
-        // (거의 없겠지만) 둘 중 하나만 있을 경우도 고려하기 위해 각각 파일명
-        // 확인
-        if (!metallicFilename.empty()) {
-            ReadImage(metallicFilename, mImage, mWidth, mHeight);
+            if (!roughnessFilename.empty()) {
+                ReadImage(roughnessFilename, rImage, rWidth, rHeight);
+            }
+
+            // 두 이미지의 해상도가 같다고 가정
+            if (!metallicFilename.empty() && !roughnessFilename.empty()) {
+                assert(mWidth == rWidth);
+                assert(mHeight == rHeight);
+            }
+            imageMap[filename].width = mWidth;
+            imageMap[filename].width = mHeight;
+
+            imageMap[filename].image.resize(size_t(mWidth * mHeight) * 4);
+            fill(imageMap[filename].image.begin(), imageMap[filename].image.end(), 0);
+
+            for (size_t i = 0; i < size_t(mWidth * mHeight); i++) {
+                if (rImage.size())
+                    imageMap[filename].image[4 * i + 1] = rImage[4 * i]; // Green = Roughness
+                if (mImage.size())
+                    imageMap[filename].image[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
+            }
         }
 
-        if (!roughnessFilename.empty()) {
-            ReadImage(roughnessFilename, rImage, rWidth, rHeight);
+   
+        if (onlyCpu == false)
+        {
+            CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image,
+                DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
         }
 
-        // 두 이미지의 해상도가 같다고 가정
-        if (!metallicFilename.empty() && !roughnessFilename.empty()) {
-            assert(mWidth == rWidth);
-            assert(mHeight == rHeight);
-        }
-
-        vector<uint8_t> combinedImage(size_t(mWidth * mHeight) * 4);
-        fill(combinedImage.begin(), combinedImage.end(), 0);
-
-        for (size_t i = 0; i < size_t(mWidth * mHeight); i++) {
-            if (rImage.size())
-                combinedImage[4 * i + 1] = rImage[4 * i]; // Green = Roughness
-            if (mImage.size())
-                combinedImage[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
-        }
-
-        CreateTextureHelper(device, context, mWidth, mHeight, combinedImage,
-                            DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
     }
 }
 
@@ -491,24 +503,32 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context,
                                const std::string filename, const bool usSRGB,
                                ComPtr<ID3D11Texture2D> &tex,
-                               ComPtr<ID3D11ShaderResourceView> &srv) {
+                               ComPtr<ID3D11ShaderResourceView> &srv,
+                               bool onlyCpu) {
+    if (imageMap.find(filename) == imageMap.end())
+    {
+        imageMap[filename] = ImageInfo();
+        imageMap[filename];
+        imageMap[filename].pixelFormat =
+            usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    int width = 0, height = 0;
-    std::vector<uint8_t> image;
-    DXGI_FORMAT pixelFormat =
-        usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+        string ext(filename.end() - 3, filename.end());
+        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
-    string ext(filename.end() - 3, filename.end());
-    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-
-    if (ext == "exr") {
-        ReadEXRImage(filename, image, width, height, pixelFormat);
-    } else {
-        ReadImage(filename, image, width, height);
+        if (ext == "exr") {
+            ReadEXRImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height, imageMap[filename].pixelFormat);
+        }
+        else {
+            ReadImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
+        }
+    }
+   
+    if (onlyCpu == false)
+    {
+        CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat, tex,
+            srv);
     }
 
-    CreateTextureHelper(device, context, width, height, image, pixelFormat, tex,
-                        srv);
 }
 
 void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
@@ -517,17 +537,25 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                const std::string opacityFilename,
                                const bool usSRGB,
                                ComPtr<ID3D11Texture2D> &texture,
-                               ComPtr<ID3D11ShaderResourceView> &srv) {
+                               ComPtr<ID3D11ShaderResourceView> &srv,
+                                bool onlyCpu) {
+    string filename = albedoFilename + '_' + opacityFilename;
+    if (imageMap.find(filename) == imageMap.end())
+    {
+        imageMap[filename] = ImageInfo();
+        imageMap[filename];
+        int width = 0, height = 0;
+        std::vector<uint8_t> image;
+        imageMap[filename].pixelFormat =
+            usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 
-    int width = 0, height = 0;
-    std::vector<uint8_t> image;
-    DXGI_FORMAT pixelFormat =
-        usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
-
-    ReadImage(albedoFilename, opacityFilename, image, width, height);
-
-    CreateTextureHelper(device, context, width, height, image, pixelFormat,
-                        texture, srv);
+        ReadImage(albedoFilename, opacityFilename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
+    }
+    if (onlyCpu == false)
+    {
+        CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat,
+            texture, srv);
+    }
 }
 
 void D3D11Utils::CreateUATexture(ComPtr<ID3D11Device> &device, const int width,
@@ -887,7 +915,6 @@ void D3D11Utils::WriteToPngFile(ComPtr<ID3D11Device> &device,
 
     // R8G8B8A8 이라고 가정
     std::vector<uint8_t> pixels(desc.Width * desc.Height * 4);
-
     D3D11_MAPPED_SUBRESOURCE ms;
     context->Map(stagingTexture.Get(), NULL, D3D11_MAP_READ, NULL,
                  &ms); // D3D11_MAP_READ 주의

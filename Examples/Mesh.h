@@ -4,6 +4,7 @@
 #include <d3d11.h>
 #include <iostream>
 #include <vector>
+#include <mutex>
 
 #include <d3d11.h>
 #include <vector>
@@ -45,6 +46,8 @@ struct Mesh {
     UINT vertexCount = 0;
     UINT stride = 0;
     UINT offset = 0;
+
+    //std::mutex g_mutex;
 };
 
 } // namespace hlab
