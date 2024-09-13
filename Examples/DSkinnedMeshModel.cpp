@@ -45,7 +45,7 @@ namespace hlab {
         void DSkinnedMeshModel::UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
             int clipId, int frame, int type) {
-            AnimHelper::UpdateAnimation(device, context, this, clipId, frame);
+            AnimHelper::GetInstance().UpdateAnimation(this, clipId, frame);
         }
 
         void DSkinnedMeshModel::Render(ComPtr<ID3D11DeviceContext>& context) {

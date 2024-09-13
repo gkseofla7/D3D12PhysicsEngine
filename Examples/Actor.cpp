@@ -1,6 +1,7 @@
 #include "Actor.h"
 #include "Camera.h"
 #include "MeshLoadHelper.h"
+#include "ActorStateFactory.h"
 namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
@@ -12,7 +13,7 @@ namespace hlab {
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
     {
-
+        SetState(ActorStateType::Idle);
     }
     bool Actor::MsgProc(WPARAM wParam)
     {
@@ -37,6 +38,9 @@ namespace hlab {
     {
         m_model->Render(context);
     }
-
+    void Actor::SetState(ActorStateType InType)
+    {
+        m_actorState = ActorStateFactory::GetInstance().CreateActorState(InType, shared_from_this());
+    }
 
 }

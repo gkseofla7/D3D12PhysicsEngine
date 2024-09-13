@@ -138,7 +138,7 @@ struct AnimationData {
 
      bool GetBoneTransform(int clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
          //TODO 제거
-        auto& clip = clips[clipId];
+        auto& clip = clipMaps[clipId];
 
         for (int boneId = 0; boneId < boneTransforms.size(); boneId++) {
             // 1일때 상체

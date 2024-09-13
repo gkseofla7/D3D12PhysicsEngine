@@ -3,6 +3,7 @@
 #include "Wizard.h"
 #include "DSkinnedMeshModel.h"
 #include "MeshLoadHelper.h"
+#include "ProjectileManager.h"
 
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
@@ -20,6 +21,9 @@ DaerimGTA::DaerimGTA() :AppBase(){}
 
 bool DaerimGTA::InitScene()
 {
+    AnimHelper::GetInstance().Initialize(m_device, m_context);
+    ProjectileManager::GetInstance().Initialize(this,m_device, m_context);
+
 	AppBase::m_globalConstsCPU.strengthIBL = 0.1f;
 	AppBase::m_globalConstsCPU.lodBias = 0.0f;
      
@@ -108,6 +112,7 @@ bool DaerimGTA::InitScene()
             Matrix::CreateTranslation(center));
         m_wizardActor =
             make_shared<Wizard>(m_device, m_context, wizardModel);
+        m_wizardActor->Initialize(m_device, m_context, wizardModel);
         m_activateActor = m_wizardActor;
         m_actorList.push_back(m_wizardActor); // 리스트에 등록, 이거 왜..?
     }
@@ -120,10 +125,6 @@ void DaerimGTA::InitAnimation()
 {
     //Wizard
     // TODO 테스트를 위해 하드 코딩, 동작 확인후 변경 예정
-    string path = "../Assets/Characters/Mixamo/";
-    AnimHelper::AddAnimPath(1, path);
-    AnimHelper::AddAnimStateToAnim(1, 0, "FightingIdleOnMichelle2.fbx");
-    AnimHelper::AddAnimStateToAnim(1, 1, "Fireball.fbx");
 
 }
 void DaerimGTA::InitPhysics(bool interactive)
@@ -209,7 +210,7 @@ btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
         0.2f, Graphics::volumetricFirePS);
 
     AppBase::m_basicList.push_back(m_fireball);
-    this->m_objects.push_back(m_fireball);
+    m_objects.push_back(m_fireball);
 
     btRigidBody* dynamic = 
         DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f, btVector4(0, 0, 1, 1));
@@ -416,7 +417,7 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 				m_device, m_context, box); // <- 우리 렌더러에 추가
 			m_newObj->m_materialConsts.GetCpu().albedoFactor = Vector3(0.8f);
 			AppBase::m_basicList.push_back(m_newObj);
-			this->m_objects.push_back(m_newObj);
+            m_objects.push_back(m_newObj);
 		}
 	}
 }

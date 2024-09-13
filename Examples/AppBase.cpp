@@ -235,7 +235,7 @@ void AppBase::Update(float dt) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
     for (auto& i : m_actorList) {
-        i->m_model->UpdateConstantBuffers(m_device, m_context);
+        i->GetModel()->UpdateConstantBuffers(m_device, m_context);
     }
 }
 
@@ -315,7 +315,7 @@ void AppBase::RenderDepthOnly() {
         model->Render(m_context);
     }
     for (const auto& actor : m_actorList) {
-        AppBase::SetPipelineState(actor->m_model->GetDepthOnlyPSO());
+        AppBase::SetPipelineState(actor->GetModel()->GetDepthOnlyPSO());
         actor->Render(m_context);
     }
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
@@ -347,7 +347,7 @@ void AppBase::RenderShadowMaps() {
                 }
             }
             for (const auto& actor : m_actorList) {
-                shared_ptr<DModel> model = actor->m_model;
+                shared_ptr<DModel> model = actor->GetModel();
                 if (model->m_castShadow && model->m_isVisible) {
                     AppBase::SetPipelineState(model->GetDepthOnlyPSO());
                     model->Render(m_context);
@@ -393,7 +393,7 @@ void AppBase::RenderOpaqueObjects() {
         model->Render(m_context);
     }
     for (const auto& actor : m_actorList) {
-        shared_ptr<DModel> model = actor->m_model;
+        shared_ptr<DModel> model = actor->GetModel();
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
@@ -442,7 +442,7 @@ void AppBase::RenderMirror() {
             model->Render(m_context);
         }
         for (const auto& actor : m_actorList) {
-            AppBase::SetPipelineState(actor->m_model->GetReflectPSO(m_drawAsWire));
+            AppBase::SetPipelineState(actor->GetModel()->GetReflectPSO(m_drawAsWire));
             actor->Render(m_context);
         }
 

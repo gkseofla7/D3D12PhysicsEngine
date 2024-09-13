@@ -29,8 +29,6 @@ public:
 		btCollisionShape* shape,
 		const btVector3& velocity);
 public:
-	vector<shared_ptr<Model>>
-		m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
 	shared_ptr<BillboardModel> m_fireball;
 	shared_ptr<SkeletalMeshActor> m_character;
 	shared_ptr<Wizard> m_wizardActor;

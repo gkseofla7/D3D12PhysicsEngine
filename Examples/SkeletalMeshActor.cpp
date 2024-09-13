@@ -11,7 +11,7 @@ namespace hlab {
     void SkeletalMeshActor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel>  InModel)
     {
-        //Actor::Initialize(device, context, InModel);
+        Actor::Initialize(device, context, InModel);
     }
     void SkeletalMeshActor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
     {
@@ -20,10 +20,10 @@ namespace hlab {
     void SkeletalMeshActor::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, int clipId,
         int frame, int type) 
     {
-        if (m_model)
-        {
-            m_model->UpdateAnimation(device, context, clipId, frame, type);
-        }
+        //if (m_model)
+        //{
+        //    m_model->UpdateAnimation(device, context, clipId, frame, type);
+        //}
     }
 
     void SkeletalMeshActor::Render(ComPtr<ID3D11DeviceContext>& context)
