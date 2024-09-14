@@ -39,14 +39,14 @@ namespace hlab {
             ComPtr<ID3D11DeviceContext>& context);
         virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
-            int clipId, int frame, int type = 0) {}
+            string clipId, int frame, int type = 0) {}
         virtual GraphicsPSO& GetPSO(const bool wired);
         virtual GraphicsPSO& GetDepthOnlyPSO();
         virtual GraphicsPSO& GetReflectPSO(const bool wired);
 
         virtual void Render(ComPtr<ID3D11DeviceContext>& context);
         virtual void UpdateAnimation(ComPtr<ID3D11DeviceContext>& context,
-            int clipId, int frame, int type);
+            string clipId, int frame, int type);
         virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext>& context);
         virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>& context);
         void UpdateWorldRow(const Matrix& worldRow);

@@ -37,7 +37,7 @@ class BillboardModel : public Model {
         // return wired ? Graphics::defaultWirePSO : fireballPSO;
         return Graphics::defaultWirePSO;
     }
-
+    virtual bool IsPostProcess() { return false; }
   public:
     ConstantBuffer<BillboardConsts> m_billboardConsts;
 

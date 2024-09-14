@@ -401,7 +401,7 @@ void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	btVector3 localInertia(0, 0, 0);
 	if (isDynamic)
 		colShape->calculateLocalInertia(mass, localInertia);
-      
+       
 	for (int i = 0; i < numStacks; i++) 
 	{ 
 		for (int j = 0; j < numWidth - i; j++) 

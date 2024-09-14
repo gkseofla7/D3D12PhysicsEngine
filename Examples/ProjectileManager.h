@@ -8,7 +8,7 @@ class ProjectileManager
 private:
     ProjectileManager() {}
 public:
-    static ProjectileManager GetInstance()
+    static ProjectileManager& GetInstance()
     {
         static ProjectileManager Manager;
         return Manager;

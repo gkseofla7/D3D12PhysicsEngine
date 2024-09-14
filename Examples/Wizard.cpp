@@ -1,65 +1,69 @@
 #include "Wizard.h"
 #include "AnimHelper.h"
+#include "ActorStateFactory.h"
+#include "ActorState.h"
+#include "ProjectileManager.h"
+#include "magic_enum.hpp"
+
 namespace hlab {
 
 Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
 	shared_ptr<DModel> InModel)
     :SkeletalMeshActor(device, context, InModel)
 {
-	Initialize(device, context, InModel);
+	//Initialize(device, context, InModel);
 }
 void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
 	shared_ptr<DModel> InModel)
 {
-    m_model->m_modelId = 1;
+    SkeletalMeshActor::Initialize(device, context,InModel);
 	InitBoundingKey();
-	// TODO. 애니메이션 등록
+    // RandomNumber 받도록 한다.
+    m_model->m_modelId = 1;
+
+    
+    // 애니메이션 관련, 따로 테이블을 만들어서 관리하는게..
+    string path = "../Assets/Characters/Mixamo/";
+    AnimHelper::GetInstance().AddAnimPath(m_model->m_modelId, path);
+    // Idle
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(ActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
+    // Attack
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(ActorStateType::Attack).data(), "Fireball.fbx");
+    // Move
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data(), "Start Walking.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalk).data(), "Strut Walking.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data(), "Stop Walking.fbx");
 }
  
 void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
 {
-    static int state = 0;
+    static const float simToRenderScale = 0.01f;
 	SkeletalMeshActor::Update(device, context, dt);
 
+    m_actorState->Tick();
 
-    // TODO:
-    if (state == 0) {
-        if (m_model != nullptr)
-        {
-            if (m_curFrame == m_model->m_maxFrame) {
-                m_curFrame = 0;
+    if (m_actorState->GetStateType() == ActorStateType::Attack)
+    {
+        static const int FIreBallStartFrame = 115;
+        if (m_actorState->GetFrame() == FIreBallStartFrame) {
+            Vector3 handPos = (GetModel()->m_worldRow).Translation();
+            Vector4 offset = Vector4::Transform(
+                Vector4(0.0f, 0.0f, -0.1f, 0.0f),
+                GetModel()->m_worldRow *
+                accumulatedRootTransform);
+            handPos += Vector3(offset.x, offset.y, offset.z);
 
-            }
+            Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
+            dir = Vector4::Transform(
+                dir, GetModel()->m_worldRow *
+                accumulatedRootTransform);
+            dir.Normalize();
+            dir *= 1.5f / simToRenderScale;
+            // 직접 만드는것보단 요청하는게..
+            ProjectileManager::GetInstance().CreateProjectile(handPos,
+                5, Vector3(dir.x, dir.y, dir.z));
         }
-
     }
-    //// 델리게이트로 끝났을 경우 쏴주는게,,,ㅋㅋ or 그냥 마무리 됐다고 알려주는
-    //else if (state == 1) {
-    //    //if (frameCount ==
-    //        //m_character->m_aniData.clips[1].keys[0].size()) {
-    //    //    frameCount = 0;
-    //    //    state = 0;
-
-    //    //}
-    //    if (frameCount == 115) {
-    //        Vector3 handPos = (m_character->m_worldRow).Translation();
-    //        Vector4 offset = Vector4::Transform(
-    //            Vector4(0.0f, 0.0f, -0.1f, 0.0f),
-    //            m_character->m_worldRow *
-    //            m_character->m_aniData.accumulatedRootTransform);
-    //        handPos += Vector3(offset.x, offset.y, offset.z);
-
-    //        Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
-    //        dir = Vector4::Transform(
-    //            dir, m_character->m_worldRow *
-    //            m_character->m_aniData.accumulatedRootTransform);
-    //        dir.Normalize();
-    //        dir *= 1.5f / m_simToRenderScale;
-    //        CreateDynamic(PxTransform(PxVec3(handPos.x, handPos.y, handPos.z) /
-    //            m_simToRenderScale),
-    //            PxSphereGeometry(5), PxVec3(dir.x, dir.y, dir.z));
-    //    }
-    //}
     m_curFrame += 1;
 }
 void Wizard::InitBoundingKey()
@@ -70,10 +74,10 @@ void Wizard::InitBoundingKey()
 
 void Wizard::ShotFireball()
 {
-	if (GetActorState() == ActorState::SpecialState)
-	{
-		return;
-	}
-	cout << "Fireball" << endl;
+    if (m_actorState->GetStateType() == ActorStateType::Idle)
+    {
+        m_actorState = ActorStateFactory::GetInstance().CreateActorState(ActorStateType::Attack, shared_from_this());
+    }	
 }
+
 }

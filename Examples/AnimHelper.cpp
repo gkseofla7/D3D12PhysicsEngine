@@ -29,7 +29,7 @@ void AnimHelper::AddAnimPath(int InActorId, string InPathName)
 {
 	m_pathMap[InActorId] = InPathName;
 }
-void AnimHelper::AddAnimStateToAnim(int InActorId,int InState, string InAnimName)
+void AnimHelper::AddAnimStateToAnim(int InActorId,string InState, string InAnimName)
 {
 	// 내 생각엔 단 한번 해주는게
 	m_animStateToAnim[InActorId].insert({ InState,InAnimName});
@@ -40,7 +40,7 @@ AnimationData GetAnimationFromFile(string path,string name)
 		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
-bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor,int InState,
+bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 	int frame, int type)
 { 
 	if (bInitialize == false)

@@ -18,11 +18,6 @@ namespace hlab {
 	}
 	void IdleState::Finish()
 	{
-
-	}
-	// 인풋 받아 리천
-	ActorStateType IdleState::Transition()
-	{
-		return ActorStateType::Idle;
+		ActorState::Finish();
 	}
 }

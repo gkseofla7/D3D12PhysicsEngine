@@ -3,15 +3,7 @@
 #include "Actor.h"
 
 namespace hlab {
-    enum CommonAnimState {
-        Idle = 0,
-        IdleToWalk = 1,
-        Walking = 2,
-        WalkingBackward = 3,
-        WalkingToIdle = 4,
-        Specail = 5,
-    };
-
+    class ActorState;
 class SkeletalMeshActor : public Actor {
 public:
     // 입력 관련 정보는 따로 관리하도록 하자, State랑 Animation 분리가 필요하다고 본다.
@@ -59,5 +51,6 @@ public:
     int m_curFrame = 0;
 private:
     int m_state = 0;
+
 };
 } // namespace hlab

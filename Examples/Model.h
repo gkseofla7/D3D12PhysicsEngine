@@ -56,7 +56,7 @@ class Model {
     virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
     virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context);
     void UpdateWorldRow(const Matrix &worldRow);
-
+    virtual bool IsPostProcess() { return true; }
   public:
     Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
     Matrix m_worldITRow = Matrix(); // InverseTranspose

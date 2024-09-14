@@ -20,20 +20,20 @@ public:
 
 	virtual void Initialize() = 0;
 	virtual void Tick();
-	virtual void Finish() = 0;
+	virtual void Finish();
 	// 인풋 받아 리천
-	virtual ActorStateType Transition() = 0;
+	virtual void Transition();
+	virtual void UpdateAnimation();
 
 	ActorStateType GetStateType() { return m_state; }
 	int GetFrame() { return m_frame; }
 protected:
 	ActorStateType m_state;
 	bool m_loopState = false;
-	ActorStateType m_afterState;
-private:
 
-	bool m_finished = false;
 	std::weak_ptr<Actor> m_actor;
+private:
+	bool m_finished = false;
 	int m_frame = 0;
 };
 }

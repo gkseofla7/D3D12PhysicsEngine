@@ -48,7 +48,7 @@ struct AnimationData {
     vector<Matrix> boneTransforms;
     vector<AnimationClip> clips;
     //새로 추가, 완성되면 clips를 제거
-    map<int, AnimationClip> clipMaps;
+    map<string, AnimationClip> clipMaps;
     Matrix defaultTransform;
     Matrix rootTransform = Matrix();
     Matrix accumulatedRootTransform = Matrix();
@@ -136,7 +136,7 @@ struct AnimationData {
         }
     }
 
-     bool GetBoneTransform(int clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
+     bool GetBoneTransform(string clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
          //TODO 제거
         auto& clip = clipMaps[clipId];
 

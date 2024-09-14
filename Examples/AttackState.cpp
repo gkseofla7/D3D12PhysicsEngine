@@ -1,4 +1,5 @@
 #include "AttackState.h"
+#include "Actor.h"
 
 namespace hlab {
 
@@ -7,7 +8,6 @@ namespace hlab {
 	{
 		m_state = ActorStateType::Attack;
 		m_loopState = false;
-		m_afterState = ActorStateType::Idle;
 	}
 	void AttackState::Initialize()
 	{
@@ -19,11 +19,13 @@ namespace hlab {
 	}
 	void AttackState::Finish()
 	{
-
+		ActorState::Finish();
+		std::shared_ptr<Actor> actorLock = m_actor.lock();
+		actorLock->SetState(ActorStateType::Idle);
 	}
 	// 인풋 받아 리천
-	ActorStateType AttackState::Transition()
+	void AttackState::Transition()
 	{
-		return ActorStateType::Idle;
+		Finish();
 	}
 }

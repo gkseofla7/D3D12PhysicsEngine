@@ -44,7 +44,7 @@ namespace hlab {
 
         virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
-            int clipId, int frame, int type = 0) override;
+            string clipId, int frame, int type = 0) override;
 
         virtual void Render(ComPtr<ID3D11DeviceContext>& context) override;
 

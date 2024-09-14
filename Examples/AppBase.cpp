@@ -311,6 +311,10 @@ void AppBase::RenderDepthOnly() {
                                      1.0f, 0);
     AppBase::SetGlobalConsts(m_globalConstsGPU);
     for (const auto &model : m_basicList) {
+        if (model->IsPostProcess() == false)
+        {
+            continue;
+        }
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }

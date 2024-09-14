@@ -26,14 +26,14 @@ public:
 	static AnimHelper& GetInstance();
 	void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	void AddAnimPath(int InActorId, string InPathName);
-	void AddAnimStateToAnim(int InActorId, int InState, string InAnimName);
-	bool UpdateAnimation(DSkinnedMeshModel* InActor, int InState,
+	void AddAnimStateToAnim(int InActorId, string InState, string InAnimName);
+	bool UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 		int frame, int type = 0);
 private:
 	ComPtr<ID3D11Device> m_device;
 	ComPtr<ID3D11DeviceContext> m_context;
 
-	map<int ,map<int, string>> m_animStateToAnim;
+	map<int ,map<string, string>> m_animStateToAnim;
 	map<int, string> m_pathMap;
 	map<int, AnimationBlock> m_animDatas;
 	

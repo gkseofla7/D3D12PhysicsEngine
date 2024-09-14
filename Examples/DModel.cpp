@@ -127,7 +127,7 @@ namespace hlab {
         }
     }
 
-    void DModel::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, int clipId,
+    void DModel::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, string clipId,
         int frame, int type = 0) {
         // class SkinnedMeshModel¿¡¼­ override
         cout << "Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, "

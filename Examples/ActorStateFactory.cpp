@@ -14,6 +14,10 @@ std::shared_ptr<ActorState> ActorStateFactory::CreateActorState(ActorStateType I
 	{
 		return std::make_shared<AttackState>(InActor);
 	}
+	else if (InType == ActorStateType::Move)
+	{
+		return std::make_shared<IdleState>();
+	}
 	return std::make_shared<IdleState>();
 }
 }

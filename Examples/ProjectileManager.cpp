@@ -8,12 +8,12 @@
 #include "bullet/BulletCollision/btBulletCollisionCommon.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.h"
 namespace hlab {
-    void ProjectileManager::Initialize(AppBase* InBase, ComPtr<ID3D11Device> InDevice, ComPtr<ID3D11DeviceContext> InContext)
-    {
-        App = InBase; 
-        m_device = InDevice;
-        m_context = InContext;
-    }
+void ProjectileManager::Initialize(AppBase* InBase, ComPtr<ID3D11Device> InDevice, ComPtr<ID3D11DeviceContext> InContext)
+{
+    App = InBase; 
+    m_device = InDevice;
+    m_context = InContext;
+}
 btRigidBody* ProjectileManager::CreateProjectile(const Vector3& tV,
         float InRadius,
         const Vector3& Invelocity)

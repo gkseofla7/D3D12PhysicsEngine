@@ -1,5 +1,6 @@
 #pragma once
 #include "SkeletalMeshActor.h"
+
 namespace hlab {
 class Wizard : public SkeletalMeshActor
 {
@@ -10,6 +11,7 @@ public:
 		shared_ptr<DModel> InModel) override;
 	void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt);
 private:
+	// TODO. Actor로 옮길 예정
 	virtual void InitBoundingKey() override;
 	void ShotFireball();
 
