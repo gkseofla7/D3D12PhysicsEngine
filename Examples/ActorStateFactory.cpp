@@ -3,6 +3,7 @@
 #include "IdleState.h"
 #include "AttackState.h"
 #include "Actor.h"
+#include "MoveState.h"
 namespace hlab {
 std::shared_ptr<ActorState> ActorStateFactory::CreateActorState(ActorStateType InType, std::shared_ptr<Actor> InActor)
 {
@@ -16,8 +17,8 @@ std::shared_ptr<ActorState> ActorStateFactory::CreateActorState(ActorStateType I
 	}
 	else if (InType == ActorStateType::Move)
 	{
-		return std::make_shared<IdleState>();
+		return std::make_shared<MoveState>(InActor);
 	}
-	return std::make_shared<IdleState>();
+	return std::make_shared<IdleState>(InActor);
 }
 }

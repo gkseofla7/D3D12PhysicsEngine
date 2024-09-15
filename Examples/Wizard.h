@@ -14,7 +14,8 @@ private:
 	// TODO. Actor로 옮길 예정
 	virtual void InitBoundingKey() override;
 	void ShotFireball();
-
+	void WalkStart();
+	void WalkEnd();
 private:
 
 };

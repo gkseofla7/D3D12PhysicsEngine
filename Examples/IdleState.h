@@ -11,7 +11,7 @@ public:
 	IdleState(std::weak_ptr<Actor> InActor);
 
 	virtual void Initialize();
-	virtual void Tick();
+	virtual void Tick(float dt);
 	virtual void Finish();
 };
 

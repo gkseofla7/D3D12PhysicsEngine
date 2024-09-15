@@ -40,6 +40,8 @@ namespace hlab {
         virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
             string clipId, int frame, int type = 0) {}
+        virtual void UpdatePosition(const Vector3& InDelta) {}
+        virtual void UpdateVelocity(float dt) {}
         virtual GraphicsPSO& GetPSO(const bool wired);
         virtual GraphicsPSO& GetDepthOnlyPSO();
         virtual GraphicsPSO& GetReflectPSO(const bool wired);

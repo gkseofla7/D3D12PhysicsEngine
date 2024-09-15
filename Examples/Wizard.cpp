@@ -30,17 +30,16 @@ void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext
     // Attack
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(ActorStateType::Attack).data(), "Fireball.fbx");
     // Move
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data(), "Start Walking.fbx");
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalk).data(), "Strut Walking.fbx");
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data(), "Stop Walking.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalk).data(), "Walking.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
 }
  
 void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
 {
+    SkeletalMeshActor::Update(device, context, dt);
     static const float simToRenderScale = 0.01f;
-	SkeletalMeshActor::Update(device, context, dt);
-
-    m_actorState->Tick();
+    m_actorState->Tick(dt);
 
     if (m_actorState->GetStateType() == ActorStateType::Attack)
     {
@@ -69,15 +68,33 @@ void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& c
 void Wizard::InitBoundingKey()
 {
 	std::function<void()> ShotFireballFunc = [this]() { this->ShotFireball();};
-	m_keyBinding.insert({ VK_SPACE, ShotFireballFunc });
+    m_keyBindingPress.insert({ VK_SPACE, ShotFireballFunc });
+    // 걷기 관련
+    std::function<void()> WalkPressFunc = [this]() { this->WalkStart(); };
+    m_keyBindingPress.insert({ VK_UP, WalkPressFunc });
+    std::function<void()> WalkReleaseFunc = [this]() { this->WalkEnd(); };
+    m_keyBindingRelease.insert({ VK_UP, WalkReleaseFunc });
 }
 
 void Wizard::ShotFireball()
 {
-    if (m_actorState->GetStateType() == ActorStateType::Idle)
+    if (m_actorStateType == ActorStateType::Idle)
     {
-        m_actorState = ActorStateFactory::GetInstance().CreateActorState(ActorStateType::Attack, shared_from_this());
+        SetState(ActorStateType::Attack);
     }	
 }
-
+void Wizard::WalkStart()
+{
+    if (m_actorState->GetStateType() == ActorStateType::Idle)
+    {
+        SetState(ActorStateType::Move);
+    }
+}
+void Wizard::WalkEnd()
+{
+    if (m_actorState->GetStateType() == ActorStateType::Move)
+    {// TODO 이거 수정 필요
+        m_actorState->Transition();
+    }
+}
 }

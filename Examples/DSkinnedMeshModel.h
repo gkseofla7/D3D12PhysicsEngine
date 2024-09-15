@@ -52,13 +52,21 @@ namespace hlab {
         // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
         // virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>
         // &context);
-        void UpdateVelocity(float dt) 
+        virtual void UpdatePosition(const Vector3& InDelta)
         {
-            //Vector3 prevPos = m_prevRootTransform.Translation();
-            //Vector3 curPos = m_aniData.accumulatedRootTransform.Translation();
+            m_accumulatedRootTransform =
+                Matrix::CreateTranslation(InDelta) *
+                m_accumulatedRootTransform;
+        }
 
-            //m_velocity = (curPos - prevPos).Length() / dt;
-            //m_prevRootTransform = m_aniData.accumulatedRootTransform;
+        virtual void UpdateVelocity(float dt) 
+        {
+            // 루트모션
+            Vector3 prevPos = m_prevRootTransform.Translation();
+            Vector3 curPos = m_accumulatedRootTransform.Translation();
+
+            m_velocity = (curPos - prevPos).Length() / dt;
+            m_prevRootTransform = m_accumulatedRootTransform;
         }
     public:
         // ConstantBuffer<SkinnedConsts> m_skinnedConsts;

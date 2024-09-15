@@ -54,9 +54,9 @@ bool Ex1701_SkeletalAnimation::InitScene() {
         mesh.albedoTextureFilename = path + "MetalPlates003_1K-PNG_Color.png";
         mesh.emissiveTextureFilename = "";
         mesh.aoTextureFilename = ""; // path + "stringy_marble_ao.png";
-        mesh.metallicTextureFilename = path + "MetalPlates003_1K-PNG_Metalness.png";
-        mesh.normalTextureFilename = path + "MetalPlates003_1K-PNG_NormalDX.png";
-        mesh.roughnessTextureFilename = path + "MetalPlates003_1K-PNG_Roughness.png";
+        //mesh.metallicTextureFilename = path + "MetalPlates003_1K-PNG_Metalness.png";
+        //mesh.normalTextureFilename = path + "MetalPlates003_1K-PNG_NormalDX.png";
+        //mesh.roughnessTextureFilename = path + "MetalPlates003_1K-PNG_Roughness.png";
 
         m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
         m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.7f);

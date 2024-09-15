@@ -2,6 +2,7 @@
 #include "Camera.h"
 #include "MeshLoadHelper.h"
 #include "ActorStateFactory.h"
+#include "ActorState.h"
 namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
@@ -15,15 +16,40 @@ namespace hlab {
     {
         SetState(ActorStateType::Idle);
     }
-    bool Actor::MsgProc(WPARAM wParam)
+    bool Actor::MsgProc(WPARAM wParam, bool bPress)
     {
-        if (m_keyBinding.find(wParam) != m_keyBinding.end())
+        if (bPress)
         {
-            m_keyBinding[wParam]();
-            return true;
+            if (m_keyBindingPress.find(wParam) != m_keyBindingPress.end())
+            {
+                m_keyBindingPress[wParam]();
+                return true;
+            }
         }
+        else
+        {
+            if (m_keyBindingRelease.find(wParam) != m_keyBindingRelease.end())
+            {
+                m_keyBindingRelease[wParam]();
+                return true;
+            }
+        }
+
         return false;
     }
+    void Actor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
+    {
+        UpdateState();
+    }
+    void Actor::UpdatePosition(const Vector3& InDelta)
+    {
+        m_model->UpdatePosition(InDelta);
+    }
+    void Actor::UpdateVelocity(float dt)
+    {
+        m_model->UpdateVelocity(dt);
+    }
+
     //Camera ฐüทร
     void Actor::ActiveCaemera()
     {
@@ -40,7 +66,14 @@ namespace hlab {
     }
     void Actor::SetState(ActorStateType InType)
     {
-        m_actorState = ActorStateFactory::GetInstance().CreateActorState(InType, shared_from_this());
+        m_actorStateType = InType;
+        
     }
-
+    void Actor::UpdateState()
+    {
+        if (m_actorState.get() == nullptr ||m_actorState.get()->GetStateType() != m_actorStateType)
+        {
+            m_actorState = ActorStateFactory::GetInstance().CreateActorState(m_actorStateType, shared_from_this());
+        }
+    }
 }

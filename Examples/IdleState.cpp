@@ -12,9 +12,9 @@ namespace hlab {
 	{
 		m_loopState = true;
 	}
-	void IdleState::Tick()
+	void IdleState::Tick(float dt)
 	{
-		ActorState::Tick();
+		ActorState::Tick(dt);
 	}
 	void IdleState::Finish()
 	{

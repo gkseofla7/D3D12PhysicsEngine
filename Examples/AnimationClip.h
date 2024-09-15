@@ -136,7 +136,7 @@ struct AnimationData {
         }
     }
 
-     bool GetBoneTransform(string clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, int type = 0) {
+     bool GetBoneTransform(string clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, bool bInit, int type = 0) {
          //TODO 제거
         auto& clip = clipMaps[clipId];
 
@@ -163,14 +163,17 @@ struct AnimationData {
                 ? OutBoneTransform[parentIdx]
                 : InRootTransform;
 
-            // keys.size()가 0일 경우에는 Identity 변환
             auto key = keys.size() > 0
                 ? keys[frame % keys.size()]
                 : AnimationClip::Key(); // key가 reference 아님
-
             // Root일 경우
             if (parentIdx < 0) {
-                if (frame != 0) {
+                if (bInit)
+                {
+                    prevPos = key.pos;
+                }
+                if (frame != 0) 
+                {
                     InRootTransform =
                         Matrix::CreateTranslation(key.pos - prevPos) *
                         InRootTransform;

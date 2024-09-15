@@ -15,7 +15,7 @@ namespace hlab {
     }
     void SkeletalMeshActor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
     {
-        UpdateAnimation(device, context, m_state, m_curFrame);
+        Actor::Update(device, context, dt);
     }
     void SkeletalMeshActor::UpdateAnimation(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, int clipId,
         int frame, int type) 

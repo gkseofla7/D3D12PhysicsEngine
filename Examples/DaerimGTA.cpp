@@ -153,9 +153,9 @@ void DaerimGTA::InitPhysics(bool interactive)
         DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld, mass, groundTransform, groundShape, 0.0f, btVector4(0, 0, 1, 1));
 	}
 
-	for (unsigned int i = 0; i < 5; i++)
+	for (unsigned int i = 0; i < 1; i++)
 	{
-		CreateStack(btTransform(btQuaternion(),btVector3(0, 0, stackZ -= 15.0f)), 8, 20, 2.5f);
+        //CreateStack(btTransform(btQuaternion(), btVector3(0, 0, stackZ -= 15.0f)), 8, 20, 2.5f);
 	} 
 }
 void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
@@ -168,7 +168,13 @@ void DaerimGTA::Update(float dt) {
     m_wizardActor->Update(m_device,m_context,dt);
    
     // 이하 물리엔진 관련
-    StepSimulation(dt);
+    static int a = 0;
+    a++;
+    if (a >= 50)
+    {
+        StepSimulation(dt);
+    }
+    
     int count = 0;
     int numCollisionObjects = m_dynamicsWorld->getNumCollisionObjects();
     {
@@ -373,9 +379,9 @@ void DaerimGTA::UpdateGUI() {
         ImGui::TreePop();
     }
 }
+
 void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
 	int numWidth, btScalar halfExtent) {
-
 	vector<MeshData> box = { GeometryGenerator::MakeBox(halfExtent) };
 	btTransform groundTransform;
 	groundTransform.setIdentity();

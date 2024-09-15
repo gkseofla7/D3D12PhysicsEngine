@@ -19,7 +19,7 @@ public:
 	ActorState(std::weak_ptr<Actor> InActor);
 
 	virtual void Initialize() = 0;
-	virtual void Tick();
+	virtual void Tick(float dt);
 	virtual void Finish();
 	// 인풋 받아 리천
 	virtual void Transition();
@@ -30,10 +30,11 @@ public:
 protected:
 	ActorStateType m_state;
 	bool m_loopState = false;
+	int m_frame = 0;
 
 	std::weak_ptr<Actor> m_actor;
 private:
 	bool m_finished = false;
-	int m_frame = 0;
+	
 };
 }

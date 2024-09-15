@@ -16,15 +16,21 @@ public:
 	virtual void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
 		shared_ptr<DModel> InModel);
 	//TODO. device랑 context를 안건네줄 방법을 찾아보자..
-	virtual void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt) {}
+	virtual void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt);
+	void UpdatePosition(const Vector3& InDelta);
+	void UpdateVelocity(float dt);
+	void SetState(ActorStateType InType);
 	void ActiveCaemera();
-	bool MsgProc(WPARAM wParam);
+
+	bool MsgProc(WPARAM wParam, bool bPress);
 	void UpdateCemeraCorrection(Vector3 deltaPos);
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 
-	void SetState(ActorStateType InType);
 	shared_ptr<DModel> GetModel() { return m_model; }
 	shared_ptr<ActorState> GetState() { return m_actorState; }
+private:
+	void UpdateState();
+
 public:
 	//ActorState GetActorState() { return m_actorState; }
 protected:
@@ -37,11 +43,13 @@ protected:
 	
 	Matrix m_cameraCorrection;
 
-	std::map<WPARAM, function<void()>> m_keyBinding;
+	std::map<WPARAM, function<void()>> m_keyBindingPress;
+	std::map<WPARAM, function<void()>> m_keyBindingRelease;
 	//ActorState m_actorState;
 protected:
 	// ConstantBuffer<SkinnedConsts> m_skinnedConsts;
 	shared_ptr<ActorState> m_actorState;
+	ActorStateType m_actorStateType;
 	shared_ptr<DModel> m_model;
 	
 };

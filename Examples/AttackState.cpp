@@ -13,9 +13,9 @@ namespace hlab {
 	{
 
 	}
-	void AttackState::Tick()
+	void AttackState::Tick(float dt)
 	{ 
-		ActorState::Tick();
+		ActorState::Tick(dt);
 	}
 	void AttackState::Finish()
 	{

@@ -584,7 +584,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     case WM_KEYDOWN:
         if (m_activateActor!=nullptr)
         {
-            if (m_activateActor->MsgProc(wParam))
+            if (m_activateActor->MsgProc(wParam, true))
             {
                 return true;
             }
@@ -598,6 +598,13 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
         break;
     case WM_KEYUP:
+        if (m_activateActor != nullptr)
+        {
+            if (m_activateActor->MsgProc(wParam, false))
+            {
+                return true;
+            }
+        }
         if (wParam == 'F') { // f키 일인칭 시점
             m_camera.m_useFirstPersonView = !m_camera.m_useFirstPersonView;
         }
