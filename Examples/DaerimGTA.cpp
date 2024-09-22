@@ -137,10 +137,10 @@ void DaerimGTA::InitPhysics(bool interactive)
 
 	///create a few basic rigid bodies
 	// TODO. 두번째 파라미터 어디에..
-	btStaticPlaneShape* groundShape = new btStaticPlaneShape(btVector3(0, 1, 0), 0);
+	btStaticPlaneShape* groundShape = new btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), btScalar(1.0f));
 
 	//groundShape->initializePolyhedralFeatures();
-	//btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),50);
+	//btCollisionShape* groundShape = new btStaticPlaneShape(btVector3(0,1,0),1);
      
 	m_collisionShapes.push_back(groundShape);
 
@@ -380,7 +380,7 @@ void DaerimGTA::UpdateGUI() {
     }
 }
 
-void DaerimGTA::CreateStack(const btTransform& t, int numStacks,
+void DaerimGTA::CreateStack(const btTransform t, int numStacks,
 	int numWidth, btScalar halfExtent) {
 	vector<MeshData> box = { GeometryGenerator::MakeBox(halfExtent) };
 	btTransform groundTransform;

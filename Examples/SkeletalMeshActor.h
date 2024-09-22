@@ -4,6 +4,7 @@
 
 namespace hlab {
     class ActorState;
+    class DSkinnedMeshModel;
 class SkeletalMeshActor : public Actor {
 public:
     // 입력 관련 정보는 따로 관리하도록 하자, State랑 Animation 분리가 필요하다고 본다.
@@ -39,6 +40,8 @@ public:
         //m_velocity = (curPos - prevPos).Length() / dt;
         //m_prevRootTransform = m_aniData.accumulatedRootTransform;
     }
+
+    virtual shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel() override;
 public:
     // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
     StructuredBuffer<Matrix> m_boneTransforms;

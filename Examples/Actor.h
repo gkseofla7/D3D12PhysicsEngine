@@ -7,6 +7,7 @@ namespace hlab {
 	using std::function;
 	class DModel;
 	class ActorState;
+	class DSkinnedMeshModel;
 	//using std::map;
 class Actor : public std::enable_shared_from_this<Actor> {
 public:
@@ -27,6 +28,7 @@ public:
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 
 	shared_ptr<DModel> GetModel() { return m_model; }
+	virtual shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel() { return nullptr; };
 	shared_ptr<ActorState> GetState() { return m_actorState; }
 private:
 	void UpdateState();

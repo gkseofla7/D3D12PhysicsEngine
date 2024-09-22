@@ -3,6 +3,7 @@
 #include "ActorStateFactory.h"
 #include "ActorState.h"
 #include "ProjectileManager.h"
+#include "DSkinnedMeshModel.h"
 #include "magic_enum.hpp"
 
 namespace hlab {
@@ -45,22 +46,24 @@ void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& c
     {
         static const int FIreBallStartFrame = 115;
         if (m_actorState->GetFrame() == FIreBallStartFrame) {
-            Vector3 handPos = (GetModel()->m_worldRow).Translation();
+            Matrix a = GetSkinnedMeshModel().get()->m_accumulatedRootTransform;
+            //Vector3 handPos = (GetModel()->m_worldRow).Translation();
+            Vector3 handPos = (GetSkinnedMeshModel().get()->m_accumulatedRootTransform).Translation();
             Vector4 offset = Vector4::Transform(
                 Vector4(0.0f, 0.0f, -0.1f, 0.0f),
                 GetModel()->m_worldRow *
-                accumulatedRootTransform);
-            handPos += Vector3(offset.x, offset.y, offset.z);
+                GetSkinnedMeshModel().get()->m_accumulatedRootTransform);
+            //handPos += Vector3(offset.x, offset.y, offset.z);
 
             Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
             dir = Vector4::Transform(
                 dir, GetModel()->m_worldRow *
-                accumulatedRootTransform);
+                GetSkinnedMeshModel().get()->m_accumulatedRootTransform);
             dir.Normalize();
             dir *= 1.5f / simToRenderScale;
             // 직접 만드는것보단 요청하는게..
             ProjectileManager::GetInstance().CreateProjectile(handPos,
-                5, Vector3(dir.x, dir.y, dir.z));
+                50, Vector3(dir.x, dir.y, dir.z));
         }
     }
     m_curFrame += 1;
@@ -93,8 +96,8 @@ void Wizard::WalkStart()
 void Wizard::WalkEnd()
 {
     if (m_actorState->GetStateType() == ActorStateType::Move)
-    {// TODO 이거 수정 필요
-        m_actorState->Transition();
+    {
+        m_actorState->Finish();
     }
 }
 }

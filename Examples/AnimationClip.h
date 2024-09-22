@@ -30,7 +30,49 @@ struct AnimationClip {
                    Matrix::CreateTranslation(pos);
         }
     };
+    // 복사 생성자
+    AnimationClip() {}
+    AnimationClip(const AnimationClip& other)
+        : name(other.name), keys(other.keys), numChannels(other.numChannels),
+        numKeys(other.numKeys), duration(other.duration), ticksPerSec(other.ticksPerSec)
+    {
+        // 깊은 복사 수행
+    }
 
+    // 복사 대입 연산자
+    AnimationClip& operator=(const AnimationClip& other) {
+        if (this != &other) {
+            name = other.name;               // 깊은 복사
+            keys = other.keys;               // vector는 깊은 복사 수행
+            numChannels = other.numChannels; // 기본형 복사
+            numKeys = other.numKeys;         // 기본형 복사
+            duration = other.duration;       // 기본형 복사
+            ticksPerSec = other.ticksPerSec; // 기본형 복사
+        }
+        return *this;
+    }
+    // 이동 대입 연산자
+    AnimationClip& operator=(AnimationClip&& other) noexcept {
+        if (this != &other) {  // 자기 자신에게 대입하는지 확인 (self-assignment 방지)
+            // 기존 리소스를 정리할 필요가 있다면 정리
+            // name과 keys는 자동으로 관리되므로 특별한 해제는 필요 없음
+
+            // 멤버들에 대해 이동 대입 연산자 수행
+            name = std::move(other.name);         // string은 이동 가능
+            keys = std::move(other.keys);         // vector는 이동 가능
+            numChannels = other.numChannels;      // 기본형은 이동 필요 없음
+            numKeys = other.numKeys;              // 기본형은 이동 필요 없음
+            duration = other.duration;            // 기본형은 이동 필요 없음
+            ticksPerSec = other.ticksPerSec;      // 기본형은 이동 필요 없음
+
+            // other 객체를 초기화 상태로 설정할 수 있음 (선택 사항)
+            other.numChannels = 0;
+            other.numKeys = 0;
+            other.duration = 0.0;
+            other.ticksPerSec = 0.0;
+        }
+        return *this;  // 자기 자신 반환
+    }
     string name;              // Name of this animation clip
     vector<vector<Key>> keys; // m_key[boneIdx][frameIdx]
     int numChannels;          // Number of bones

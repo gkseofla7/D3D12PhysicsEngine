@@ -59,7 +59,6 @@ namespace hlab {
     {
         m_cameraCorrection = Matrix::CreateTranslation(deltaPos);
     }
-
     void Actor::Render(ComPtr<ID3D11DeviceContext>& context)
     {
         m_model->Render(context);
@@ -74,6 +73,7 @@ namespace hlab {
         if (m_actorState.get() == nullptr ||m_actorState.get()->GetStateType() != m_actorStateType)
         {
             m_actorState = ActorStateFactory::GetInstance().CreateActorState(m_actorStateType, shared_from_this());
+            m_actorState->Initialize();
         }
     }
 }

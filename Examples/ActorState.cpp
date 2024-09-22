@@ -8,7 +8,8 @@
 namespace hlab {
 
 ActorState::ActorState(std::weak_ptr<Actor> InActor)
-{	m_actor = InActor;
+{	
+	m_actor = InActor;
 }
 void ActorState::Tick(float dt)
 {

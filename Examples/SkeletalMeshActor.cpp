@@ -1,5 +1,5 @@
 #include"SkeletalMeshActor.h"
-#include "SkinnedMeshModel.h"
+#include "DSkinnedMeshModel.h"
 #include "AnimHelper.h"
 
 namespace hlab {
@@ -38,6 +38,15 @@ namespace hlab {
         // Model::Render(.)를 같이 사용 가능
         Actor::Render(context);
     };
+
+    shared_ptr<DSkinnedMeshModel> SkeletalMeshActor::GetSkinnedMeshModel()
+    {
+        if (std::shared_ptr<DSkinnedMeshModel> derivedPtr = std::dynamic_pointer_cast<DSkinnedMeshModel>(GetModel()))
+        {
+            return derivedPtr;
+        }
+        return nullptr;
+    }
 }
 
 //void SkeletalMeshActor::UpdateAnimation(ComPtr<ID3D11DeviceContext> m_context, float dt, bool* m_keyPressed)

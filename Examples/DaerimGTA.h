@@ -23,7 +23,7 @@ public:
 	void Render() override;
 
 	void StepSimulation(float deltaTime);
-	void CreateStack(const btTransform& t, int numStacks, int numSlices,
+	void CreateStack(const btTransform t, int numStacks, int numSlices,
 		btScalar halfExtent);
 	btRigidBody* CreateDynamic(const btTransform& t,
 		btCollisionShape* shape,

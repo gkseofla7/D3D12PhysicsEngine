@@ -54,6 +54,9 @@ namespace hlab {
         // &context);
         virtual void UpdatePosition(const Vector3& InDelta)
         {
+/*            m_accumulatedRootTransform =
+                Matrix::CreateTranslation(InDelta) *
+                m_accumulatedRootTransform;    */       
             m_accumulatedRootTransform =
                 Matrix::CreateTranslation(InDelta) *
                 m_accumulatedRootTransform;

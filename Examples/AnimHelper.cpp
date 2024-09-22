@@ -40,6 +40,66 @@ AnimationData GetAnimationFromFile(string path,string name)
 		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
+bool AnimHelper::LoadAnimation(DSkinnedMeshModel* InActor, string InState)
+{
+	bool bInit;
+	return LoadAnimation(InActor, InState, bInit);
+}
+bool AnimHelper::LoadAnimation(DSkinnedMeshModel* InActor, string InState, bool& bInit)
+{
+	if (bInitialize == false)
+	{
+		return false;
+	}
+	bInit = false;
+	//비동기 로딩하도록 한다.
+	int ActorId = InActor->m_modelId;
+	const string& path = m_pathMap[ActorId];
+	const string& name = m_animStateToAnim[ActorId][InState];
+	
+	mtx.lock();
+	AnimationBlock& AnimBlock = m_animDatas[ActorId];
+	mtx.unlock();
+
+	std::unique_lock<std::mutex> lock(AnimBlock.mtx); // 락을 걸기
+	if (AnimBlock.AniData.clipMaps.find(InState) == AnimBlock.AniData.clipMaps.end())
+	{
+		if (AnimBlock.Loaders.find(InState) != AnimBlock.Loaders.end() && AnimBlock.Loaders[InState]._Is_ready())
+		{
+			bInit = true;
+			if (AnimBlock.IsFirstSetting == true)
+			{
+				AnimBlock.IsFirstSetting = false;
+				AnimBlock.AniData = AnimBlock.Loaders[InState].get();
+				AnimBlock.AniData.clipMaps[InState] = std::move(AnimBlock.AniData.clips.front());
+				InActor->m_boneTransforms.m_cpu.resize(AnimBlock.AniData.clipMaps[InState].keys.size());
+				// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
+				for (int i = 0; i < AnimBlock.AniData.clipMaps[InState].keys.size(); i++)
+					InActor->m_boneTransforms.m_cpu[i] = Matrix();
+				InActor->m_boneTransforms.Initialize(m_device);
+			}
+			else
+			{ // TODO. R-Value로 넘겨주는게,,
+				AnimationData AniData = AnimBlock.Loaders[InState].get();
+				AnimBlock.AniData.clipMaps[InState] = std::move(AniData.clips.front());
+			}
+			AnimBlock.Loaders.erase(InState);
+		}
+		else if (AnimBlock.Loaders.find(InState) == AnimBlock.Loaders.end())
+		{
+			ThreadPool& tPool = ThreadPool::getInstance();
+			std::future<AnimationData> Loader;
+			Loader = tPool.EnqueueJob(GetAnimationFromFile, path, name);
+			AnimBlock.Loaders.insert({ InState,std::move(Loader) });
+			return false;
+		}
+		else
+		{
+			return false;
+		}
+	}
+	return true;
+}
 bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 	int frame, int type)
 { 
@@ -47,52 +107,13 @@ bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 	{
 		return false;
 	}
-	//비동기 로딩하도록 한다.
-	int ActorId = InActor->m_modelId;
-	const string& path = m_pathMap[ActorId];
-	const string& name = m_animStateToAnim[ActorId][InState];
-	if (m_animDatas.find(ActorId) == m_animDatas.end())
-	{
-		m_animDatas[ActorId] = AnimationBlock();
-	}
 	bool bInit = false;
-	AnimationBlock& AnimBlock =m_animDatas[ActorId];
-	if (AnimBlock.AniData.clipMaps.find(InState) == AnimBlock.AniData.clipMaps.end())
+	if (LoadAnimation(InActor, InState, bInit) == false)
 	{
-		if (AnimBlock.IsLoading == true&& AnimBlock.Loader._Is_ready())
-		{
-			bInit = true;
-			AnimBlock.IsLoading = false;
-			if (AnimBlock.IsFirstSetting == true)
-			{
-				AnimBlock.IsFirstSetting = false;
-				AnimBlock.AniData = AnimBlock.Loader.get();
-				AnimBlock.AniData.clipMaps[InState] = AnimBlock.AniData.clips.front();
-				InActor->m_boneTransforms.m_cpu.resize(AnimBlock.AniData.clips.front().keys.size());
-				// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
-				for (int i = 0; i < AnimBlock.AniData.clips.front().keys.size(); i++)
-					InActor->m_boneTransforms.m_cpu[i] = Matrix();
-				InActor->m_boneTransforms.Initialize(m_device);
-			}
-			else
-			{ // TODO. R-Value로 넘겨주는게,,
-				AnimationData AniData = AnimBlock.Loader.get();
-				AnimBlock.AniData.clipMaps[InState] = AniData.clips.front();
-			}
-		} 
-		else if (AnimBlock.IsLoading == false)
-		{
-			ThreadPool& tPool =ThreadPool::getInstance();
-			AnimBlock.Loader = tPool.EnqueueJob(GetAnimationFromFile, path, name);
-			m_animDatas[ActorId].IsLoading = true;
-			return false;
-		}
-		else
-		{
-			return false;
-		}
-	}   
-	//m_aniData[ActorId].Update(InState, frame, type);
+		return false;
+	}
+	int ActorId = InActor->m_modelId;
+	AnimationBlock& AnimBlock = m_animDatas[ActorId];
 	InActor->m_maxFrame = AnimBlock.AniData.clipMaps[InState].keys[0].size();
 	vector<Matrix> BoneTransform;
 	BoneTransform.resize(m_animDatas[ActorId].AniData.boneTransforms.size());
