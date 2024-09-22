@@ -14,7 +14,18 @@ namespace hlab {
 	}
 	void MoveState::Initialize()
 	{
-
+		std::shared_ptr<Actor> actorLock = m_actor.lock();
+		if (actorLock.get() == nullptr)
+		{
+			return;
+		}
+		std::shared_ptr<ActorState> myLock = actorLock->GetState();
+		if (std::shared_ptr<DSkinnedMeshModel> derivedPtr = std::dynamic_pointer_cast<DSkinnedMeshModel>(actorLock->GetModel()))
+		{
+			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data());
+			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(MoveStateType::MoveStateWalk).data());
+			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data());
+		}
 	}
 	void MoveState::Tick(float dt)
 	{
@@ -36,7 +47,7 @@ namespace hlab {
 		//}
 		if (m_moveState == MoveStateType::MoveStateWalk)
 		{
-			actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 300.0f));
+			actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 3.0f));
 			actorLock->UpdateVelocity(dt);
 		}
 

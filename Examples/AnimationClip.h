@@ -97,6 +97,9 @@ struct AnimationData {
     //TODO 이거 값 Actor나 Model로 보내는게..ㅎ
     Vector3 prevPos = Vector3(0.0f);
     set<int> lowerBodyBones;
+
+    float rootWeight = 0.0f;
+
     Matrix Get(int clipId, int boneId, int frame) {
 
         return defaultTransform.Invert() * offsetMatrices[boneId] *

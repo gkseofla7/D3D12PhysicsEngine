@@ -213,7 +213,7 @@ void Ex2001_GamePlay::Update(float dt) {
         if (frameCount == 115) {
             Vector3 handPos = (m_character->m_worldRow).Translation();
             Vector4 offset = Vector4::Transform(
-                Vector4(0.0f, 0.0f, -0.1f, 0.0f),
+                Vector4(0.0f, 0.0f, -0.5f, 0.0f),
                 m_character->m_worldRow *
                     m_character->m_aniData.accumulatedRootTransform);
             handPos += Vector3(offset.x, offset.y, offset.z);

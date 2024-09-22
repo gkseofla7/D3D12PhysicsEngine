@@ -52,15 +52,15 @@ namespace hlab {
         // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
         // virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>
         // &context);
-        virtual void UpdatePosition(const Vector3& InDelta)
-        {
-/*            m_accumulatedRootTransform =
-                Matrix::CreateTranslation(InDelta) *
-                m_accumulatedRootTransform;    */       
-            m_accumulatedRootTransform =
-                Matrix::CreateTranslation(InDelta) *
-                m_accumulatedRootTransform;
-        }
+//        virtual void UpdatePosition(const Vector3& InDelta)
+//        {
+///*            m_accumulatedRootTransform =
+//                Matrix::CreateTranslation(InDelta) *
+//                m_accumulatedRootTransform;    */       
+//            m_accumulatedRootTransform =
+//                Matrix::CreateTranslation(InDelta) *
+//                m_accumulatedRootTransform;
+//        }
 
         virtual void UpdateVelocity(float dt) 
         {
@@ -78,6 +78,7 @@ namespace hlab {
         float m_velocity = 0.0f;
         Matrix m_prevRootTransform;
         Matrix m_accumulatedRootTransform;
+        Matrix m_accumulatedRootTransformToLocal;
 
     };
 

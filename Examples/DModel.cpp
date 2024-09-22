@@ -65,6 +65,11 @@ namespace hlab {
         }
     }
 
+    void DModel::UpdatePosition(const Vector3& InDelta)
+    {
+        Matrix newMatrix = Matrix::CreateTranslation(InDelta)* m_worldRow;
+        UpdateWorldRow(newMatrix);
+    }
     GraphicsPSO& DModel::GetPSO(const bool wired) {
         return wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
     }

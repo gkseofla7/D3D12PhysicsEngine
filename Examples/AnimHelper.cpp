@@ -121,6 +121,10 @@ bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
 		InActor->m_boneTransforms.m_cpu[i] = 
 			m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
+		if (i == 0)
+		{
+			InActor->m_accumulatedRootTransformToLocal = m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]);
+		}
 	}
 	 
 	InActor->m_boneTransforms.Upload(m_context);
