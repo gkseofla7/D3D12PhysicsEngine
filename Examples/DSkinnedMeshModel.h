@@ -62,6 +62,9 @@ namespace hlab {
 //                m_accumulatedRootTransform;
 //        }
 
+        //virtual void UpdatePosition(const Vector3& InDelta);
+        //virtual void UpdateRotation(const Matrix& InDelta);
+        void IntegrateRootTransformToWorldTransform(ComPtr<ID3D11DeviceContext>& context);
         virtual void UpdateVelocity(float dt) 
         {
             // 루트모션

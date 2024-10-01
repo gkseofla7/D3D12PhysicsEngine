@@ -61,6 +61,18 @@ namespace hlab {
             DModel::Render(context);
         };
 
+        void DSkinnedMeshModel::IntegrateRootTransformToWorldTransform(ComPtr<ID3D11DeviceContext>& context)
+        {
+            Vector3 RootMotionTransition = m_accumulatedRootTransformToLocal.Translation();
+            RootMotionTransition.y = 0;
+            UpdateWorldRow(Matrix::CreateTranslation(RootMotionTransition) * m_worldRow);
+
+            auto temp = m_accumulatedRootTransform.Translation();
+            temp.x = 0.0;
+            temp.z = 0.0;
+            m_accumulatedRootTransform.Translation(temp);
+            UpdateConstantBuffers(context);
+        }
 
 
 } // namespace hlab

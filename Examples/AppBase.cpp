@@ -235,7 +235,7 @@ void AppBase::Update(float dt) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
     for (auto& i : m_actorList) {
-        i->GetModel()->UpdateConstantBuffers(m_device, m_context);
+        i->GetModel()->UpdateConstantBuffers(m_context);
     }
 }
 

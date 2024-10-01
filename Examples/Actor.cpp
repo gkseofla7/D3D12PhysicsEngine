@@ -50,6 +50,11 @@ namespace hlab {
         m_model->UpdateVelocity(dt);
     }
 
+    void Actor::UpdateRotationY(float InDelta)
+    {
+        m_model->UpdateRotation(Matrix::CreateRotationY(InDelta));
+    }
+
     //Camera ฐüทร
     void Actor::ActiveCaemera()
     {

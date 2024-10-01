@@ -33,23 +33,11 @@ public:
     // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
     // virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>
     // &context);
-    void UpdateVelocity(float dt) {
-        //Vector3 prevPos = m_prevRootTransform.Translation();
-        //Vector3 curPos = m_aniData.accumulatedRootTransform.Translation();
-
-        //m_velocity = (curPos - prevPos).Length() / dt;
-        //m_prevRootTransform = m_aniData.accumulatedRootTransform;
-    }
 
     virtual shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel() override;
 public:
     // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
     StructuredBuffer<Matrix> m_boneTransforms;
-
-    Matrix accumulatedRootTransform = Matrix();
-    float m_velocity = 0.0f;
-    Matrix m_prevRootTransform;
-
     //Anim ฐüทร
     int m_curFrame = 0;
 private:

@@ -112,6 +112,11 @@ bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 	{
 		return false;
 	}
+	if (frame == 0)
+	{
+		InActor->IntegrateRootTransformToWorldTransform(m_context);
+	}
+
 	int ActorId = InActor->m_modelId;
 	AnimationBlock& AnimBlock = m_animDatas[ActorId];
 	InActor->m_maxFrame = AnimBlock.AniData.clipMaps[InState].keys[0].size();

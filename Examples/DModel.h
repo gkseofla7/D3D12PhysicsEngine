@@ -35,12 +35,12 @@ namespace hlab {
         virtual void InitMeshBuffers(ComPtr<ID3D11Device>& device,
             const MeshData& meshData,
             shared_ptr<Mesh>& newMesh);
-        void UpdateConstantBuffers(ComPtr<ID3D11Device>& device,
-            ComPtr<ID3D11DeviceContext>& context);
+        void UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context);
         virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
             string clipId, int frame, int type = 0) {}
-        void UpdatePosition(const Vector3& InDelta);
+        virtual void UpdatePosition(const Vector3& InDelta);
+        virtual void UpdateRotation(const Matrix& InDelta);
         virtual void UpdateVelocity(float dt) {}
         virtual GraphicsPSO& GetPSO(const bool wired);
         virtual GraphicsPSO& GetDepthOnlyPSO();

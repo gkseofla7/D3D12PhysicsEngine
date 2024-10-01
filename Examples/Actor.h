@@ -20,6 +20,7 @@ public:
 	virtual void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt);
 	void UpdatePosition(const Vector3& InDelta);
 	void UpdateVelocity(float dt);
+	void UpdateRotationY(float InDelta);
 	void SetState(ActorStateType InType);
 	void ActiveCaemera();
 

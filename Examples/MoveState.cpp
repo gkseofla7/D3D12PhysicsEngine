@@ -35,22 +35,18 @@ namespace hlab {
 		{
 			return;
 		}
-		//bool rightPressed = AppBase::m_keyPressed[VK_RIGHT];
-		//bool leftPressed = AppBase::m_keyPressed[VK_LEFT];
-
-		//if ((rightPressed || leftPressed) && rightPressed != leftPressed) {
-		//	float sign = rightPressed == true ? 1.0f : -1.0f;
-		//	m_character->m_aniData.accumulatedRootTransform =
-		//		Matrix::CreateRotationY(sign *
-		//			(3.141592f * 60.0f / 180.0f * dt)) *
-		//		m_character->m_aniData.accumulatedRootTransform;
-		//}
 		if (m_moveState == MoveStateType::MoveStateWalk)
 		{
 			actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 3.0f));
 			actorLock->UpdateVelocity(dt);
-		}
 
+			if ((bRoateLeft || bRotateRight) && bRoateLeft != bRotateRight) {
+				float sign = bRotateRight == true ? 1.0f : -1.0f;
+				actorLock.get()->UpdateRotationY(sign *
+					(3.141592f * 60.0f / 180.0f * dt));
+
+			}
+		}
 	}
 	void MoveState::Finish()
 	{

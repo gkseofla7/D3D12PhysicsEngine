@@ -57,8 +57,7 @@ namespace hlab {
     
 
 
-    void DModel::UpdateConstantBuffers(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context) {
+    void DModel::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
         if (m_isVisible) {
             m_meshConsts.Upload(context);
             m_materialConsts.Upload(context);
@@ -68,6 +67,15 @@ namespace hlab {
     void DModel::UpdatePosition(const Vector3& InDelta)
     {
         Matrix newMatrix = Matrix::CreateTranslation(InDelta)* m_worldRow;
+        UpdateWorldRow(newMatrix);
+    }
+
+    void DModel::UpdateRotation(const Matrix& InDelta)
+    {
+        Vector3 ModelPos = m_worldRow.Translation();
+        m_worldRow.Translation(Vector3(0.0f));
+        Matrix newMatrix = m_worldRow*InDelta;
+        newMatrix.Translation(ModelPos);
         UpdateWorldRow(newMatrix);
     }
     GraphicsPSO& DModel::GetPSO(const bool wired) {

@@ -12,12 +12,18 @@ public:
 	void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt);
 private:
 	// TODO. Actor로 옮길 예정
+	// 초기화
+	void InitAnimPath();
 	virtual void InitBoundingKey() override;
-	void ShotFireball();
+
+	// 인푼 관련 함수
+	void Attack();
 	void WalkStart();
 	void WalkEnd();
-private:
+	void RotateLeft(bool InOn);
+	void RotateRight(bool InOn);
 
+	void ShotFireBall();
 };
 }
 

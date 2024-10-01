@@ -14,7 +14,12 @@ public:
 	// 인풋 받아 리천
 	virtual void Transition();
 	virtual void UpdateAnimation();
+
+	void RotateLeft(bool InOn) { bRoateLeft = InOn; }
+	void RotateRight(bool InOn) { bRotateRight = InOn; }
 private:
 	MoveStateType m_moveState;
+	bool bRoateLeft;
+	bool bRotateRight;
 };
 }
