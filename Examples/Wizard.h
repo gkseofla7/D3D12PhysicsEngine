@@ -22,6 +22,7 @@ private:
 	void WalkEnd();
 	void RotateLeft(bool InOn);
 	void RotateRight(bool InOn);
+	void Jump();
 
 	void ShotFireBall();
 };

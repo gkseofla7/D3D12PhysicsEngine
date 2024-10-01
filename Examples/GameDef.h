@@ -6,6 +6,7 @@ enum class ActorStateType
 	Idle,
 	Attack,
 	Move,
+	Jump,
 };
 
 // Sub Type
@@ -16,5 +17,11 @@ enum class MoveStateType
 	MoveStateWalkToIdle,
 
 	EndOfEnum
+};
+
+enum class JumpStateType
+{
+	JumpStateInPlace,
+	JumpStateRunning,
 };
 }

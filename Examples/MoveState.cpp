@@ -9,8 +9,22 @@ namespace hlab {
 		:ActorState(InActor)
 	{
 		m_state = ActorStateType::Move;
-		m_moveState = MoveStateType::MoveStateIdleToWalk;
-		m_loopState = false;
+		std::shared_ptr<Actor> actorLock = m_actor.lock();
+		if (actorLock.get() == nullptr)
+		{
+			return;
+		}
+		if (actorLock->GetVelocity() != 0.0f)
+		{
+			m_moveState = MoveStateType::MoveStateWalk;
+			m_loopState = true;
+		}
+		else
+		{
+			
+			m_moveState = MoveStateType::MoveStateIdleToWalk;
+			m_loopState = false;
+		}
 	}
 	void MoveState::Initialize()
 	{
@@ -35,10 +49,11 @@ namespace hlab {
 		{
 			return;
 		}
+		actorLock->SetVelocity(0.0f);
 		if (m_moveState == MoveStateType::MoveStateWalk)
 		{
-			actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 3.0f));
-			actorLock->UpdateVelocity(dt);
+			//actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 3.0f));
+			actorLock->SetVelocity(3.0f);
 
 			if ((bRoateLeft || bRotateRight) && bRoateLeft != bRotateRight) {
 				float sign = bRotateRight == true ? 1.0f : -1.0f;

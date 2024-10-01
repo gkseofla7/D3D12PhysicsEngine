@@ -36,7 +36,7 @@ btRigidBody* ProjectileManager::CreateProjectile(const Vector3& tV,
     m_fireball->Initialize(m_device, m_context, { {0.0f, 0.0f, 0.0f, 1.0f} },
         0.2f, Graphics::volumetricFirePS);
 
-    App->m_basicList.push_back(m_fireball);
+    App->m_billboardModelList.push_back(m_fireball);
     App->m_objects.push_back(m_fireball);
 
     btRigidBody* dynamic =

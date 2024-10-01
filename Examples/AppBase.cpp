@@ -234,6 +234,9 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
+    for (auto& i : m_billboardModelList) {
+        i->UpdateConstantBuffers(m_device, m_context);
+    }
     for (auto& i : m_actorList) {
         i->GetModel()->UpdateConstantBuffers(m_context);
     }
@@ -322,6 +325,11 @@ void AppBase::RenderDepthOnly() {
         AppBase::SetPipelineState(actor->GetModel()->GetDepthOnlyPSO());
         actor->Render(m_context);
     }
+    for (const auto& model : m_billboardModelList) {
+        AppBase::SetPipelineState(model->GetDepthOnlyPSO());
+        model->Render(m_context);
+    }
+
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
     if (m_skybox)
         m_skybox->Render(m_context);
@@ -357,6 +365,13 @@ void AppBase::RenderShadowMaps() {
                     model->Render(m_context);
                 }
             }
+            for (const auto& model : m_billboardModelList) {
+                if (model->m_castShadow && model->m_isVisible) {
+                    AppBase::SetPipelineState(model->GetDepthOnlyPSO());
+                    model->Render(m_context);
+                }
+            }
+
             if (m_mirror && m_mirror->m_castShadow)
                 m_mirror->Render(m_context);
         }
@@ -391,13 +406,16 @@ void AppBase::RenderOpaqueObjects() {
     AppBase::SetPipelineState(m_drawAsWire ? Graphics::skyboxWirePSO
                                            : Graphics::skyboxSolidPSO);
     m_skybox->Render(m_context);
-
-    for (const auto &model : m_basicList) {
+    for (const auto& actor : m_actorList) {
+        shared_ptr<DModel> model = actor->GetModel();
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
-    for (const auto& actor : m_actorList) {
-        shared_ptr<DModel> model = actor->GetModel();
+    for (const auto& model : m_basicList) {
+        AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
+        model->Render(m_context);
+    }
+    for (const auto& model : m_billboardModelList) {
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
@@ -449,7 +467,10 @@ void AppBase::RenderMirror() {
             AppBase::SetPipelineState(actor->GetModel()->GetReflectPSO(m_drawAsWire));
             actor->Render(m_context);
         }
-
+        for (const auto& model : m_billboardModelList) {
+            AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
+            model->Render(m_context);
+        }
         AppBase::SetPipelineState(m_drawAsWire
                                       ? Graphics::reflectSkyboxWirePSO
                                       : Graphics::reflectSkyboxSolidPSO);

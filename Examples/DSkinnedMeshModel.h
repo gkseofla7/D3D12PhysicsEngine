@@ -61,25 +61,17 @@ namespace hlab {
 //                Matrix::CreateTranslation(InDelta) *
 //                m_accumulatedRootTransform;
 //        }
+        Matrix& GetAccumulatedRootTransform() { return m_accumulatedRootTransform; }
+        Matrix& GetAccumulatedRootTransformToLocal() { return m_accumulatedRootTransformToLocal; }
 
-        //virtual void UpdatePosition(const Vector3& InDelta);
-        //virtual void UpdateRotation(const Matrix& InDelta);
+        void SetAccumulatedRootTransform(const Matrix& InAccumulatedRootTransform) { m_accumulatedRootTransform = InAccumulatedRootTransform; }
+        void SetAccumulatedRootTransformToLocal(const Matrix& InAccumulatedRootTransformToLocal) { m_accumulatedRootTransformToLocal = InAccumulatedRootTransformToLocal; }
+
         void IntegrateRootTransformToWorldTransform(ComPtr<ID3D11DeviceContext>& context);
-        virtual void UpdateVelocity(float dt) 
-        {
-            // 루트모션
-            Vector3 prevPos = m_prevRootTransform.Translation();
-            Vector3 curPos = m_accumulatedRootTransform.Translation();
-
-            m_velocity = (curPos - prevPos).Length() / dt;
-            m_prevRootTransform = m_accumulatedRootTransform;
-        }
     public:
         // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
         StructuredBuffer<Matrix> m_boneTransforms;
-        AnimationData* m_aniData = nullptr;
-        float m_velocity = 0.0f;
-        Matrix m_prevRootTransform;
+    private:
         Matrix m_accumulatedRootTransform;
         Matrix m_accumulatedRootTransformToLocal;
 

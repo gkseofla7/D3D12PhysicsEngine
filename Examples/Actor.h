@@ -18,14 +18,21 @@ public:
 		shared_ptr<DModel> InModel);
 	//TODO. device랑 context를 안건네줄 방법을 찾아보자..
 	virtual void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt);
+	
+	// 위치 이동 관련
 	void UpdatePosition(const Vector3& InDelta);
 	void UpdateVelocity(float dt);
 	void UpdateRotationY(float InDelta);
+	void SetVelocity(float InVelocity) { m_velocity = InVelocity; }
+	float GetVelocity() { return m_velocity; }
 	void SetState(ActorStateType InType);
+	ActorStateType GetPrevState() { return m_prevStateType; }
+	// 카메라 관련
 	void ActiveCaemera();
+	void UpdateCemeraCorrection(Vector3 deltaPos);
 
 	bool MsgProc(WPARAM wParam, bool bPress);
-	void UpdateCemeraCorrection(Vector3 deltaPos);
+	
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 
 	shared_ptr<DModel> GetModel() { return m_model; }
@@ -33,28 +40,23 @@ public:
 	shared_ptr<ActorState> GetState() { return m_actorState; }
 private:
 	void UpdateState();
-
 public:
 	//ActorState GetActorState() { return m_actorState; }
 protected:
 	virtual void InitBoundingKey() {};
 protected:
 	shared_ptr<class Camera> m_camera;
-
-protected:
-
-	
 	Matrix m_cameraCorrection;
 
 	std::map<WPARAM, function<void()>> m_keyBindingPress;
 	std::map<WPARAM, function<void()>> m_keyBindingRelease;
-	//ActorState m_actorState;
-protected:
-	// ConstantBuffer<SkinnedConsts> m_skinnedConsts;
+
 	shared_ptr<ActorState> m_actorState;
 	ActorStateType m_actorStateType;
+	ActorStateType m_prevStateType;
 	shared_ptr<DModel> m_model;
-	
+
+	float m_velocity = 0.0f;
 };
 
 } // namespace hlab

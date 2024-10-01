@@ -55,6 +55,9 @@ void Wizard::InitAnimPath()
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalk).data(), "Walking.fbx");
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
+    // Jumping
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(JumpStateType::JumpStateInPlace).data(), "Jumping.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(JumpStateType::JumpStateRunning).data(), "Jump.fbx");
 }
 void Wizard::InitBoundingKey()
 {
@@ -75,6 +78,9 @@ void Wizard::InitBoundingKey()
     m_keyBindingPress.insert({ VK_RIGHT, RightPressFunc });
     std::function<void()> RightReleaseFunc = [this]() { RotateRight(false); };
     m_keyBindingRelease.insert({ VK_RIGHT, RightReleaseFunc });
+
+    std::function<void()> JumpFunc = [this]() { Jump(); };
+    m_keyBindingPress.insert({ VK_SHIFT, JumpFunc });
 }
 
 // 인풋 관련 함수들
@@ -98,6 +104,10 @@ void Wizard::WalkEnd()
     {
         m_actorState->Finish();
     }
+    else if (m_prevStateType == ActorStateType::Move)
+    {
+        m_prevStateType = ActorStateType::Idle;
+    }
 }
 
 void Wizard::RotateLeft(bool InOn)
@@ -117,14 +127,17 @@ void Wizard::RotateRight(bool InOn)
     }
 }
 
+void Wizard::Jump()
+{
+    SetState(ActorStateType::Jump);
+}
 
 void Wizard::ShotFireBall()
 {
     static const float simToRenderScale = 0.01f;
 
     Vector4 offset = Vector4::Transform(
-        Vector4(0.0f, 0.0f, -0.1f, 1.0f),
-        GetSkinnedMeshModel().get()->m_accumulatedRootTransformToLocal * GetModel()->m_worldRow);
+        Vector4(0.0f, 0.0f, -0.1f, 1.0f), GetModel()->m_worldRow);
     Vector3 handPos = Vector3(offset.x, offset.y, offset.z);
 
     Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
@@ -134,6 +147,6 @@ void Wizard::ShotFireBall()
     dir *= 1.5f / simToRenderScale;
 
     ProjectileManager::GetInstance().CreateProjectile(handPos,
-        0.01 / simToRenderScale, Vector3(dir.x, dir.y, dir.z));
+        0.1 / simToRenderScale, Vector3(dir.x, dir.y, dir.z));
 }
 }

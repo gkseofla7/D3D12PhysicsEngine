@@ -39,8 +39,11 @@ namespace hlab {
     }
     void Actor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
     {
+        Vector3 DeltaPos = m_velocity * Vector3(0., 0., -dt);
+        UpdatePosition(DeltaPos);
         UpdateState();
     }
+    // 위치 이동 관련
     void Actor::UpdatePosition(const Vector3& InDelta)
     {
         m_model->UpdatePosition(InDelta);
@@ -64,14 +67,16 @@ namespace hlab {
     {
         m_cameraCorrection = Matrix::CreateTranslation(deltaPos);
     }
+
     void Actor::Render(ComPtr<ID3D11DeviceContext>& context)
     {
         m_model->Render(context);
     }
+    // 상태 관련
     void Actor::SetState(ActorStateType InType)
     {
+        m_prevStateType = m_actorStateType;
         m_actorStateType = InType;
-        
     }
     void Actor::UpdateState()
     {

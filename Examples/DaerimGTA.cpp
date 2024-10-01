@@ -155,7 +155,8 @@ void DaerimGTA::InitPhysics(bool interactive)
 
 	for (unsigned int i = 0; i < 1; i++)
 	{
-        //CreateStack(btTransform(btQuaternion(), btVector3(0, 0, stackZ -= 15.0f)), 8, 20, 2.5f);
+        btTransform t = btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(0, 0, stackZ -= 15.0f));
+        CreateStack(t, 8, 20, 2.5f);
 	} 
 }
 void DaerimGTA::UpdateLights(float dt) { AppBase::UpdateLights(dt); }
@@ -168,12 +169,8 @@ void DaerimGTA::Update(float dt) {
     m_wizardActor->Update(m_device,m_context,dt);
    
     // 이하 물리엔진 관련
-    static int a = 0;
-    a++;
-    if (a >= 50)
-    {
-        StepSimulation(dt);
-    }
+    StepSimulation(dt);
+    
     
     int count = 0;
     int numCollisionObjects = m_dynamicsWorld->getNumCollisionObjects();

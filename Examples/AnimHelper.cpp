@@ -122,16 +122,15 @@ bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
 	InActor->m_maxFrame = AnimBlock.AniData.clipMaps[InState].keys[0].size();
 	vector<Matrix> BoneTransform;
 	BoneTransform.resize(m_animDatas[ActorId].AniData.boneTransforms.size());
-	m_animDatas[ActorId].AniData.GetBoneTransform(InState, frame, InActor->m_accumulatedRootTransform, BoneTransform, bInit, type);
+	m_animDatas[ActorId].AniData.GetBoneTransform(InState, frame, InActor->GetAccumulatedRootTransform(), BoneTransform, bInit, type);
 	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
 		InActor->m_boneTransforms.m_cpu[i] = 
 			m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
 		if (i == 0)
 		{
-			InActor->m_accumulatedRootTransformToLocal = m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]);
+			InActor->SetAccumulatedRootTransformToLocal( m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]));
 		}
 	}
-	 
 	InActor->m_boneTransforms.Upload(m_context);
 	return true;
 }
