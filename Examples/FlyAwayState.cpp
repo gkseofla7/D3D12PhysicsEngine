@@ -6,7 +6,7 @@ namespace hlab {
 	FlyAwayState::FlyAwayState(std::weak_ptr<Actor> InActor)
 		:ActorState(InActor)
 	{
-		m_state = ActorStateType::FlyAway;
+		m_state = EActorStateType::FlyAway;
 		m_loopState = false;
 	}
 	void FlyAwayState::Initialize()
@@ -23,14 +23,14 @@ namespace hlab {
 	{
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
-		actorLock->SetState(ActorStateType::Idle);
+		actorLock->SetState(EActorStateType::Idle);
 	}
 	// 인풋 받아 리천
 	void FlyAwayState::Transition()
 	{
-		if (m_flyAwayState == FlyAwayStateType::FlayAwayStateFlying)
+		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying)
 		{
-			m_flyAwayState = FlyAwayStateType::FlayAwayStateLieDown;
+			m_flyAwayState = EFlyAwayStateType::FlayAwayStateLieDown;
 			m_pauseFrame = false;
 		}
 		else
@@ -47,7 +47,7 @@ namespace hlab {
 		{
 			return;
 		}
-		if (m_flyAwayState == FlyAwayStateType::FlayAwayStateFlying)
+		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying)
 		{
 			actorLock.get()->UpdateVelocity(-dt*0.1f);
 			if (actorLock.get()->GetVelocity() == 0.0f)
@@ -59,7 +59,7 @@ namespace hlab {
 
 	void FlyAwayState::PauseFrameIfFlyAway()
 	{
-		if (m_flyAwayState == FlyAwayStateType::FlayAwayStateFlying && m_frame >= 8)
+		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying && m_frame >= 8)
 		{
 			m_pauseFrame = true;
 		}

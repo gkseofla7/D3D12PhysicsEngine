@@ -22,7 +22,7 @@ namespace hlab {
 		void PauseFrameIfFlyAway();
 
 	private:
-		FlyAwayStateType m_flyAwayState;
+		EFlyAwayStateType m_flyAwayState;
 	};
 
 }

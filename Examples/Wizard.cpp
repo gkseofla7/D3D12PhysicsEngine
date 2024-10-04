@@ -20,7 +20,7 @@ void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext
 {
     SkeletalMeshActor::Initialize(device, context,InModel);
     // RandomNumber 받도록 한다.
-    m_model->m_modelId = 1;
+    m_model->m_modelId = DModelNumberGenerator::GetInstance().GetNewModelNumber();
 
 	InitBoundingKey();
     InitAnimPath();
@@ -32,7 +32,7 @@ void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& c
 
     m_actorState->Tick(dt);
 
-    if (m_actorState->GetStateType() == ActorStateType::Attack)
+    if (m_actorState->GetStateType() == EActorStateType::Attack)
     {
         static const int FIreBallStartFrame = 115;
         if (m_actorState->GetFrame() == FIreBallStartFrame) {
@@ -48,27 +48,27 @@ void Wizard::InitAnimPath()
     string path = "../Assets/Characters/Mixamo/";
     AnimHelper::GetInstance().AddAnimPath(m_model->m_modelId, path);
     // Idle
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(ActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(ActorStateType::Idle).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::Idle).data());
     // Attack
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(ActorStateType::Attack).data(), "Fireball.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(ActorStateType::Attack).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Attack).data(), "Fireball.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::Attack).data());
     // Move
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data());
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalk).data(), "Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(MoveStateType::MoveStateWalk).data());
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateWalk).data(), "Walking.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalk).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data());
     // Jumping
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(JumpStateType::JumpStateInPlace).data(), "Jumping.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(JumpStateType::JumpStateInPlace).data());
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(JumpStateType::JumpStateRunning).data(), "Jump.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(JumpStateType::JumpStateRunning).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data(), "Jumping.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EJumpStateType::JumpStateRunning).data(), "Jump.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateRunning).data());
     
     // 쓰러짐
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(ActorStateType::FlyAway).data(), "Stunned.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(ActorStateType::FlyAway).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::FlyAway).data(), "Stunned.fbx");
+    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::FlyAway).data());
 }
 
 void Wizard::LoadAnimAsync(string InState)
@@ -147,33 +147,33 @@ void Wizard::InitBoundingKey()
 // 인풋 관련 함수들
 void Wizard::Attack()
 {
-    if (m_actorState->GetStateType() == ActorStateType::Idle)
+    if (m_actorState->GetStateType() == EActorStateType::Idle)
     {
-        SetState(ActorStateType::Attack);
+        SetState(EActorStateType::Attack);
     }	
 }
 void Wizard::WalkStart()
 {
-    if (m_actorState->GetStateType() == ActorStateType::Idle)
+    if (m_actorState->GetStateType() == EActorStateType::Idle)
     {
-        SetState(ActorStateType::Move);
+        SetState(EActorStateType::Move);
     }
 }
 void Wizard::WalkEnd()
 {
-    if (m_actorState->GetStateType() == ActorStateType::Move)
+    if (m_actorState->GetStateType() == EActorStateType::Move)
     {
         m_actorState->Finish();
     }
-    else if (m_prevStateType == ActorStateType::Move)
+    else if (m_prevStateType == EActorStateType::Move)
     {
-        m_prevStateType = ActorStateType::Idle;
+        m_prevStateType = EActorStateType::Idle;
     }
 }
 
 void Wizard::RotateLeft(bool InOn)
 {
-    if (m_actorState->GetStateType() == ActorStateType::Move)
+    if (m_actorState->GetStateType() == EActorStateType::Move)
     {
         std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
         derivedPtr->RotateLeft(InOn);
@@ -181,7 +181,7 @@ void Wizard::RotateLeft(bool InOn)
 }
 void Wizard::RotateRight(bool InOn)
 {
-    if (m_actorState->GetStateType() == ActorStateType::Move)
+    if (m_actorState->GetStateType() == EActorStateType::Move)
     {
         std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
         derivedPtr->RotateRight(InOn);
@@ -190,7 +190,7 @@ void Wizard::RotateRight(bool InOn)
 
 void Wizard::Jump()
 {
-    SetState(ActorStateType::Jump);
+    SetState(EActorStateType::Jump);
 }
 
 void Wizard::ShotFireBall()

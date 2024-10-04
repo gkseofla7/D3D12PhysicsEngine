@@ -8,7 +8,7 @@ namespace hlab {
 	JumpState::JumpState(std::weak_ptr<Actor> InActor)
 		:ActorState(InActor)
 	{
-		m_state = ActorStateType::Jump;
+		m_state = EActorStateType::Jump;
 		m_loopState = false;
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
 		if (actorLock.get() == nullptr)
@@ -16,13 +16,13 @@ namespace hlab {
 			return;
 		}
 		const float MinVelocity = 0.2f;
-		if (actorLock.get()->GetPrevState() == ActorStateType::Move && actorLock.get()->GetVelocity() >= MinVelocity)
+		if (actorLock.get()->GetPrevState() == EActorStateType::Move && actorLock.get()->GetVelocity() >= MinVelocity)
 		{
-			m_jumpState = JumpStateType::JumpStateRunning;
+			m_jumpState = EJumpStateType::JumpStateRunning;
 		}
 		else
 		{
-			m_jumpState = JumpStateType::JumpStateInPlace;
+			m_jumpState = EJumpStateType::JumpStateInPlace;
 		}
 	}
 	void JumpState::Initialize()
@@ -41,21 +41,21 @@ namespace hlab {
 		{
 			return;
 		}
-		if (m_jumpState == JumpStateType::JumpStateRunning)
+		if (m_jumpState == EJumpStateType::JumpStateRunning)
 		{
-			if (actorLock.get()->GetPrevState() != ActorStateType::Move)
+			if (actorLock.get()->GetPrevState() != EActorStateType::Move)
 			{
-				m_jumpState = JumpStateType::JumpStateInPlace;
+				m_jumpState = EJumpStateType::JumpStateInPlace;
 			}
 		}
 
-		if (m_jumpState == JumpStateType::JumpStateInPlace)
+		if (m_jumpState == EJumpStateType::JumpStateInPlace)
 		{
-			actorLock->SetState(ActorStateType::Idle);
+			actorLock->SetState(EActorStateType::Idle);
 		}
-		else if (m_jumpState == JumpStateType::JumpStateRunning)
+		else if (m_jumpState == EJumpStateType::JumpStateRunning)
 		{
-			actorLock->SetState(ActorStateType::Move);
+			actorLock->SetState(EActorStateType::Move);
 		}
 	}
 	// 인풋 받아 리천

@@ -5,6 +5,7 @@
 
 #include "D3D11Utils.h"
 #include "GraphicsCommon.h"
+#include "Actor.h"
 
 // imgui_impl_win32.cpp에 정의된 메시지 처리 함수에 대한 전방 선언
 // Vcpkg를 통해 IMGUI를 사용할 경우 빨간줄로 경고가 뜰 수 있음
@@ -239,6 +240,7 @@ void AppBase::Update(float dt) {
     }
     for (auto& i : m_actorList) {
         i->GetModel()->UpdateConstantBuffers(m_context);
+        i->Update(m_device,m_context, dt);
     }
 }
 
@@ -438,9 +440,17 @@ void AppBase::RenderOpaqueObjects() {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingBox(m_context);
         }
+        for (const auto& actor : m_actorList) {
+            shared_ptr<DModel> model = actor->GetModel();
+            model->RenderWireBoundingBox(m_context);
+        }
     }
     if (AppBase::m_drawBS) {
         for (auto &model : m_basicList) {
+            model->RenderWireBoundingSphere(m_context);
+        }
+        for (const auto& actor : m_actorList) {
+            shared_ptr<DModel> model = actor->GetModel();
             model->RenderWireBoundingSphere(m_context);
         }
     }
@@ -858,6 +868,21 @@ shared_ptr<Model> AppBase::PickClosest(const Ray &pickingRay, float &minDist) {
     return minModel;
 }
 
+void AppBase::SelectClosestActor(const Ray& pickingRay, float& minDist) {
+    minDist = 1e5f;
+    for (auto& actor : m_actorList) {
+        float dist = 0.0f;
+        std::shared_ptr<DModel> model = actor->GetModel();
+
+        if (actor->IsPickable() &&
+            pickingRay.Intersects(model->m_boundingSphere, dist) &&
+            dist < minDist) {
+            m_activateActor = actor;
+            minDist = dist;
+        }
+    }
+}
+
 void AppBase::ProcessMouseControl() {
 
     static shared_ptr<Model> activeModel = nullptr;
@@ -884,6 +909,8 @@ void AppBase::ProcessMouseControl() {
         Vector3 dir = worldFar - worldNear;
         dir.Normalize();
         const Ray curRay = SimpleMath::Ray(worldNear, dir);
+
+        SelectClosestActor(curRay, dist);
 
         // 이전 프레임에서 아무 물체도 선택되지 않았을 경우에는 새로 선택
         if (!activeModel) {

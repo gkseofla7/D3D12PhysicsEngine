@@ -32,8 +32,8 @@ public:
 		m_velocity = InVelocity; 
 	}
 	float GetVelocity() { return m_velocity; }
-	void SetState(ActorStateType InType);
-	ActorStateType GetPrevState() { return m_prevStateType; }
+	void SetState(EActorStateType InType);
+	EActorStateType GetPrevState() { return m_prevStateType; }
 	// 카메라 관련
 	void ActiveCaemera();
 	void UpdateCemeraCorrection(Vector3 deltaPos);
@@ -45,6 +45,8 @@ public:
 	shared_ptr<DModel> GetModel() { return m_model; }
 	virtual shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel() { return nullptr; };
 	shared_ptr<ActorState> GetState() { return m_actorState; }
+
+	bool IsPickable() { return m_isPickable; }
 private:
 	void UpdateState();
 public:
@@ -60,11 +62,13 @@ protected:
 	// Actor에서 State가 어떤 동작을 하는지
 	// 어떤 상태인지 모르고 돌아가는게 베스트 아닌가싶다.
 	shared_ptr<ActorState> m_actorState;
-	ActorStateType m_actorStateType;
-	ActorStateType m_prevStateType;
+	EActorStateType m_actorStateType;
+	EActorStateType m_prevStateType;
 	shared_ptr<DModel> m_model;
 
 	float m_velocity = 0.0f;
+
+	bool m_isPickable = true; // 마우스로 선택/조작 가능 여부
 };
 
 } // namespace hlab

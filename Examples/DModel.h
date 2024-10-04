@@ -19,6 +19,23 @@ namespace hlab {
     using std::string;
     using std::vector;
 
+    class DModelNumberGenerator
+    {
+    public:
+        static DModelNumberGenerator& GetInstance()
+        {
+            static DModelNumberGenerator generator;
+            return generator;
+        }
+        int GetNewModelNumber()
+        {
+            m_lastModelNumber++;
+            return m_lastModelNumber;
+        }
+    private:
+        int m_lastModelNumber = 0;
+    };
+
     class DModel {
     public:
         DModel() {}
@@ -80,6 +97,7 @@ namespace hlab {
 
         shared_ptr<Mesh> m_boundingBoxMesh;
         shared_ptr<Mesh> m_boundingSphereMesh;
+
         bool m_initializeMesh = false;
         bool m_initializeBoundingVolume = false;
     };

@@ -67,54 +67,39 @@ bool DaerimGTA::InitScene()
 
     // Main Object
     {
-        //vector<string> clipNames = { "FightingIdleOnMichelle2.fbx",
-        //                            "Fireball.fbx" };
-       // string path = "../Assets/Characters/Mixamo/";
-        //string characterName = "character.fbx";
-        //AnimationData aniData;
+        {
+            string path = "../Assets/Characters/Mixamo/";
+            string characterName = "character.fbx";
+            Vector3 center(0.0f, 0.1f, 1.0f);
+            shared_ptr<DSkinnedMeshModel> wizardModel = make_shared<DSkinnedMeshModel>(m_device, m_context, path, characterName);
+            wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+            wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+            wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+            wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+                Matrix::CreateTranslation(center));
+            shared_ptr<Wizard> wizardActor=
+                make_shared<Wizard>(m_device, m_context, wizardModel);
+            wizardActor->Initialize(m_device, m_context, wizardModel);
+            m_activateActor = wizardActor;
+            m_actorList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
+        }
 
-        //auto [meshes, _] =
-        //    GeometryGenerator::ReadAnimationFromFile(path, "character.fbx");
+        {
+            string path = "../Assets/Characters/Mixamo/";
+            string characterName = "character.fbx";
+            Vector3 center(0.5f, 0.1f, 1.0f);
+            shared_ptr<DSkinnedMeshModel> wizardModel = make_shared<DSkinnedMeshModel>(m_device, m_context, path, characterName);
+            wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+            wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+            wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+            wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+                Matrix::CreateTranslation(center));
+            shared_ptr<Wizard> wizardActor =
+                make_shared<Wizard>(m_device, m_context, wizardModel);
+            wizardActor->Initialize(m_device, m_context, wizardModel);
+            m_actorList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
+        }
 
-        //for (auto& name : clipNames) {
-        //    auto [_, ani] =
-        //        GeometryGenerator::ReadAnimationFromFile(path, name);
-
-        //    if (aniData.clips.empty()) {
-        //        aniData = ani;
-        //    }
-        //    else {
-        //        aniData.clips.push_back(ani.clips.front());
-        //    }
-        //}
-
-        //Vector3 center(0.0f, 0.1f, 1.0f);
-        //shared_ptr<SkinnedMeshModel> characterModel =
-        //    make_shared<SkinnedMeshModel>(m_device, m_context, meshes, aniData);
-        //characterModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-        //characterModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-        //characterModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-
-        //m_character = make_shared< SkeletalMeshActor>();
-        //m_character->m_skinnedMeshModel = characterModel;
-        //m_character->UpdateWorldRow(Matrix::CreateScale(0.2f) *
-        //    Matrix::CreateTranslation(center));
-         
-        //// 인풋을 받는 Actor 
-        string path = "../Assets/Characters/Mixamo/";
-        string characterName = "character.fbx";
-        Vector3 center(0.0f, 0.1f, 1.0f);
-        shared_ptr<DSkinnedMeshModel> wizardModel = make_shared<DSkinnedMeshModel>(m_device, m_context, path, characterName);
-        wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-        wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-        wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-        wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
-            Matrix::CreateTranslation(center));
-        m_wizardActor =
-            make_shared<Wizard>(m_device, m_context, wizardModel);
-        m_wizardActor->Initialize(m_device, m_context, wizardModel);
-        m_activateActor = m_wizardActor;
-        m_actorList.push_back(m_wizardActor); // 리스트에 등록, 이거 왜..?
     }
      
     InitPhysics(true);
@@ -165,8 +150,8 @@ void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
      
-    MeshLoadHelper::LoadUnloadedModel(m_device, m_context);
-    m_wizardActor->Update(m_device,m_context,dt);
+    MeshLoadHelper::LoadAllUnloadedModel(m_device, m_context);
+    //m_wizardActor->Update(m_device,m_context,dt);
    
     // 이하 물리엔진 관련
     StepSimulation(dt);

@@ -1,7 +1,7 @@
 #pragma once
 namespace hlab {
 // Main Type
-enum class ActorStateType
+enum class EActorStateType
 {
 	Idle,
 	Attack,
@@ -11,7 +11,7 @@ enum class ActorStateType
 };
 
 // Sub Type
-enum class MoveStateType
+enum class EMoveStateType
 {
 	MoveStateIdleToWalk,
 	MoveStateWalk,
@@ -20,16 +20,23 @@ enum class MoveStateType
 	EndOfEnum
 };
 
-enum class JumpStateType
+enum class EJumpStateType
 {
 	JumpStateInPlace,
 	JumpStateRunning,
 };
 
-enum class FlyAwayStateType
+enum class EFlyAwayStateType
 {
 	FlayAwayStateFlying,
 	FlayAwayStateLieDown,
 };
 
+
+enum class ELoadType
+{
+	NotLoaded,
+	Loading,
+	Loaded,
+};
 }

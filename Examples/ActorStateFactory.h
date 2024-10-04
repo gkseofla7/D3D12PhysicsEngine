@@ -14,7 +14,7 @@ public:
 		static ActorStateFactory helper;
 		return helper;
 	}
-	std::shared_ptr<ActorState> CreateActorState(ActorStateType InType, std::shared_ptr<Actor> InActor);
+	std::shared_ptr<ActorState> CreateActorState(EActorStateType InType, std::shared_ptr<Actor> InActor);
 };
 
 }

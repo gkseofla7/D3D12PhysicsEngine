@@ -2,8 +2,10 @@
 #include <map>
 #include <string>
 #include <future>
+#include <mutex>
 #include "dModel.h"
 #include <directxtk/SimpleMath.h>
+#include "GameDef.h"
 
 namespace hlab {
 using namespace std;
@@ -30,19 +32,27 @@ struct MeshBlock
 	ComPtr<ID3D11DeviceContext> deferredContext;
 	std::future<vector<MeshData>> Loader;
 	std::future<ID3D11CommandList*> LoadCommandList;
-	bool IsLoading = false;
-	bool IsModelLoading = false;
+	
+	ELoadType MeshDataLoadType = ELoadType::NotLoaded;
+	ELoadType MeshLoadType = ELoadType::NotLoaded;
+
 };
 class MeshLoadHelper
 {
 public:
-	static void LoadUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
+	static void LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	static bool GetMesh( const string& InPath, const string& InName, vector<Mesh>*& OutMesh);
+	static bool GetBoundingMesh(const string& InPath, const string& InName, 
+		DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
+		shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh);
+
 	static bool LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& InPath, const string& InName, vector<Mesh>* OutModel);
 	static ID3D11CommandList* LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context,const string& key);
 	static bool SetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants);
+
 public:
 	static map<string, MeshBlock> MeshMap;
+	static std::mutex m_mtx;
 };
 
 }

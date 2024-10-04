@@ -15,7 +15,7 @@ namespace hlab {
 		virtual void Transition();
 		virtual void UpdateAnimation();
 	private:
-		JumpStateType m_jumpState;
+		EJumpStateType m_jumpState;
 	};
 
 }

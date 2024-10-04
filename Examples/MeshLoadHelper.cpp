@@ -5,10 +5,11 @@
 #include "ConstantBuffers.h"
 #include "ThreadPool.h"
 #include <filesystem>
-#include <mutex>
+
 namespace hlab {
     using namespace DirectX;
     map<string, MeshBlock> MeshLoadHelper::MeshMap;
+    std::mutex MeshLoadHelper::m_mtx;
     BoundingBox GetBoundingBoxFromVertices(const vector<hlab::Vertex>& vertices) {
 
         if (vertices.size() == 0)
@@ -55,12 +56,12 @@ AnimationData ReadAnimationFromFile(string path, string name)
 	return ani;
 }
 
-void MeshLoadHelper::LoadUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
+void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
 {
     for (auto& Pair : MeshMap)
     {
         MeshBlock& mBloock = Pair.second;
-        if (mBloock.IsLoading == true && mBloock.Loader._Is_ready() == true)
+        if (mBloock.MeshDataLoadType == ELoadType::Loading && mBloock.Loader._Is_ready() == true)
         {
             ThreadPool& tPool = ThreadPool::getInstance();
             //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
@@ -68,7 +69,7 @@ void MeshLoadHelper::LoadUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D
                 return LoadModel(device, nullptr, Pair.first); };
             mBloock.LoadCommandList = tPool.EnqueueJob(func);
         } 
-        else if (mBloock.IsModelLoading == true && mBloock.LoadCommandList._Is_ready() == true)
+        else if (mBloock.MeshLoadType == ELoadType::Loading && mBloock.LoadCommandList._Is_ready() == true)
         { 
             // 4. 주 스레드에서 Immediate Context를 사용해 명령 리스트 실행
             ID3D11CommandList* CommandList = mBloock.LoadCommandList.get();
@@ -76,8 +77,9 @@ void MeshLoadHelper::LoadUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D
             CommandList->Release();
             mBloock.deferredContext = nullptr; 
             //mBloock.deferredContext->Release();
+            // 텍스처는 메인에서 생성
             LoadModel(device, context, Pair.first); 
-            mBloock.IsModelLoading = false;
+            mBloock.MeshLoadType = ELoadType::Loaded;
         }
     }
 }
@@ -97,11 +99,11 @@ bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
         auto func = [&device, &context, &meshBlocks]() {
             return CreateMeshData(meshBlocks); };
 		MeshMap[key].Loader = tPool.EnqueueJob(func);
-		MeshMap[key].IsLoading = true;
+		MeshMap[key].MeshDataLoadType = ELoadType::Loading;
 		return false;
 	}
 	
-    return true;
+    return MeshMap[key].MeshDataLoadType == ELoadType::Loaded;
 }
 bool MeshLoadHelper::SetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants)
 {
@@ -110,7 +112,7 @@ bool MeshLoadHelper::SetMaterial(const string& InPath, const string& InName, Mat
     {
         return false;
     }
-    if (MeshMap[key].IsLoading == true)
+    if (MeshMap[key].MeshDataLoadType != ELoadType::Loaded)
     {
         return false;
     }
@@ -125,46 +127,52 @@ bool MeshLoadHelper::SetMaterial(const string& InPath, const string& InName, Mat
 ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, const string& key)
 {
     bool deferred = context == nullptr;
-    if (deferred)
     {
+        std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
+
         if (MeshMap.find(key) == MeshMap.end())
         {
             return nullptr;
         }
         // MeshData 로드 안됨
-        if (MeshMap[key].IsLoading == false)
+        if (MeshMap[key].MeshDataLoadType == ELoadType::NotLoaded)
         {
             return nullptr;
         }
         // MeshData 로딩중
-        if (MeshMap[key].IsLoading == true && MeshMap[key].Loader._Is_ready() == false)
+        if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == false)
         {
             return nullptr;
         }
         // 이미 모델 로딩중
-        if (MeshMap[key].IsModelLoading)
+        if ((MeshMap[key].MeshLoadType == ELoadType::Loading && deferred == true)
+            || MeshMap[key].MeshLoadType == ELoadType::Loaded)
         {
             return nullptr;
         }
+
+        // 동시에 여기에 들어오면 이슈 발생,,
+        MeshMap[key].MeshLoadType = ELoadType::Loading;
     }
-    
     // 1. Deferred Context 생성
     std::vector<MeshData>& MeshDatas = MeshMap[key].MeshDatas;
-    MeshMap[key].IsLoading = false;
-    
+    if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == true)
+    {
+        MeshDatas = MeshMap[key].Loader.get();
+        MeshMap[key].MeshDataLoadType = ELoadType::Loaded;
+    }
+
     ComPtr<ID3D11DeviceContext> deferredContext = nullptr;
     if (deferred)
     {
-        MeshMap[key].IsModelLoading = true;
         device->CreateDeferredContext(0, &deferredContext); 
         MeshMap[key].deferredContext = deferredContext;
-        MeshDatas = MeshMap[key].Loader.get();
+        
     }
     else
     {
         deferredContext = context; 
     }
-    
     
     // 이 부분도 따로 멀티스레딩으로 뺄수없을까?
     MeshBlock& MeshBlock = MeshMap[key];
@@ -294,49 +302,53 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         }
         index++;
     } 
-    // Initialize Bounding Box
+    if (deferred)
     {
-        MeshBlock.boundingBox = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
-        for (size_t i = 1; i < MeshDatas.size(); i++) {
-            auto bb = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
-            GetExtendBoundingBox(bb, MeshBlock.boundingBox);
+        // Initialize Bounding Box
+        {
+            MeshBlock.boundingBox = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
+            for (size_t i = 1; i < MeshDatas.size(); i++) {
+                auto bb = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
+                GetExtendBoundingBox(bb, MeshBlock.boundingBox);
+            }
+            auto meshData = GeometryGenerator::MakeWireBox(
+                MeshBlock.boundingBox.Center,
+                Vector3(MeshBlock.boundingBox.Extents) + Vector3(1e-3f));
+            MeshBlock.boundingBoxMesh = std::make_shared<Mesh>();
+            D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+                MeshBlock.boundingBoxMesh->vertexBuffer);
+            MeshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
+            MeshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
+            MeshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
+            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                MeshBlock.boundingBoxMesh->indexBuffer);
         }
-        auto meshData = GeometryGenerator::MakeWireBox(
-            MeshBlock.boundingBox.Center,
-            Vector3(MeshBlock.boundingBox.Extents) + Vector3(1e-3f));
-        MeshBlock.boundingBoxMesh = std::make_shared<Mesh>();
-        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-            MeshBlock.boundingBoxMesh->vertexBuffer);
-        MeshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
-        MeshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
-        MeshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
-        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-            MeshBlock.boundingBoxMesh->indexBuffer);
+
+        // Initialize Bounding Sphere
+        {
+            float maxRadius = 0.0f;
+            for (auto& mesh : MeshDatas) {
+                for (auto& v : mesh.vertices) {
+                    maxRadius = std::max(
+                        (Vector3(MeshBlock.boundingBox.Center) - v.position).Length(),
+                        maxRadius);
+                }
+            }
+            maxRadius += 1e-2f; // 살짝 크게 설정
+            MeshBlock.boundingSphere = BoundingSphere(MeshBlock.boundingBox.Center, maxRadius);
+            auto meshData = GeometryGenerator::MakeWireSphere(
+                MeshBlock.boundingSphere.Center, MeshBlock.boundingSphere.Radius);
+            MeshBlock.boundingSphereMesh = std::make_shared<Mesh>();
+            D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+                MeshBlock.boundingSphereMesh->vertexBuffer);
+            MeshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
+            MeshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
+            MeshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
+            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                MeshBlock.boundingSphereMesh->indexBuffer);
+        }
     }
 
-    // Initialize Bounding Sphere
-    {
-        float maxRadius = 0.0f;
-        for (auto& mesh : MeshDatas) {
-            for (auto& v : mesh.vertices) {
-                maxRadius = std::max(
-                    (Vector3(MeshBlock.boundingBox.Center) - v.position).Length(),
-                    maxRadius);
-            }
-        }
-        maxRadius += 1e-2f; // 살짝 크게 설정
-        MeshBlock.boundingSphere = BoundingSphere(MeshBlock.boundingBox.Center, maxRadius);
-        auto meshData = GeometryGenerator::MakeWireSphere(
-            MeshBlock.boundingSphere.Center, MeshBlock.boundingSphere.Radius);
-        MeshBlock.boundingSphereMesh = std::make_shared<Mesh>();
-        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-            MeshBlock.boundingSphereMesh->vertexBuffer);
-        MeshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
-        MeshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
-        MeshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
-        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-            MeshBlock.boundingSphereMesh->indexBuffer);
-    }
 
     // 3. 명령 리스트로 마무리
     if (deferred)
@@ -348,9 +360,11 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
     }
     else
     {
+        MeshMap[key].MeshLoadType = ELoadType::Loaded;
         return nullptr;
     }
 }
+
 
 bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<Mesh>*& OutMesh)
 {
@@ -359,11 +373,33 @@ bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<
     {
         return false;
     }
-    if (MeshMap[key].IsLoading == true || MeshMap[key].IsModelLoading == true)
+    if (MeshMap[key].MeshLoadType != ELoadType::Loaded)
     {
         return false;
     }
     OutMesh = &(MeshMap[key].Meshes);
+    return true;
+}
+
+bool MeshLoadHelper::GetBoundingMesh(const string& InPath, const string& InName, 
+    DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
+    shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh)
+{
+    string key = InPath + InName;
+    if (MeshMap.find(key) == MeshMap.end())
+    {
+        return false;
+    }
+    if (MeshMap[key].MeshLoadType != ELoadType::Loaded)
+    {
+        return false;
+    }
+
+    OutBox = MeshMap[key].boundingBox;
+    OutBoxMesh = MeshMap[key].boundingBoxMesh;
+    OutSphere = MeshMap[key].boundingSphere;
+    OutSphereMesh = MeshMap[key].boundingSphereMesh;
+
     return true;
 }
 }

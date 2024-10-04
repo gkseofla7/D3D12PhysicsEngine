@@ -8,7 +8,7 @@ namespace hlab {
 	MoveState::MoveState(std::weak_ptr<Actor> InActor)
 		:ActorState(InActor)
 	{
-		m_state = ActorStateType::Move;
+		m_state = EActorStateType::Move;
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
 		if (actorLock.get() == nullptr)
 		{
@@ -16,13 +16,13 @@ namespace hlab {
 		}
 		if (actorLock->GetVelocity() != 0.0f)
 		{
-			m_moveState = MoveStateType::MoveStateWalk;
+			m_moveState = EMoveStateType::MoveStateWalk;
 			m_loopState = true;
 		}
 		else
 		{
 			
-			m_moveState = MoveStateType::MoveStateIdleToWalk;
+			m_moveState = EMoveStateType::MoveStateIdleToWalk;
 			m_loopState = false;
 		}
 	}
@@ -36,9 +36,9 @@ namespace hlab {
 		std::shared_ptr<ActorState> myLock = actorLock->GetState();
 		if (std::shared_ptr<DSkinnedMeshModel> derivedPtr = std::dynamic_pointer_cast<DSkinnedMeshModel>(actorLock->GetModel()))
 		{
-			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(MoveStateType::MoveStateIdleToWalk).data());
-			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(MoveStateType::MoveStateWalk).data());
-			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(MoveStateType::MoveStateWalkToIdle).data());
+			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data());
+			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(EMoveStateType::MoveStateWalk).data());
+			AnimHelper::GetInstance().LoadAnimation(derivedPtr.get(), magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data());
 		}
 	}
 	void MoveState::Tick(float dt)
@@ -50,7 +50,7 @@ namespace hlab {
 			return;
 		}
 		actorLock->SetVelocity(0.0f);
-		if (m_moveState == MoveStateType::MoveStateWalk)
+		if (m_moveState == EMoveStateType::MoveStateWalk)
 		{
 			//actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 3.0f));
 			actorLock->SetVelocity(3.0f);
@@ -67,18 +67,18 @@ namespace hlab {
 	{
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
-		actorLock->SetState(ActorStateType::Idle);
+		actorLock->SetState(EActorStateType::Idle);
 		// 이후 난 죽음..ㅋㅋ 액터 틱에서 펜딩 걸어주는게 좋을듯 보인다
 	}
 	// 인풋 받아 리천
 	void MoveState::Transition()
 	{
-		if (m_moveState != MoveStateType::EndOfEnum)
+		if (m_moveState != EMoveStateType::EndOfEnum)
 		{
-			m_moveState = MoveStateType((int)m_moveState + 1);
+			m_moveState = EMoveStateType((int)m_moveState + 1);
 		}
 
-		if (m_moveState == MoveStateType::MoveStateWalk)
+		if (m_moveState == EMoveStateType::MoveStateWalk)
 		{
 			m_loopState = true;
 		}
@@ -87,7 +87,7 @@ namespace hlab {
 			m_loopState = false;
 		}
 
-		if (m_moveState == MoveStateType::EndOfEnum)
+		if (m_moveState == EMoveStateType::EndOfEnum)
 		{
 			Finish();
 		}

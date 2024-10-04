@@ -49,7 +49,7 @@ namespace hlab {
         m_meshConsts.Initialize(device);
         m_materialConsts.Initialize(device);
 
-        if (m_initializeMesh = MeshLoadHelper::LoadModelData(device, context, basePath, filename, m_meshes))
+        if (MeshLoadHelper::LoadModelData(device, context, basePath, filename, m_meshes))
         {
             MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
         }
@@ -91,7 +91,14 @@ namespace hlab {
         {
             if (m_initializeMesh = MeshLoadHelper::GetMesh(m_basePath, m_filename, m_meshes))
             {
+                MeshLoadHelper::GetBoundingMesh(m_basePath, m_filename, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
                 MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
+                m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
+                m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
+
+                m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
+                m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
+
             }
             else
             {
@@ -148,6 +155,10 @@ namespace hlab {
     }
 
     void DModel::RenderWireBoundingBox(ComPtr<ID3D11DeviceContext>& context) {
+        if (m_initializeMesh == false)
+        {
+            return;
+        }
         ID3D11Buffer* constBuffers[2] = {
             m_boundingBoxMesh->meshConstsGPU.Get(),
             m_boundingBoxMesh->materialConstsGPU.Get() };
@@ -161,9 +172,16 @@ namespace hlab {
     }
 
     void DModel::RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>& context) {
+        if (m_initializeMesh == false)
+        {
+            return;
+        }
+        m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
+        m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
+
         ID3D11Buffer* constBuffers[2] = {
-            m_boundingBoxMesh->meshConstsGPU.Get(),
-            m_boundingBoxMesh->materialConstsGPU.Get() };
+            m_boundingSphereMesh->meshConstsGPU.Get(),
+            m_boundingSphereMesh->materialConstsGPU.Get() };
         context->VSSetConstantBuffers(1, 2, constBuffers);
         context->IASetVertexBuffers(
             0, 1, m_boundingSphereMesh->vertexBuffer.GetAddressOf(),

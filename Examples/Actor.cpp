@@ -14,7 +14,7 @@ namespace hlab {
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
     {
-        SetState(ActorStateType::Idle);
+        SetState(EActorStateType::Idle);
     }
     bool Actor::MsgProc(WPARAM wParam, bool bPress)
     {
@@ -73,7 +73,7 @@ namespace hlab {
         m_model->Render(context);
     }
     // 상태 관련
-    void Actor::SetState(ActorStateType InType)
+    void Actor::SetState(EActorStateType InType)
     {
         m_prevStateType = m_actorStateType;
         m_actorStateType = InType;

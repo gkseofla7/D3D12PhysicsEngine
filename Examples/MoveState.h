@@ -18,7 +18,7 @@ public:
 	void RotateLeft(bool InOn) { bRoateLeft = InOn; }
 	void RotateRight(bool InOn) { bRotateRight = InOn; }
 private:
-	MoveStateType m_moveState;
+	EMoveStateType m_moveState;
 	bool bRoateLeft;
 	bool bRotateRight;
 };

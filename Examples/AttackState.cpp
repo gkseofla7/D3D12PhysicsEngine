@@ -6,7 +6,7 @@ namespace hlab {
 	AttackState::AttackState(std::weak_ptr<Actor> InActor)
 		:ActorState(InActor)
 	{
-		m_state = ActorStateType::Attack;
+		m_state = EActorStateType::Attack;
 		m_loopState = false;
 	}
 	void AttackState::Initialize()
@@ -21,7 +21,7 @@ namespace hlab {
 	{
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
-		actorLock->SetState(ActorStateType::Idle);
+		actorLock->SetState(EActorStateType::Idle);
 	}
 	// 인풋 받아 리천
 	void AttackState::Transition()

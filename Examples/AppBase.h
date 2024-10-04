@@ -30,6 +30,8 @@ using std::shared_ptr;
 using std::vector;
 using std::wstring;
 
+class Actor;
+
 class AppBase {
   public:
     AppBase();
@@ -67,6 +69,7 @@ class AppBase {
     void SetPipelineState(const GraphicsPSO &pso);
     void SetPipelineState(const ComputePSO &pso);
     shared_ptr<Model> PickClosest(const Ray &pickingRay, float &minDist);
+    void SelectClosestActor(const Ray &pickingRay, float &minDist);
     void ProcessMouseControl();
 
   protected: // 상속 받은 클래스에서도 접근 가능

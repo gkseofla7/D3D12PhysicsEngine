@@ -31,7 +31,7 @@ public:
 public:
 	shared_ptr<BillboardModel> m_fireball;
 	shared_ptr<SkeletalMeshActor> m_character;
-	shared_ptr<Wizard> m_wizardActor;
+	
 
 	btScalar stackZ = 10.0f;
 
