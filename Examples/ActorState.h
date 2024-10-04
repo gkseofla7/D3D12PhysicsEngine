@@ -21,9 +21,9 @@ public:
 	virtual void Initialize() = 0;
 	virtual void Tick(float dt);
 	virtual void Finish();
-	// 인풋 받아 리천
 	virtual void Transition();
 	virtual void UpdateAnimation();
+	bool ActionKeyIfBind(WPARAM InKey, bool InPressed);
 
 	ActorStateType GetStateType() { return m_state; }
 	int GetFrame() { return m_frame; }
@@ -31,10 +31,14 @@ protected:
 	ActorStateType m_state;
 	bool m_loopState = false;
 	int m_frame = 0;
+	bool m_pauseFrame = false;
 
 	std::weak_ptr<Actor> m_actor;
 private:
 	bool m_finished = false;
+
+	std::map<WPARAM, function<bool()>> m_keyBindingPress;
+	std::map<WPARAM, function<bool()>> m_keyBindingRelease; 
 	
 };
 }

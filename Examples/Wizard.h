@@ -14,6 +14,7 @@ private:
 	// TODO. Actor로 옮길 예정
 	// 초기화
 	void InitAnimPath();
+	void LoadAnimAsync(string InState);
 	virtual void InitBoundingKey() override;
 
 	// 인푼 관련 함수

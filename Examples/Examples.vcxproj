@@ -112,6 +112,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalOptions>/D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -136,6 +137,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
+      <AdditionalOptions>/D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -149,10 +151,18 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Actor.cpp" />
+    <ClCompile Include="ActorState.cpp" />
+    <ClCompile Include="AnimHelper.cpp" />
+    <ClCompile Include="ActorStateFactory.cpp" />
+    <ClCompile Include="AttackState.cpp" />
     <ClCompile Include="BillboardModel.cpp" />
     <ClCompile Include="BitonicSort.cpp" />
     <ClCompile Include="D3D11Utils.cpp" />
     <ClCompile Include="DaerimGTA.cpp" />
+    <ClCompile Include="DaerimsEngineBase.cpp" />
+    <ClCompile Include="DModel.cpp" />
+    <ClCompile Include="DSkinnedMeshModel.cpp" />
     <ClCompile Include="Ex1404_StructuredBuffer.cpp" />
     <ClCompile Include="Ex1405_ConsumeAppendBuffer.cpp" />
     <ClCompile Include="Ex1406_DensityField.cpp" />
@@ -179,24 +189,38 @@
     <ClCompile Include="Ex1403_MatVecMult.cpp" />
     <ClCompile Include="Example_TEMPLATE.cpp" />
     <ClCompile Include="FluidSimulationCPU.cpp" />
+    <ClCompile Include="FlyAwayState.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="GraphicsCommon.cpp" />
     <ClCompile Include="GraphicsPSO.cpp" />
+    <ClCompile Include="IdleState.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="JumpState.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppBase.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="MeshLoadHelper.cpp" />
+    <ClCompile Include="MoveState.cpp" />
     <ClCompile Include="Noise.cpp" />
     <ClCompile Include="PostProcess.cpp" />
+    <ClCompile Include="ProjectileManager.cpp" />
+    <ClCompile Include="SkeletalMeshActor.cpp" />
     <ClCompile Include="SphSimulation.cpp" />
     <ClCompile Include="StableFluids.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="UniformGrid.cpp" />
+    <ClCompile Include="Wizard.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Actor.h" />
+    <ClInclude Include="ActorState.h" />
     <ClInclude Include="AnimationClip.h" />
+    <ClInclude Include="AnimHelper.h" />
+    <ClInclude Include="AnimStateDef.h" />
+    <ClInclude Include="ActorStateFactory.h" />
+    <ClInclude Include="AttackState.h" />
     <ClInclude Include="BillboardModel.h" />
     <ClInclude Include="BitonicSort.h" />
     <ClInclude Include="Buffers.h" />
@@ -206,6 +230,10 @@
     <ClInclude Include="D3D11Utils.h" />
     <ClInclude Include="AppBase.h" />
     <ClInclude Include="DaerimGTA.h" />
+    <ClInclude Include="DaerimsEngineBase.h" />
+    <ClInclude Include="Delegate.h" />
+    <ClInclude Include="DModel.h" />
+    <ClInclude Include="DSkinnedMeshModel.h" />
     <ClInclude Include="Ex1404_StructuredBuffer.h" />
     <ClInclude Include="Ex1406_DensityField.h" />
     <ClInclude Include="Ex1405_ConsumeAppendBuffer.h" />
@@ -232,11 +260,18 @@
     <ClInclude Include="Example_TEMPLATE.h" />
     <ClInclude Include="FireballActor.h" />
     <ClInclude Include="FluidSimulationCPU.h" />
+    <ClInclude Include="FlyAwayState.h" />
+    <ClInclude Include="GameDef.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="GraphicsPSO.h" />
     <ClInclude Include="GrassModel.h" />
     <ClInclude Include="Ex1901_Physx.h" />
+    <ClInclude Include="IdleState.h" />
+    <ClInclude Include="JumpState.h" />
+    <ClInclude Include="MeshLoadHelper.h" />
+    <ClInclude Include="MoveState.h" />
+    <ClInclude Include="ProjectileManager.h" />
     <ClInclude Include="RigidBodyActor.h" />
     <ClInclude Include="SkeletalMeshActor.h" />
     <ClInclude Include="ImageFilter.h" />
@@ -256,9 +291,13 @@
     <ClInclude Include="StructuredBuffer.h" />
     <ClInclude Include="Texture2D.h" />
     <ClInclude Include="Texture3D.h" />
+    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="ThreadPool.hpp" />
     <ClInclude Include="Timer.h" />
+    <ClInclude Include="TypeDef.h" />
     <ClInclude Include="UniformGrid.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="Wizard.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

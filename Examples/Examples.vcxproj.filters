@@ -72,7 +72,6 @@
     <ClCompile Include="GraphicsPSO.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="PostProcess.cpp" />
     <ClCompile Include="ExampleApp.cpp">
       <Filter>Examples</Filter>
@@ -172,6 +171,50 @@
     <ClCompile Include="DaerimGTA.cpp">
       <Filter>Examples\DaerimsProject</Filter>
     </ClCompile>
+    <ClCompile Include="Actor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="SkeletalMeshActor.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="Wizard.cpp">
+      <Filter>Actors</Filter>
+    </ClCompile>
+    <ClCompile Include="DaerimsEngineBase.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="AnimHelper.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelLoader.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="MeshLoadHelper.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="ThreadPool.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="DModel.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="DSkinnedMeshModel.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="IdleState.cpp" />
+    <ClCompile Include="AttackState.cpp" />
+    <ClCompile Include="ProjectileManager.cpp" />
+    <ClCompile Include="ActorState.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="ActorStateFactory.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="MoveState.cpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClCompile>
+    <ClCompile Include="JumpState.cpp" />
+    <ClCompile Include="FlyAwayState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h" />
@@ -185,7 +228,6 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="ModelInstance.h" />
-    <ClInclude Include="ModelLoader.h" />
     <ClInclude Include="PostProcess.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="ExampleApp.h">
@@ -318,6 +360,59 @@
     <ClInclude Include="DaerimGTA.h">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
+    <ClInclude Include="Delegate.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="Wizard.h">
+      <Filter>Actors</Filter>
+    </ClInclude>
+    <ClInclude Include="DaerimsEngineBase.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimHelper.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelLoader.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="MeshLoadHelper.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPool.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="DModel.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="DSkinnedMeshModel.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreadPool.hpp">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="TypeDef.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="AnimStateDef.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="GameDef.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="IdleState.h" />
+    <ClInclude Include="AttackState.h" />
+    <ClInclude Include="ProjectileManager.h" />
+    <ClInclude Include="ActorState.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="ActorStateFactory.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="MoveState.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="JumpState.h" />
+    <ClInclude Include="FlyAwayState.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

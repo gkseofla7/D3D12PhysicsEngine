@@ -7,6 +7,7 @@ enum class ActorStateType
 	Attack,
 	Move,
 	Jump,
+	FlyAway,
 };
 
 // Sub Type
@@ -24,4 +25,11 @@ enum class JumpStateType
 	JumpStateInPlace,
 	JumpStateRunning,
 };
+
+enum class FlyAwayStateType
+{
+	FlayAwayStateFlying,
+	FlayAwayStateLieDown,
+};
+
 }

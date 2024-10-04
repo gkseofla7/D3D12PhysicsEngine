@@ -21,15 +21,18 @@ void ActorState::Tick(float dt)
 	std::shared_ptr<ActorState> myLock = actorLock->GetState();
 	if (std::shared_ptr<DSkinnedMeshModel> derivedPtr = std::dynamic_pointer_cast<DSkinnedMeshModel>(actorLock->GetModel()))
 	{
-		UpdateAnimation();
-		m_frame++;
-		if (m_frame >= derivedPtr->m_maxFrame)
+		if (m_pauseFrame == false)
 		{
-			m_frame = 0;
-			if (false == m_loopState)
+			UpdateAnimation();
+			m_frame++;
+			if (m_frame >= derivedPtr->m_maxFrame)
 			{
-				// 주의! 나의 shared_ptr을 참조하고 있는 유일한 곳을 끊어준다..
-				Transition();
+				m_frame = 0;
+				if (false == m_loopState)
+				{
+					// 주의! 나의 shared_ptr을 참조하고 있는 유일한 곳을 끊어준다..
+					Transition();
+				}
 			}
 		}
 	}
@@ -56,5 +59,14 @@ void ActorState::UpdateAnimation()
 	{
 		AnimHelper::GetInstance().UpdateAnimation(derivedPtr.get(), magic_enum::enum_name(m_state).data(), m_frame);
 	}
+}
+
+bool ActorState::ActionKeyIfBind(WPARAM InKey, bool InPressed)
+{
+	if (m_keyBindingPress.find(InKey) != m_keyBindingPress.end())
+	{
+		return m_keyBindingPress[InKey]();
+	}
+	return false;
 }
 }

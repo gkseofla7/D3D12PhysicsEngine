@@ -54,8 +54,6 @@ namespace hlab {
             MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
         }
     }
-    
-
 
     void DModel::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
         if (m_isVisible) {

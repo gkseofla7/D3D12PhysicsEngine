@@ -21,9 +21,16 @@ public:
 	
 	// 위치 이동 관련
 	void UpdatePosition(const Vector3& InDelta);
-	void UpdateVelocity(float dt);
+	void UpdateVelocity(float InDelta);
 	void UpdateRotationY(float InDelta);
-	void SetVelocity(float InVelocity) { m_velocity = InVelocity; }
+	void SetVelocity(float InVelocity) { 
+		if (InVelocity < 0.0)
+		{
+			m_velocity = 0.0;
+			return;
+		}
+		m_velocity = InVelocity; 
+	}
 	float GetVelocity() { return m_velocity; }
 	void SetState(ActorStateType InType);
 	ActorStateType GetPrevState() { return m_prevStateType; }
@@ -50,7 +57,8 @@ protected:
 
 	std::map<WPARAM, function<void()>> m_keyBindingPress;
 	std::map<WPARAM, function<void()>> m_keyBindingRelease;
-
+	// Actor에서 State가 어떤 동작을 하는지
+	// 어떤 상태인지 모르고 돌아가는게 베스트 아닌가싶다.
 	shared_ptr<ActorState> m_actorState;
 	ActorStateType m_actorStateType;
 	ActorStateType m_prevStateType;

@@ -48,9 +48,9 @@ namespace hlab {
     {
         m_model->UpdatePosition(InDelta);
     }
-    void Actor::UpdateVelocity(float dt)
+    void Actor::UpdateVelocity(float InDelta)
     {
-        m_model->UpdateVelocity(dt);
+        SetVelocity(m_velocity - InDelta);
     }
 
     void Actor::UpdateRotationY(float InDelta)
