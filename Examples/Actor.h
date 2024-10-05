@@ -8,6 +8,23 @@ namespace hlab {
 	class DModel;
 	class ActorState;
 	class DSkinnedMeshModel;
+
+	class ActorNumberGenerator
+	{
+	public:
+		static ActorNumberGenerator& GetInstance()
+		{
+			static ActorNumberGenerator generator;
+			return generator;
+		}
+		int GetNewActorNumber()
+		{
+			m_lastActorNumber++;
+			return m_lastActorNumber;
+		}
+	private:
+		int m_lastActorNumber = 0;
+	};
 	//using std::map;
 class Actor : public std::enable_shared_from_this<Actor> {
 public:
@@ -45,6 +62,7 @@ public:
 	shared_ptr<DModel> GetModel() { return m_model; }
 	virtual shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel() { return nullptr; };
 	shared_ptr<ActorState> GetState() { return m_actorState; }
+	int GetActorId() { return m_actorId; }
 
 	bool IsPickable() { return m_isPickable; }
 private:
@@ -69,6 +87,9 @@ protected:
 	float m_velocity = 0.0f;
 
 	bool m_isPickable = true; // 마우스로 선택/조작 가능 여부
+
+private:
+	int m_actorId = 0;
 };
 
 } // namespace hlab

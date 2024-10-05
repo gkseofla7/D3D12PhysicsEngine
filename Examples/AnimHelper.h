@@ -10,6 +10,7 @@
 namespace hlab {
 using namespace std;
 class DSkinnedMeshModel;
+class Actor;
 struct AnimationBlock
 {
 	//AnimationBlock() = default;
@@ -37,7 +38,7 @@ public:
 	void AddAnimPath(int InActorId, string InPathName);
 	void AddAnimStateToAnim(int InActorId, string InState, string InAnimName);
 	bool LoadAnimation(DSkinnedMeshModel* InActor, string InState);
-	bool UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
+	bool UpdateAnimation(Actor* InActor, string InState,
 		int frame, int type = 0);
 
 private:

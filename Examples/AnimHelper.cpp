@@ -3,6 +3,7 @@
 #include "ThreadPool.h"
 #include "AnimHelper.h"
 #include "DSkinnedMeshModel.h"
+#include "Actor.h"
 namespace hlab {
 
 AnimHelper& AnimHelper::GetInstance()
@@ -66,17 +67,11 @@ bool AnimHelper::LoadAnimation(DSkinnedMeshModel* InActor, string InState, bool&
 	{
 		if (AnimBlock.Loaders.find(InState) != AnimBlock.Loaders.end() && AnimBlock.Loaders[InState]._Is_ready())
 		{
-			bInit = true;
 			if (AnimBlock.IsFirstSetting == true)
 			{
-				AnimBlock.IsFirstSetting = false;
 				AnimBlock.AniData = AnimBlock.Loaders[InState].get();
 				AnimBlock.AniData.clipMaps[InState] = std::move(AnimBlock.AniData.clips.front());
-				InActor->m_boneTransforms.m_cpu.resize(AnimBlock.AniData.clipMaps[InState].keys.size());
-				// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
-				for (int i = 0; i < AnimBlock.AniData.clipMaps[InState].keys.size(); i++)
-					InActor->m_boneTransforms.m_cpu[i] = Matrix();
-				InActor->m_boneTransforms.Initialize(m_device);
+				AnimBlock.IsFirstSetting = false;
 			}
 			else
 			{ // TODO. R-Value로 넘겨주는게,,
@@ -98,40 +93,56 @@ bool AnimHelper::LoadAnimation(DSkinnedMeshModel* InActor, string InState, bool&
 			return false;
 		}
 	}
+	if (InActor->m_boneTransforms.m_cpu.size() != AnimBlock.AniData.clipMaps[InState].keys.size())
+	{
+		bInit = true;
+		InActor->m_boneTransforms.m_cpu.resize(AnimBlock.AniData.clipMaps[InState].keys.size());
+		// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
+		for (int i = 0; i < AnimBlock.AniData.clipMaps[InState].keys.size(); i++)
+			InActor->m_boneTransforms.m_cpu[i] = Matrix();
+		InActor->m_boneTransforms.Initialize(m_device);
+	}
+
 	return true;
 }
-bool AnimHelper::UpdateAnimation(DSkinnedMeshModel* InActor, string InState,
+bool AnimHelper::UpdateAnimation(Actor* InActor, string InState,
 	int frame, int type)
 { 
 	if (bInitialize == false)
 	{
 		return false;
 	}
+	std::shared_ptr<DSkinnedMeshModel> SkinnedMeshModel = std::dynamic_pointer_cast<DSkinnedMeshModel>(InActor->GetModel());
+	if (SkinnedMeshModel == nullptr)
+	{
+		return false;
+	}
 	bool bInit = false;
-	if (LoadAnimation(InActor, InState, bInit) == false)
+	if (LoadAnimation(SkinnedMeshModel.get(), InState, bInit) == false)
 	{
 		return false;
 	}
 	if (frame == 0)
 	{
-		InActor->IntegrateRootTransformToWorldTransform(m_context);
+		SkinnedMeshModel->IntegrateRootTransformToWorldTransform(m_context);
 	}
 
-	int ActorId = InActor->m_modelId;
-	AnimationBlock& AnimBlock = m_animDatas[ActorId];
-	InActor->m_maxFrame = AnimBlock.AniData.clipMaps[InState].keys[0].size();
+	int ActorId = InActor->GetActorId();
+	int ModelId = SkinnedMeshModel->m_modelId;
+	AnimationBlock& AnimBlock = m_animDatas[ModelId];
+	SkinnedMeshModel->m_maxFrame = AnimBlock.AniData.clipMaps[InState].keys[0].size();
 	vector<Matrix> BoneTransform;
-	BoneTransform.resize(m_animDatas[ActorId].AniData.boneTransforms.size());
-	m_animDatas[ActorId].AniData.GetBoneTransform(InState, frame, InActor->GetAccumulatedRootTransform(), BoneTransform, bInit, type);
-	for (int i = 0; i < InActor->m_boneTransforms.m_cpu.size(); i++) {
-		InActor->m_boneTransforms.m_cpu[i] = 
-			m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
+	BoneTransform.resize(m_animDatas[ModelId].AniData.boneTransforms.size());
+	m_animDatas[ModelId].AniData.GetBoneTransform(ActorId,InState, frame, SkinnedMeshModel->GetAccumulatedRootTransform(), BoneTransform, bInit, type);
+	for (int i = 0; i < SkinnedMeshModel->m_boneTransforms.m_cpu.size(); i++) {
+		SkinnedMeshModel->m_boneTransforms.m_cpu[i] =
+			m_animDatas[ModelId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
 		if (i == 0)
 		{
-			InActor->SetAccumulatedRootTransformToLocal( m_animDatas[ActorId].AniData.GetAnimationTransform(i, BoneTransform[i]));
+			SkinnedMeshModel->SetAccumulatedRootTransformToLocal( m_animDatas[ModelId].AniData.GetAnimationTransform(i, BoneTransform[i]));
 		}
 	}
-	InActor->m_boneTransforms.Upload(m_context);
+	SkinnedMeshModel->m_boneTransforms.Upload(m_context);
 	return true;
 }
 

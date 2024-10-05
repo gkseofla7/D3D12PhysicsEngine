@@ -71,10 +71,6 @@ namespace hlab {
 		{
 			return;
 		}
-		std::shared_ptr<ActorState> myLock = actorLock->GetState();
-		if (std::shared_ptr<DSkinnedMeshModel> derivedPtr = std::dynamic_pointer_cast<DSkinnedMeshModel>(actorLock->GetModel()))
-		{
-			AnimHelper::GetInstance().UpdateAnimation(derivedPtr.get(), magic_enum::enum_name(m_jumpState).data(), m_frame);
-		}
+		AnimHelper::GetInstance().UpdateAnimation(actorLock.get(), magic_enum::enum_name(m_jumpState).data(), m_frame);
 	}
 }

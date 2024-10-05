@@ -200,8 +200,14 @@ namespace hlab {
         // 바운딩스피어 위치 업데이트
         // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
         // 구(sphere)라서 회전은 고려할 필요 없음
-        m_boundingSphere.Center = this->m_worldRow.Translation();
-
+        if(m_initializeMesh)
+        {
+            m_boundingSphere.Center = this->m_worldRow.Translation();
+            float scaleVal = std::fmaxf(this->m_worldRow._11, this->m_worldRow._21);
+            scaleVal = std::fmaxf(scaleVal ,this->m_worldRow._33);
+            m_boundingSphere.Radius = (scaleVal/ m_boundingSphereScale) * m_boundingSphere.Radius;
+            m_boundingSphereScale = scaleVal;
+        }
         m_meshConsts.GetCpu().world = worldRow.Transpose();
         m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
         m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();

@@ -19,23 +19,6 @@ namespace hlab {
     using std::string;
     using std::vector;
 
-    class DModelNumberGenerator
-    {
-    public:
-        static DModelNumberGenerator& GetInstance()
-        {
-            static DModelNumberGenerator generator;
-            return generator;
-        }
-        int GetNewModelNumber()
-        {
-            m_lastModelNumber++;
-            return m_lastModelNumber;
-        }
-    private:
-        int m_lastModelNumber = 0;
-    };
-
     class DModel {
     public:
         DModel() {}
@@ -100,6 +83,8 @@ namespace hlab {
 
         bool m_initializeMesh = false;
         bool m_initializeBoundingVolume = false;
+
+        float m_boundingSphereScale = 1.0f;
     };
 
 } // namespace hlab

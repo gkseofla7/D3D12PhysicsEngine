@@ -19,8 +19,7 @@ void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext
 	shared_ptr<DModel> InModel)
 {
     SkeletalMeshActor::Initialize(device, context,InModel);
-    // RandomNumber 받도록 한다.
-    m_model->m_modelId = DModelNumberGenerator::GetInstance().GetNewModelNumber();
+    m_model->m_modelId = 1;
 
 	InitBoundingKey();
     InitAnimPath();

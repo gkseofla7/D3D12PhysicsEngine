@@ -15,6 +15,7 @@ namespace hlab {
         shared_ptr<DModel> InModel)
     {
         SetState(EActorStateType::Idle);
+        m_actorId = ActorNumberGenerator::GetInstance().GetNewActorNumber();
     }
     bool Actor::MsgProc(WPARAM wParam, bool bPress)
     {

@@ -1,6 +1,9 @@
 #pragma once
 #include "GameDef.h"
 #include <memory>
+#include <map>
+#include <functional> 
+#include <windows.h>
 namespace hlab {
 
 class Actor;
@@ -25,10 +28,10 @@ public:
 	virtual void UpdateAnimation();
 	bool ActionKeyIfBind(WPARAM InKey, bool InPressed);
 
-	ActorStateType GetStateType() { return m_state; }
+	EActorStateType GetStateType() { return m_state; }
 	int GetFrame() { return m_frame; }
 protected:
-	ActorStateType m_state;
+	EActorStateType m_state;
 	bool m_loopState = false;
 	int m_frame = 0;
 	bool m_pauseFrame = false;
@@ -37,8 +40,8 @@ protected:
 private:
 	bool m_finished = false;
 
-	std::map<WPARAM, function<bool()>> m_keyBindingPress;
-	std::map<WPARAM, function<bool()>> m_keyBindingRelease; 
+	std::map<WPARAM, std::function<bool()>> m_keyBindingPress;
+	std::map<WPARAM, std::function<bool()>> m_keyBindingRelease;
 	
 };
 }
