@@ -235,12 +235,10 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
-    for (auto& i : m_billboardModelList) {
-        i->UpdateConstantBuffers(m_device, m_context);
-    }
-    for (auto& i : m_actorList) {
+    for (auto& i : m_objectList)
+    {
         i->GetModel()->UpdateConstantBuffers(m_context);
-        i->Update(m_device,m_context, dt);
+        i->Tick(dt);
     }
 }
 
@@ -323,13 +321,21 @@ void AppBase::RenderDepthOnly() {
         AppBase::SetPipelineState(model->GetDepthOnlyPSO());
         model->Render(m_context);
     }
-    for (const auto& actor : m_actorList) {
-        AppBase::SetPipelineState(actor->GetModel()->GetDepthOnlyPSO());
-        actor->Render(m_context);
+    for (const auto& object : m_objectList) {
+        if (object->GetBillboardModel() != nullptr)
+        {
+            continue;
+        }
+        AppBase::SetPipelineState(object->GetModel()->GetDepthOnlyPSO());
+        object->Render(m_context);
     }
-    for (const auto& model : m_billboardModelList) {
-        AppBase::SetPipelineState(model->GetDepthOnlyPSO());
-        model->Render(m_context);
+    for (const auto& object : m_objectList) {
+        if (object->GetBillboardModel() == nullptr)
+        {
+            continue;
+        }
+        AppBase::SetPipelineState(object->GetModel()->GetDepthOnlyPSO());
+        object->Render(m_context);
     }
 
     AppBase::SetPipelineState(Graphics::depthOnlyPSO);
@@ -360,14 +366,23 @@ void AppBase::RenderShadowMaps() {
                     model->Render(m_context);
                 }
             }
-            for (const auto& actor : m_actorList) {
-                shared_ptr<DModel> model = actor->GetModel();
+            for (const auto& object : m_objectList) {
+                if (object->GetBillboardModel() != nullptr)
+                {
+                    continue;
+                }
+                shared_ptr<DModel> model = object->GetModel();
                 if (model->m_castShadow && model->m_isVisible) {
                     AppBase::SetPipelineState(model->GetDepthOnlyPSO());
                     model->Render(m_context);
                 }
             }
-            for (const auto& model : m_billboardModelList) {
+            for (const auto& object : m_objectList) {
+                if (object->GetBillboardModel() == nullptr)
+                {
+                    continue;
+                }
+                shared_ptr<DModel> model = object->GetModel();
                 if (model->m_castShadow && model->m_isVisible) {
                     AppBase::SetPipelineState(model->GetDepthOnlyPSO());
                     model->Render(m_context);
@@ -408,16 +423,27 @@ void AppBase::RenderOpaqueObjects() {
     AppBase::SetPipelineState(m_drawAsWire ? Graphics::skyboxWirePSO
                                            : Graphics::skyboxSolidPSO);
     m_skybox->Render(m_context);
-    for (const auto& actor : m_actorList) {
-        shared_ptr<DModel> model = actor->GetModel();
-        AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
-        model->Render(m_context);
-    }
     for (const auto& model : m_basicList) {
+
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
-    for (const auto& model : m_billboardModelList) {
+    for (const auto& object : m_objectList) {
+        if (object->GetBillboardModel() != nullptr)
+        {
+            continue;
+        }
+        shared_ptr<DModel> model = object->GetModel();
+        AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
+        model->Render(m_context);
+    }
+
+    for (const auto& object : m_objectList) {
+        if (object->GetBillboardModel() == nullptr)
+        {
+            continue;
+        }
+        shared_ptr<DModel> model = object->GetModel();
         AppBase::SetPipelineState(model->GetPSO(m_drawAsWire));
         model->Render(m_context);
     }
@@ -440,8 +466,8 @@ void AppBase::RenderOpaqueObjects() {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingBox(m_context);
         }
-        for (const auto& actor : m_actorList) {
-            shared_ptr<DModel> model = actor->GetModel();
+        for (const auto& object : m_objectList) {
+            shared_ptr<DModel> model = object->GetModel();
             model->RenderWireBoundingBox(m_context);
         }
     }
@@ -449,8 +475,8 @@ void AppBase::RenderOpaqueObjects() {
         for (auto &model : m_basicList) {
             model->RenderWireBoundingSphere(m_context);
         }
-        for (const auto& actor : m_actorList) {
-            shared_ptr<DModel> model = actor->GetModel();
+        for (const auto& object : m_objectList) {
+            shared_ptr<DModel> model = object->GetModel();
             model->RenderWireBoundingSphere(m_context);
         }
     }
@@ -473,13 +499,21 @@ void AppBase::RenderMirror() {
             AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
             model->Render(m_context);
         }
-        for (const auto& actor : m_actorList) {
-            AppBase::SetPipelineState(actor->GetModel()->GetReflectPSO(m_drawAsWire));
-            actor->Render(m_context);
+        for (const auto& object : m_objectList) {
+            if (object->GetBillboardModel() != nullptr)
+            {
+                continue;
+            }
+            AppBase::SetPipelineState(object->GetModel()->GetReflectPSO(m_drawAsWire));
+            object->Render(m_context);
         }
-        for (const auto& model : m_billboardModelList) {
-            AppBase::SetPipelineState(model->GetReflectPSO(m_drawAsWire));
-            model->Render(m_context);
+        for (const auto& object : m_objectList) {
+            if (object->GetBillboardModel() == nullptr)
+            {
+                continue;
+            }
+            AppBase::SetPipelineState(object->GetModel()->GetReflectPSO(m_drawAsWire));
+            object->Render(m_context);
         }
         AppBase::SetPipelineState(m_drawAsWire
                                       ? Graphics::reflectSkyboxWirePSO
@@ -870,11 +904,16 @@ shared_ptr<Model> AppBase::PickClosest(const Ray &pickingRay, float &minDist) {
 
 void AppBase::SelectClosestActor(const Ray& pickingRay, float& minDist) {
     minDist = 1e5f;
-    for (auto& actor : m_actorList) {
+    for (auto& object : m_objectList) {
+        std::shared_ptr<Actor> actor = std::dynamic_pointer_cast<Actor>(object);
+        if (actor == nullptr)
+        {
+            continue;
+        }
         float dist = 0.0f;
-        std::shared_ptr<DModel> model = actor->GetModel();
+        std::shared_ptr<DModel> model = object->GetModel();
 
-        if (actor->IsPickable() &&
+        if (object->IsPickable() &&
             pickingRay.Intersects(model->m_boundingSphere, dist) &&
             dist < minDist) {
             m_activateActor = actor;

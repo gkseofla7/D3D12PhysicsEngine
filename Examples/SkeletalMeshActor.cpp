@@ -13,9 +13,9 @@ namespace hlab {
     {
         Actor::Initialize(device, context, InModel);
     }
-    void SkeletalMeshActor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
+    void SkeletalMeshActor::Tick(float dt)
     {
-        Actor::Update(device, context, dt);
+        Actor::Tick( dt);
     }
 
     void SkeletalMeshActor::Render(ComPtr<ID3D11DeviceContext>& context)
@@ -30,13 +30,4 @@ namespace hlab {
         // Model::Render(.)를 같이 사용 가능
         Actor::Render(context);
     };
-
-    shared_ptr<DSkinnedMeshModel> SkeletalMeshActor::GetSkinnedMeshModel()
-    {
-        if (std::shared_ptr<DSkinnedMeshModel> derivedPtr = std::dynamic_pointer_cast<DSkinnedMeshModel>(GetModel()))
-        {
-            return derivedPtr;
-        }
-        return nullptr;
-    }
 }

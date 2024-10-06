@@ -49,7 +49,11 @@ private:
 
 	map<int ,map<string, string>> m_animStateToAnim;
 	map<int, string> m_pathMap;
+	// ModelId -> AnimationBlock
 	map<int, AnimationBlock> m_animDatas;
+
+	// 액터의 현재 애니메이션
+	map<int, string> m_actorAnimState;
 	
 	std::mutex mtx;
 	bool bInitialize = false;

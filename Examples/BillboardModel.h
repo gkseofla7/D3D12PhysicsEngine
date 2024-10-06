@@ -3,7 +3,7 @@
 #include <directxtk/SimpleMath.h>
 #include <vector>
 
-#include "Model.h"
+#include "DModel.h"
 
 namespace hlab {
 
@@ -20,7 +20,7 @@ struct BillboardConsts {
 static_assert((sizeof(BillboardConsts) % 16) == 0,
               "Constant Buffer size must be 16-byte aligned");
 
-class BillboardModel : public Model {
+class BillboardModel : public DModel {
   public:
     void Initialize(ComPtr<ID3D11Device> &device,
                     ComPtr<ID3D11DeviceContext> &context,
@@ -28,7 +28,7 @@ class BillboardModel : public Model {
                     const ComPtr<ID3D11PixelShader> &pixelShader);
 
     void Render(ComPtr<ID3D11DeviceContext> &context) override;
-    void RenderNormals(ComPtr<ID3D11DeviceContext> &context) override{};
+    //void RenderNormals(ComPtr<ID3D11DeviceContext> &context) override{};
     void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context) override{};
     void
     RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext> &context) override{};

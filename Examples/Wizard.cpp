@@ -25,9 +25,9 @@ void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext
     InitAnimPath();
 }
  
-void Wizard::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
+void Wizard::Tick(float dt)
 {
-    SkeletalMeshActor::Update(device, context, dt);
+    SkeletalMeshActor::Tick( dt);
 
     m_actorState->Tick(dt);
 

@@ -186,16 +186,28 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         }
         Mesh& newMesh = meshes[index];
          
-        //TODO. Skinned일때만, 아닌경우 조건문 추가 예정
         if (deferred)
         {
-            D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
-                newMesh.vertexBuffer);
-            newMesh.indexCount = UINT(meshData.indices.size());
-            newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
-            newMesh.stride = UINT(sizeof(SkinnedVertex));
-            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                newMesh.indexBuffer);
+            if (meshData.skinnedVertices.size() > 0)
+            {
+                D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
+                    newMesh.vertexBuffer);
+                newMesh.indexCount = UINT(meshData.indices.size());
+                newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
+                newMesh.stride = UINT(sizeof(SkinnedVertex));
+                D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                    newMesh.indexBuffer);
+            }
+            else
+            {
+                D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+                    newMesh.vertexBuffer);
+                newMesh.indexCount = UINT(meshData.indices.size());
+                newMesh.vertexCount = UINT(meshData.vertices.size());
+                newMesh.stride = UINT(sizeof(Vertex));
+                D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                    newMesh.indexBuffer);
+            }
         }
 
 
@@ -369,15 +381,20 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
 bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<Mesh>*& OutMesh)
 {
     string key = InPath + InName;
-    if (MeshMap.find(key) == MeshMap.end())
+    return GetMesh(key, OutMesh);
+}
+
+bool MeshLoadHelper::GetMesh(const string& InKey, vector<Mesh>*& OutMesh)
+{
+    if (MeshMap.find(InKey) == MeshMap.end())
     {
         return false;
     }
-    if (MeshMap[key].MeshLoadType != ELoadType::Loaded)
+    if (MeshMap[InKey].MeshLoadType != ELoadType::Loaded)
     {
         return false;
     }
-    OutMesh = &(MeshMap[key].Meshes);
+    OutMesh = &(MeshMap[InKey].Meshes);
     return true;
 }
 
@@ -401,5 +418,22 @@ bool MeshLoadHelper::GetBoundingMesh(const string& InPath, const string& InName,
     OutSphereMesh = MeshMap[key].boundingSphereMesh;
 
     return true;
+}
+
+string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, float InHalfExtent)
+{
+    string Key = "Box"  + std::to_string(InHalfExtent);
+    if (MeshMap.find(Key) == MeshMap.end())
+    {
+        std::vector<MeshData>& MeshDatas = MeshMap[Key].MeshDatas;
+        MeshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
+        MeshMap[Key].MeshDataLoadType = ELoadType::Loaded;
+
+        auto func = [&device, &context, Key]() {
+            return LoadModel(device, nullptr, Key); };
+        ThreadPool& tPool = ThreadPool::getInstance();
+        MeshMap[Key].LoadCommandList = tPool.EnqueueJob(func);
+    }
+    return Key;
 }
 }

@@ -24,6 +24,8 @@ namespace hlab {
         DModel() {}
         DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
             const string& basePath, const string& filename);
+        DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+            const string& meshKey);
 
         virtual void Initialize(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context);
@@ -31,7 +33,9 @@ namespace hlab {
             ComPtr<ID3D11DeviceContext>& context,
             const string& basePath,
             const string& filename);
-
+        void Initialize(ComPtr<ID3D11Device>& device,
+            ComPtr<ID3D11DeviceContext>& context,
+            const string& meshKey);
         virtual void InitMeshBuffers(ComPtr<ID3D11Device>& device,
             const MeshData& meshData,
             shared_ptr<Mesh>& newMesh);
@@ -53,6 +57,7 @@ namespace hlab {
         virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>& context);
         void UpdateWorldRow(const Matrix& worldRow);
 
+        void SetScale(float InScale) { m_scale = InScale; }
     public:
         Matrix m_worldRow = Matrix();   // Model(Object) To World 행렬
         Matrix m_worldITRow = Matrix(); // InverseTranspose
@@ -72,19 +77,21 @@ namespace hlab {
 
         string m_name = "NoName";
         int m_modelId = -1;
-        //TODO 임시
+
         int m_maxFrame = 0;
     private:
         string m_basePath;
         string m_filename;
 
+        string m_meshKey;
+
         shared_ptr<Mesh> m_boundingBoxMesh;
         shared_ptr<Mesh> m_boundingSphereMesh;
 
+        float m_scale = 1.0f;
+
         bool m_initializeMesh = false;
         bool m_initializeBoundingVolume = false;
-
-        float m_boundingSphereScale = 1.0f;
     };
 
 } // namespace hlab

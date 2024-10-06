@@ -25,9 +25,9 @@ public:
 	void StepSimulation(float deltaTime);
 	void CreateStack(const btTransform t, int numStacks, int numSlices,
 		btScalar halfExtent);
-	btRigidBody* CreateDynamic(const btTransform& t,
-		btCollisionShape* shape,
-		const btVector3& velocity);
+	//btRigidBody* CreateDynamic(const btTransform& t,
+	//	btCollisionShape* shape,
+	//	const btVector3& velocity);
 public:
 	shared_ptr<BillboardModel> m_fireball;
 	shared_ptr<SkeletalMeshActor> m_character;

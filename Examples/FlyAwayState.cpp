@@ -49,7 +49,8 @@ namespace hlab {
 		}
 		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying)
 		{
-			actorLock.get()->UpdateVelocity(-dt*0.1f);
+			float CurVel = actorLock.get()->GetVelocity();
+			actorLock.get()->SetVelocity(CurVel -dt*0.1f);
 			if (actorLock.get()->GetVelocity() == 0.0f)
 			{
 				Transition();

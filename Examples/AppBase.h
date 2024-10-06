@@ -31,7 +31,7 @@ using std::vector;
 using std::wstring;
 
 class Actor;
-
+class Object;
 class AppBase {
   public:
     AppBase();
@@ -184,12 +184,11 @@ class AppBase {
 
     // 거울이 아닌 물체들의 리스트 (for문으로 그리기 위함)
     vector<shared_ptr<Model>> m_basicList;
-    // BillboardModel은 무조건 가장 마지막에 그리도록한다.
-    vector<shared_ptr<Model>> m_billboardModelList;
-    vector<shared_ptr<Actor>> m_actorList;
     
     vector<shared_ptr<Model>> m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
 
+    vector<shared_ptr<Object>> m_objectList;
+    vector<shared_ptr<Object>> m_physList;
     //셋팅 했을 경우 해당 액터에 키가 바인딩 돼있다면 액터가 먹음
     shared_ptr<Actor> m_activateActor;
 

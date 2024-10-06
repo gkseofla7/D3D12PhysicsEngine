@@ -7,13 +7,13 @@ namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
-        :m_model(InModel)
     {
         m_model = InModel;
     }
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
     {
+        Object::Initialize(device, context, InModel);
         SetState(EActorStateType::Idle);
         m_actorId = ActorNumberGenerator::GetInstance().GetNewActorNumber();
     }
@@ -38,25 +38,12 @@ namespace hlab {
 
         return false;
     }
-    void Actor::Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt)
+    void Actor::Tick(float dt)
     {
+        Object::Tick( dt);
         Vector3 DeltaPos = m_velocity * Vector3(0., 0., -dt);
         UpdatePosition(DeltaPos);
         UpdateState();
-    }
-    // 위치 이동 관련
-    void Actor::UpdatePosition(const Vector3& InDelta)
-    {
-        m_model->UpdatePosition(InDelta);
-    }
-    void Actor::UpdateVelocity(float InDelta)
-    {
-        SetVelocity(m_velocity - InDelta);
-    }
-
-    void Actor::UpdateRotationY(float InDelta)
-    {
-        m_model->UpdateRotation(Matrix::CreateRotationY(InDelta));
     }
 
     //Camera 관련

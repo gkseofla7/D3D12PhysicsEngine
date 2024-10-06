@@ -177,8 +177,8 @@ PxRigidDynamic *Ex2001_GamePlay::CreateDynamic(const PxTransform &t,
     m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
                            0.2f, Graphics::volumetricFirePS);
 
-    AppBase::m_basicList.push_back(m_fireball);
-    this->m_objects.push_back(m_fireball);
+    //AppBase::m_basicList.push_back(m_fireball);
+   // this->m_objects.push_back(m_fireball);
      
     PxRigidDynamic *dynamic =
         PxCreateDynamic(*gPhysics, t, geometry, *gMaterial, 10.0f);

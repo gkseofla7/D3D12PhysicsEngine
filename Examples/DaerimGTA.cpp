@@ -77,11 +77,12 @@ bool DaerimGTA::InitScene()
             wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
             wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
                 Matrix::CreateTranslation(center));
+            wizardModel->SetScale(0.2f);
             shared_ptr<Wizard> wizardActor=
                 make_shared<Wizard>(m_device, m_context, wizardModel);
             wizardActor->Initialize(m_device, m_context, wizardModel);
             m_activateActor = wizardActor;
-            m_actorList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
+            m_objectList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
         }
 
         {
@@ -94,10 +95,11 @@ bool DaerimGTA::InitScene()
             wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
             wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
                 Matrix::CreateTranslation(center));
+            wizardModel->SetScale(0.2f);
             shared_ptr<Wizard> wizardActor =
                 make_shared<Wizard>(m_device, m_context, wizardModel);
             wizardActor->Initialize(m_device, m_context, wizardModel);
-            m_actorList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
+            m_objectList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
         }
 
     }
@@ -175,37 +177,37 @@ void DaerimGTA::Update(float dt) {
                 btQuaternion orn = colObj->getWorldTransform().getRotation();
                 //Matrix::CreateFromQuaternion(orn.get128())*
                 //    Matrix::CreateTranslation(pos.get128())*
-                m_objects[count]->UpdateWorldRow(Matrix::CreateTranslation(pos.get128())*
+                m_physList[count]->UpdateWorldRow(Matrix::CreateTranslation(pos.get128())*
                     Matrix::CreateScale(m_simToRenderScale)); // PhysX to Render 스케일
-                m_objects[count]->UpdateConstantBuffers(m_device, m_context);
+                //m_objectList[count]->UpdateConstantBuffers(m_device, m_context);
                 count++;
             }
         }
     } 
 }
 
-btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
-    btCollisionShape* shape,
-    const btVector3& velocity) {
-    m_fireball = std::make_shared<BillboardModel>();
-    //m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
-    //                       1.0f, L"GameExplosionPS.hlsl");
-    Vector3 dir(float(velocity.getX()), float(velocity.getY()), float(velocity.getZ()));
-    dir.Normalize();
-    m_fireball->m_billboardConsts.m_cpu.directionWorld = dir;
-    m_fireball->m_castShadow = false;
-    m_fireball->Initialize(m_device, m_context, { {0.0f, 0.0f, 0.0f, 1.0f} },
-        0.2f, Graphics::volumetricFirePS);
-
-    AppBase::m_basicList.push_back(m_fireball);
-    m_objects.push_back(m_fireball);
-
-    btRigidBody* dynamic = 
-        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f, btVector4(0, 0, 1, 1));
-    dynamic->setLinearVelocity(velocity);
-
-    return dynamic;
-}
+//btRigidBody* DaerimGTA::CreateDynamic(const btTransform& t,
+//    btCollisionShape* shape,
+//    const btVector3& velocity) {
+//    m_fireball = std::make_shared<BillboardModel>();
+//    //m_fireball->Initialize(m_device, m_context, {{0.0f, 0.0f, 0.0f, 1.0f}},
+//    //                       1.0f, L"GameExplosionPS.hlsl");
+//    Vector3 dir(float(velocity.getX()), float(velocity.getY()), float(velocity.getZ()));
+//    dir.Normalize();
+//    m_fireball->m_billboardConsts.m_cpu.directionWorld = dir;
+//    m_fireball->m_castShadow = false;
+//    m_fireball->Initialize(m_device, m_context, { {0.0f, 0.0f, 0.0f, 1.0f} },
+//        0.2f, Graphics::volumetricFirePS);
+//
+//    AppBase::m_basicList.push_back(m_fireball);
+//    m_objects.push_back(m_fireball);
+//
+//    btRigidBody* dynamic = 
+//        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,5.0, t, shape, 0.5f, btVector4(0, 0, 1, 1));
+//    dynamic->setLinearVelocity(velocity);
+//
+//    return dynamic;
+//}
 
 void DaerimGTA::Render() 
 {
@@ -364,7 +366,7 @@ void DaerimGTA::UpdateGUI() {
 
 void DaerimGTA::CreateStack(const btTransform t, int numStacks,
 	int numWidth, btScalar halfExtent) {
-	vector<MeshData> box = { GeometryGenerator::MakeBox(halfExtent) };
+	//vector<MeshData> box = { GeometryGenerator::MakeBox(halfExtent) };
 	btTransform groundTransform;
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0, -50, 0));
@@ -389,7 +391,7 @@ void DaerimGTA::CreateStack(const btTransform t, int numStacks,
 	btVector3 localInertia(0, 0, 0);
 	if (isDynamic)
 		colShape->calculateLocalInertia(mass, localInertia);
-       
+    string meshKey = MeshLoadHelper::LoadBoxMesh(m_device, m_context, halfExtent);
 	for (int i = 0; i < numStacks; i++) 
 	{ 
 		for (int j = 0; j < numWidth - i; j++) 
@@ -401,11 +403,14 @@ void DaerimGTA::CreateStack(const btTransform t, int numStacks,
             localTm.setBasis(btMatrix3x3::getIdentity());
 			btRigidBody* body = DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,mass, t*localTm, colShape, 0.0f, btVector4(0, 0, 1, 1));
 
-			auto m_newObj = std::make_shared<Model>(
-				m_device, m_context, box); // <- 우리 렌더러에 추가
-			m_newObj->m_materialConsts.GetCpu().albedoFactor = Vector3(0.8f);
-			AppBase::m_basicList.push_back(m_newObj);
-            m_objects.push_back(m_newObj);
+			auto newModel = std::make_shared<DModel>(
+				m_device, m_context, meshKey); // <- 우리 렌더러에 추가
+            newModel->m_materialConsts.GetCpu().albedoFactor = Vector3(0.8f);
+            
+            auto newObj = std::make_shared<Object>();
+            newObj->Initialize(m_device, m_context, newModel);
+            m_physList.push_back(newObj);
+            m_objectList.push_back(newObj);
 		}
 	}
 }

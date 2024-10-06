@@ -14,7 +14,11 @@ namespace hlab {
         const std::string& basePath, const std::string& filename) {
         Initialize(device, context, basePath, filename);
     }
+    DModel::DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+        const string& meshKey)
+    {
 
+    }
     void DModel::Initialize(ComPtr<ID3D11Device>& device,
         ComPtr<ID3D11DeviceContext>& context) {
         std::cout << "Model::Initialize(ComPtr<ID3D11Device> &device, "
@@ -54,8 +58,16 @@ namespace hlab {
             MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
         }
     }
-
+    void DModel::Initialize(ComPtr<ID3D11Device>& device,
+        ComPtr<ID3D11DeviceContext>& context,
+        const string& meshKey) {
+        m_meshKey = meshKey;
+    }
     void DModel::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
+        if (m_initializeMesh == false)
+        {
+            return;
+        }
         if (m_isVisible) {
             m_meshConsts.Upload(context);
             m_materialConsts.Upload(context);
@@ -89,7 +101,13 @@ namespace hlab {
     void DModel::Render(ComPtr<ID3D11DeviceContext>& context) {
         if (m_initializeMesh == false)
         {
-            if (m_initializeMesh = MeshLoadHelper::GetMesh(m_basePath, m_filename, m_meshes))
+            
+            if (m_meshKey.empty())
+            {
+                m_meshKey = m_basePath + m_filename;
+            }
+            
+            if (m_initializeMesh = MeshLoadHelper::GetMesh(m_meshKey, m_meshes))
             {
                 MeshLoadHelper::GetBoundingMesh(m_basePath, m_filename, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
                 MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
@@ -99,12 +117,13 @@ namespace hlab {
                 m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
                 m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
 
+                m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
             }
             else
             {
                 return;
             }
-
+            
         } 
         if (m_isVisible) { 
             for (auto& mesh : *m_meshes) {
@@ -197,17 +216,11 @@ namespace hlab {
         m_worldITRow.Translation(Vector3(0.0f));
         m_worldITRow = m_worldITRow.Invert().Transpose();
 
-        // 바운딩스피어 위치 업데이트
-        // 스케일까지 고려하고 싶다면 x, y, z 스케일 중 가장 큰 값으로 스케일
-        // 구(sphere)라서 회전은 고려할 필요 없음
-        if(m_initializeMesh)
+        if (m_initializeMesh)
         {
             m_boundingSphere.Center = this->m_worldRow.Translation();
-            float scaleVal = std::fmaxf(this->m_worldRow._11, this->m_worldRow._21);
-            scaleVal = std::fmaxf(scaleVal ,this->m_worldRow._33);
-            m_boundingSphere.Radius = (scaleVal/ m_boundingSphereScale) * m_boundingSphere.Radius;
-            m_boundingSphereScale = scaleVal;
         }
+
         m_meshConsts.GetCpu().world = worldRow.Transpose();
         m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
         m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();

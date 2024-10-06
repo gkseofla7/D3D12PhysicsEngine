@@ -42,6 +42,7 @@ class MeshLoadHelper
 public:
 	static void LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	static bool GetMesh( const string& InPath, const string& InName, vector<Mesh>*& OutMesh);
+	static bool GetMesh(const string& InKey, vector<Mesh>*& OutMesh);
 	static bool GetBoundingMesh(const string& InPath, const string& InName, 
 		DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
 		shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh);
@@ -50,6 +51,7 @@ public:
 	static ID3D11CommandList* LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context,const string& key);
 	static bool SetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants);
 
+	static string LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, float InHalfExtent);
 public:
 	static map<string, MeshBlock> MeshMap;
 	static std::mutex m_mtx;

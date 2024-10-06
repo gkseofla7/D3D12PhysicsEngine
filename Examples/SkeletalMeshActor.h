@@ -12,7 +12,7 @@ public:
         shared_ptr<DModel>  InModel);
     void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel>  InModel);
-    virtual void Update(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float dt) override;
+    virtual void Tick(float dt) override;
     virtual void InitializeAnimation() {}
 
     void Render(ComPtr<ID3D11DeviceContext>& context) override;
@@ -21,7 +21,6 @@ public:
     // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
     // virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>
     // &context);
-    virtual shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel() override;
 public:
     // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
     StructuredBuffer<Matrix> m_boneTransforms;
