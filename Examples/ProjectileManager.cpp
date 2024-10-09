@@ -46,8 +46,7 @@ btRigidBody* ProjectileManager::CreateProjectile(const Vector3& tV,
     dynamic->setLinearVelocity(velocity);
     projectile->SetPhysicsBody(dynamic);
     App->m_objectList.push_back(projectile);
-
-
+    App->m_physList.push_back(projectile);
 
     return dynamic;
 }

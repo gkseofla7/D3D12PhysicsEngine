@@ -25,6 +25,8 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
     m_meshConsts.GetCpu().world = Matrix();
     m_meshConsts.Initialize(device);
     m_materialConsts.Initialize(device);
+
+    m_initializeMesh = true;
 }
 
 void BillboardModel::Render(ComPtr<ID3D11DeviceContext> &context) {

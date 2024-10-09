@@ -68,8 +68,6 @@ protected:
 	shared_ptr<ActorState> m_actorState;
 	EActorStateType m_actorStateType;
 	EActorStateType m_prevStateType;
-
-	float m_velocity = 0.0f;
 private:
 	int m_actorId = 0;
 };

@@ -17,7 +17,7 @@ namespace hlab {
     DModel::DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         const string& meshKey)
     {
-
+        Initialize(device, context, meshKey);
     }
     void DModel::Initialize(ComPtr<ID3D11Device>& device,
         ComPtr<ID3D11DeviceContext>& context) {
@@ -55,18 +55,26 @@ namespace hlab {
 
         if (MeshLoadHelper::LoadModelData(device, context, basePath, filename, m_meshes))
         {
-            MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
+            MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
         }
     }
     void DModel::Initialize(ComPtr<ID3D11Device>& device,
         ComPtr<ID3D11DeviceContext>& context,
         const string& meshKey) {
         m_meshKey = meshKey;
+
+        m_meshConsts.GetCpu().world = Matrix();
+        m_meshConsts.Initialize(device);
+        m_materialConsts.Initialize(device);
     }
     void DModel::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
         if (m_initializeMesh == false)
         {
-            return;
+            m_initializeMesh = LoadMesh();
+            if (m_initializeMesh == false)
+            {
+                return;
+            }
         }
         if (m_isVisible) {
             m_meshConsts.Upload(context);
@@ -101,29 +109,7 @@ namespace hlab {
     void DModel::Render(ComPtr<ID3D11DeviceContext>& context) {
         if (m_initializeMesh == false)
         {
-            
-            if (m_meshKey.empty())
-            {
-                m_meshKey = m_basePath + m_filename;
-            }
-            
-            if (m_initializeMesh = MeshLoadHelper::GetMesh(m_meshKey, m_meshes))
-            {
-                MeshLoadHelper::GetBoundingMesh(m_basePath, m_filename, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
-                MeshLoadHelper::SetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
-                m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
-                m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
-
-                m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
-                m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
-
-                m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
-            }
-            else
-            {
-                return;
-            }
-            
+            return;
         } 
         if (m_isVisible) { 
             for (auto& mesh : *m_meshes) {
@@ -226,4 +212,34 @@ namespace hlab {
         m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
     }
 
+    bool DModel::LoadMesh()
+    {
+        if (m_initializeMesh)
+        {
+            return true;
+        }
+        // TODO. UpdateConstantBuffers가 아닌 따로 Update 함수로 빼내는게 좋다
+        if (m_meshKey.size() == 0)
+        {
+            m_meshKey = m_basePath + m_filename;
+        }
+
+        if (m_initializeMesh = MeshLoadHelper::GetMesh(m_meshKey, m_meshes))
+        {
+            MeshLoadHelper::GetBoundingMesh(m_meshKey, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
+            MeshLoadHelper::GetMaterial(m_meshKey, m_materialConsts.GetCpu());
+            m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
+            m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
+
+            m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
+            m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
+
+            m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
+        }
+        else
+        {
+            return false;
+        }
+        return true;
+    }
 } // namespace hlab

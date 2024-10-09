@@ -46,11 +46,14 @@ public:
 	static bool GetBoundingMesh(const string& InPath, const string& InName, 
 		DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
 		shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh);
+	static bool GetBoundingMesh(const string& InMeshKey,
+		DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
+		shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh);
 
 	static bool LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& InPath, const string& InName, vector<Mesh>* OutModel);
 	static ID3D11CommandList* LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context,const string& key);
-	static bool SetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants);
-
+	static bool GetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants);
+	static bool GetMaterial(const string& InMeshKey, MaterialConstants& InConstants);
 	static string LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, float InHalfExtent);
 public:
 	static map<string, MeshBlock> MeshMap;

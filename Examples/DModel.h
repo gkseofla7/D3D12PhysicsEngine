@@ -58,6 +58,8 @@ namespace hlab {
         void UpdateWorldRow(const Matrix& worldRow);
 
         void SetScale(float InScale) { m_scale = InScale; }
+    private:
+        bool LoadMesh();
     public:
         Matrix m_worldRow = Matrix();   // Model(Object) To World За·Д
         Matrix m_worldITRow = Matrix(); // InverseTranspose
@@ -79,6 +81,8 @@ namespace hlab {
         int m_modelId = -1;
 
         int m_maxFrame = 0;
+    protected:
+        bool m_initializeMesh = false;
     private:
         string m_basePath;
         string m_filename;
@@ -89,8 +93,6 @@ namespace hlab {
         shared_ptr<Mesh> m_boundingSphereMesh;
 
         float m_scale = 1.0f;
-
-        bool m_initializeMesh = false;
         bool m_initializeBoundingVolume = false;
     };
 

@@ -105,23 +105,27 @@ bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
 	
     return MeshMap[key].MeshDataLoadType == ELoadType::Loaded;
 }
-bool MeshLoadHelper::SetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants)
+bool MeshLoadHelper::GetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants)
 {
     string key = InPath + InName;
-    if (MeshMap.find(key) == MeshMap.end())
+    return GetMaterial(key, InName, InConstants);
+}
+bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
+{
+    if (MeshMap.find(InMeshKey) == MeshMap.end())
     {
         return false;
     }
-    if (MeshMap[key].MeshDataLoadType != ELoadType::Loaded)
+    if (MeshMap[InMeshKey].MeshDataLoadType != ELoadType::Loaded)
     {
         return false;
     }
-    InConstants.useAlbedoMap = MeshMap[key].useAlbedoMap;
-    InConstants.useAOMap = MeshMap[key].useAOMap;
-    InConstants.useEmissiveMap = MeshMap[key].useEmissiveMap;
-    InConstants.useMetallicMap = MeshMap[key].useMetalicMap;
-    InConstants.useNormalMap = MeshMap[key].useNormalMap;
-    InConstants.useRoughnessMap = MeshMap[key].useRoughnessMap;
+    InConstants.useAlbedoMap = MeshMap[InMeshKey].useAlbedoMap;
+    InConstants.useAOMap = MeshMap[InMeshKey].useAOMap;
+    InConstants.useEmissiveMap = MeshMap[InMeshKey].useEmissiveMap;
+    InConstants.useMetallicMap = MeshMap[InMeshKey].useMetalicMap;
+    InConstants.useNormalMap = MeshMap[InMeshKey].useNormalMap;
+    InConstants.useRoughnessMap = MeshMap[InMeshKey].useRoughnessMap;
     return true;
 }
 ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, const string& key)
@@ -403,23 +407,28 @@ bool MeshLoadHelper::GetBoundingMesh(const string& InPath, const string& InName,
     shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh)
 {
     string key = InPath + InName;
-    if (MeshMap.find(key) == MeshMap.end())
+    return GetBoundingMesh(key, OutSphere, OutBox, OutSphereMesh, OutBoxMesh);
+}
+bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
+    DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
+    shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh)
+{
+    if (MeshMap.find(InMeshKey) == MeshMap.end())
     {
         return false;
     }
-    if (MeshMap[key].MeshLoadType != ELoadType::Loaded)
+    if (MeshMap[InMeshKey].MeshLoadType != ELoadType::Loaded)
     {
         return false;
     }
 
-    OutBox = MeshMap[key].boundingBox;
-    OutBoxMesh = MeshMap[key].boundingBoxMesh;
-    OutSphere = MeshMap[key].boundingSphere;
-    OutSphereMesh = MeshMap[key].boundingSphereMesh;
+    OutBox = MeshMap[InMeshKey].boundingBox;
+    OutBoxMesh = MeshMap[InMeshKey].boundingBoxMesh;
+    OutSphere = MeshMap[InMeshKey].boundingSphere;
+    OutSphereMesh = MeshMap[InMeshKey].boundingSphereMesh;
 
     return true;
 }
-
 string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, float InHalfExtent)
 {
     string Key = "Box"  + std::to_string(InHalfExtent);
