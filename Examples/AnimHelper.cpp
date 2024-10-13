@@ -122,18 +122,18 @@ bool AnimHelper::UpdateAnimation(Actor* InActor, string InState,
 	{
 		return false;
 	}
-	if (frame == 0 && m_actorAnimState[InActor->GetActorId()] != InState)
+	if (frame == 0 && m_actorAnimState[InActor->GetObjectId()] != InState)
 	{
 		SkinnedMeshModel->IntegrateRootTransformToWorldTransform(m_context);
 	}
-	m_actorAnimState[InActor->GetActorId()] = InState;
+	m_actorAnimState[InActor->GetObjectId()] = InState;
 
 	int ModelId = SkinnedMeshModel->m_modelId;
 	AnimationBlock& AnimBlock = m_animDatas[ModelId];
 	SkinnedMeshModel->m_maxFrame = AnimBlock.AniData.clipMaps[InState].keys[0].size();
 	vector<Matrix> BoneTransform;
 	BoneTransform.resize(m_animDatas[ModelId].AniData.boneTransforms.size());
-	m_animDatas[ModelId].AniData.GetBoneTransform(InActor->GetActorId(),InState, frame, SkinnedMeshModel->GetAccumulatedRootTransform(), BoneTransform, bInit, type);
+	m_animDatas[ModelId].AniData.GetBoneTransform(InActor->GetObjectId(),InState, frame, SkinnedMeshModel->GetAccumulatedRootTransform(), BoneTransform, bInit, type);
 	for (int i = 0; i < SkinnedMeshModel->m_boneTransforms.m_cpu.size(); i++) {
 		SkinnedMeshModel->m_boneTransforms.m_cpu[i] =
 			m_animDatas[ModelId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();

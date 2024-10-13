@@ -24,7 +24,7 @@ btRigidBody* ProjectileManager::CreateProjectile(const Vector3& tV,
     btTransform t = btTransform(btQuaternion(), btVector3(tV.x, tV.y, tV.z) /
         simToRenderScale);
     btVector3 velocity = btVector3(Invelocity.x, Invelocity.y, Invelocity.z);
-    btSphereShape* SphereShape = new btSphereShape(InRadius);
+    btSphereShape* SphereShape = new btSphereShape(InRadius * 0.5);
     
 
     //shared_ptr<BillboardModel> m_fireball = std::make_shared<BillboardModel>();
@@ -42,11 +42,13 @@ btRigidBody* ProjectileManager::CreateProjectile(const Vector3& tV,
     projectile->Initialize(m_device, m_context, tV, Invelocity, InRadius);
 
     btRigidBody* dynamic =
-        DaerimsEngineBase::CreateRigidBody(App->m_dynamicsWorld, 5.0, t, SphereShape, 0.5f, btVector4(0, 0, 1, 1));
+        DaerimsEngineBase::GetInstance().CreateRigidBody( 5.0, t, SphereShape, 0.5f, btVector4(0, 0, 1, 1));
     dynamic->setLinearVelocity(velocity);
+    dynamic->clearGravity();
     projectile->SetPhysicsBody(dynamic);
     App->m_objectList.push_back(projectile);
-    App->m_physList.push_back(projectile);
+    //m_physList[] = (newObj);
+    DaerimsEngineBase::GetInstance().RegisterPhysMap(dynamic, projectile);
 
     return dynamic;
 }

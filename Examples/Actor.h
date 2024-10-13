@@ -9,23 +9,6 @@ namespace hlab {
 	class DModel;
 	class ActorState;
 	class DSkinnedMeshModel;
-
-	class ActorNumberGenerator
-	{
-	public:
-		static ActorNumberGenerator& GetInstance()
-		{
-			static ActorNumberGenerator generator;
-			return generator;
-		}
-		int GetNewActorNumber()
-		{
-			m_lastActorNumber++;
-			return m_lastActorNumber;
-		}
-	private:
-		int m_lastActorNumber = 0;
-	};
 	//using std::map;
 class Actor : public Object, public std::enable_shared_from_this<Actor> {
 public:
@@ -48,8 +31,6 @@ public:
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 
 	shared_ptr<ActorState> GetState() { return m_actorState; }
-	int GetActorId() { return m_actorId; }
-
 
 private:
 	void UpdateState();
@@ -68,8 +49,6 @@ protected:
 	shared_ptr<ActorState> m_actorState;
 	EActorStateType m_actorStateType;
 	EActorStateType m_prevStateType;
-private:
-	int m_actorId = 0;
 };
 
 } // namespace hlab

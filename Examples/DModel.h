@@ -26,7 +26,6 @@ namespace hlab {
             const string& basePath, const string& filename);
         DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
             const string& meshKey);
-
         virtual void Initialize(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context);
         virtual void Initialize(ComPtr<ID3D11Device>& device,
@@ -39,13 +38,17 @@ namespace hlab {
         virtual void InitMeshBuffers(ComPtr<ID3D11Device>& device,
             const MeshData& meshData,
             shared_ptr<Mesh>& newMesh);
+        void Tick(float dt);
         void UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context);
         virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
             string clipId, int frame, int type = 0) {}
         virtual void UpdatePosition(const Vector3& InDelta);
+        void SetWorldPosition(const Vector3& InPos);
         virtual void UpdateRotation(const Matrix& InDelta);
         virtual void UpdateVelocity(float dt) {}
+        Vector3 GetWorldPosition() { return m_worldRow.Translation(); }
+        
         virtual GraphicsPSO& GetPSO(const bool wired);
         virtual GraphicsPSO& GetDepthOnlyPSO();
         virtual GraphicsPSO& GetReflectPSO(const bool wired);
@@ -56,8 +59,11 @@ namespace hlab {
         virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext>& context);
         virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>& context);
         void UpdateWorldRow(const Matrix& worldRow);
+       
 
         void SetScale(float InScale) { m_scale = InScale; }
+
+        bool IsMeshInitialized() { return m_initializeMesh; }
     private:
         bool LoadMesh();
     public:

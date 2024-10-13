@@ -1,4 +1,5 @@
 #include "DaerimsEngineBase.h"
+#include "Object.h"
 
 #include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/btBulletCollisionCommon.h"
@@ -9,6 +10,14 @@
 
 namespace hlab{
 
+
+void DaerimsEngineBase::InitPhysEngine()
+{
+	DaerimsEngineBase::CreateEmptyDynamicsWorld(m_collisionConfiguration, m_dispatcher, m_broadphase, m_solver, m_dynamicsWorld);
+	if (m_dynamicsWorld->getDebugDrawer())
+		m_dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
+
+}
 void DaerimsEngineBase::CreateEmptyDynamicsWorld(btDefaultCollisionConfiguration*& OutCollisionCofiguration,
 		btCollisionDispatcher* &OutCollisionDispatcher, btBroadphaseInterface*& OutBroadphaseInterface,
 		btConstraintSolver* &OutSolver, btDiscreteDynamicsWorld*& OutDynamicsWorld)
@@ -37,7 +46,7 @@ btBoxShape* DaerimsEngineBase::CreateBoxShape(const btVector3& halfExtents)
 	return box;
 }
 
-btRigidBody* DaerimsEngineBase::CreateRigidBody(btDiscreteDynamicsWorld* InDynamicsWorld,float mass,
+btRigidBody* DaerimsEngineBase::CreateRigidBody(float mass,
 	const btTransform startTransform, btCollisionShape* shape, const btScalar m_angularDamping, const btVector4& color)
 {
 	btAssert((!shape || shape->getShapeType() != INVALID_SHAPE_PROXYTYPE));
@@ -66,7 +75,66 @@ btRigidBody* DaerimsEngineBase::CreateRigidBody(btDiscreteDynamicsWorld* InDynam
 #endif  //
 
 	body->setUserIndex(-1);
-	InDynamicsWorld->addRigidBody(body);
+	m_dynamicsWorld->addRigidBody(body);
 	return body;
 }
+
+void DaerimsEngineBase::RemoveRigidBody(btRigidBody* InRigidBody)
+{
+	m_dynamicsWorld->removeRigidBody(InRigidBody);
+}
+
+void DaerimsEngineBase::StepSimulation(float InDeltaTime)
+{
+	if (m_dynamicsWorld)
+	{
+		m_dynamicsWorld->stepSimulation(InDeltaTime);
+	}
+}
+
+void DaerimsEngineBase::RegisterPhysMap(btCollisionObject* InRigidBody, std::weak_ptr<Object> InObject)
+{
+	m_physMap[InRigidBody] = InObject;
+
+	std::shared_ptr<Object> objectLock = InObject.lock();
+	if (objectLock.get() == nullptr)
+	{
+		return;
+	}
+	m_collisionMap[objectLock->GetObjectId()] = InRigidBody;
+}
+void DaerimsEngineBase::RemovePhysMap(btCollisionObject* InRigidBody)
+{
+	if (m_physMap.find(InRigidBody) != m_physMap.end())
+	{
+		std::shared_ptr<Object> objectLock = m_physMap[InRigidBody].lock();
+		if (objectLock.get() != nullptr)
+		{
+			if (m_collisionMap.find(objectLock->GetObjectId()) != m_collisionMap.end())
+			{
+				m_collisionMap.erase(m_collisionMap.find(objectLock->GetObjectId()));
+			}
+		}
+		m_physMap.erase(m_physMap.find(InRigidBody));
+	}
+}
+
+std::weak_ptr<Object> DaerimsEngineBase::GetPhysObject(btCollisionObject* InRigidBody)
+{
+	if (m_physMap.find(InRigidBody) == m_physMap.end())
+	{
+		return std::weak_ptr<Object>();
+	}
+	return m_physMap[InRigidBody];
+}
+
+btCollisionObject* DaerimsEngineBase::GetCollisionObject(int InObjId)
+{
+	if (m_collisionMap.find(InObjId) == m_collisionMap.end())
+	{
+		return nullptr;
+	}
+	return m_collisionMap[InObjId];
+}
+
 }

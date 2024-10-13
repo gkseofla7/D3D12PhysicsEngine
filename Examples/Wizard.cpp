@@ -38,6 +38,17 @@ void Wizard::Tick(float dt)
             ShotFireBall();
         }
     }
+    if (m_actorState->GetStateType() != EActorStateType::Move)
+    {
+        if (bLeft)
+        {
+            UpdateRotationY((3.141592f * 60.0f / 180.0f * dt));
+        }
+        if (bRight)
+        {
+            UpdateRotationY(-(3.141592f * 60.0f / 180.0f * dt));
+        }
+    }
     m_curFrame += 1;
 }
 
@@ -172,6 +183,7 @@ void Wizard::WalkEnd()
 
 void Wizard::RotateLeft(bool InOn)
 {
+    bLeft = InOn;
     if (m_actorState->GetStateType() == EActorStateType::Move)
     {
         std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
@@ -180,6 +192,7 @@ void Wizard::RotateLeft(bool InOn)
 }
 void Wizard::RotateRight(bool InOn)
 {
+    bRight = InOn;
     if (m_actorState->GetStateType() == EActorStateType::Move)
     {
         std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);

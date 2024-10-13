@@ -6,6 +6,7 @@
 #include "D3D11Utils.h"
 #include "GraphicsCommon.h"
 #include "Actor.h"
+#include "DaerimsEngineBase.h"
 
 // imgui_impl_win32.cpp에 정의된 메시지 처리 함수에 대한 전방 선언
 // Vcpkg를 통해 IMGUI를 사용할 경우 빨간줄로 경고가 뜰 수 있음
@@ -206,6 +207,7 @@ bool AppBase::InitScene() {
 
 void AppBase::Update(float dt) {
 
+    KillObjects();
     // 카메라의 이동
     m_camera.UpdateKeyboard(dt, m_keyPressed);
 
@@ -235,10 +237,12 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
-    for (auto& i : m_objectList)
+    int objectCount = m_objectList.size();
+    for (int i  = 0; i<m_objectList.size(); i++)
     {
-        i->GetModel()->UpdateConstantBuffers(m_context);
-        i->Tick(dt);
+        m_objectList[i]->Tick(dt);
+        // TODO. Tick으로 빼는게 좋을듯 싶은데,,
+        m_objectList[i]->GetModel()->UpdateConstantBuffers(m_context);
     }
 }
 
@@ -1209,6 +1213,18 @@ void AppBase::ComputeShaderBarrier() {
         0,
     };
     m_context->CSSetUnorderedAccessViews(0, 6, nullUAV, NULL);
+}
+
+void AppBase::KillObjects()
+{
+    for (int i = m_objectList.size()-1; i >=0 ; i--)
+    {
+        if (m_objectList[i]->IsPendingKill())
+        {
+            DaerimsEngineBase::GetInstance().RemoveRigidBody(m_objectList[i]->GetPhysicsBody());
+            m_objectList.erase(m_objectList.begin() + i);
+        }
+    }
 }
 
 void AppBase::CreateBuffers() {

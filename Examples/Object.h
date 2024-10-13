@@ -12,6 +12,23 @@ class DModel;
 class Model;
 class DSkinnedMeshModel;
 class BillboardModel;
+class ObjectNumberGenerator
+{
+public:
+	static ObjectNumberGenerator& GetInstance()
+	{
+		static ObjectNumberGenerator generator;
+		return generator;
+	}
+	int GetNewObjectNumber()
+	{
+		m_lastObjectId++;
+		return m_lastObjectId;
+	}
+private:
+	int m_lastObjectId = 0;
+};
+
 class Object
 {
 public:
@@ -33,19 +50,38 @@ public:
 		}
 		m_velocity = InVelocity;
 	}
+	void SetPendingKill(bool InPendingKill) { m_pendingKill = InPendingKill; }
+	Vector3 GetWorldPosition();
 	float GetVelocity() { return m_velocity; }
 	bool IsPickable() { return m_isPickable; }
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 
+	virtual bool IsNeedRegisterPhysics() { return m_needRegisterPhysics; }
+	void ResetNeedRegisterPhysics() { m_needRegisterPhysics = false; }
+
 	shared_ptr<DModel> GetModel() { return m_model; }
 	shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel();
 	shared_ptr<BillboardModel> GetBillboardModel();
+	btRigidBody* GetPhysicsBody() { return m_physicsBody; }
+
+	int GetObjectId() { return m_objectId; }
+
+	void SetUsePhsycisSimulation(bool InUse) { m_usePhysicsSimulation = InUse; }
+
+	bool IsPendingKill() { return m_pendingKill; }
+	bool IsUsePhsycsSimulation() { return m_usePhysicsSimulation; }
 protected:
 	std::shared_ptr<DModel> m_model;
 	btRigidBody* m_physicsBody = nullptr;
 
 	float m_velocity = 0.0f;
-	bool m_isPickable = true; // 마우스로 선택/조작 가능 여부
+	bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
+
+	bool m_needRegisterPhysics = false;
+	bool m_usePhysicsSimulation = false;
+	int m_objectId = 0;
+private:
+	bool m_pendingKill = false;
 };
 }
 

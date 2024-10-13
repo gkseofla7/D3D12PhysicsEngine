@@ -70,22 +70,33 @@ namespace hlab {
     void DModel::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
         if (m_initializeMesh == false)
         {
-            m_initializeMesh = LoadMesh();
-            if (m_initializeMesh == false)
-            {
-                return;
-            }
+            return;
         }
         if (m_isVisible) {
             m_meshConsts.Upload(context);
             m_materialConsts.Upload(context);
         }
     }
-
+    void DModel::Tick(float dt)
+    {
+        if (m_initializeMesh == false)
+        {
+            m_initializeMesh = LoadMesh();
+            if (m_initializeMesh == false)
+            {
+                return;
+            }
+        }
+    }
     void DModel::UpdatePosition(const Vector3& InDelta)
     {
         Matrix newMatrix = Matrix::CreateTranslation(InDelta)* m_worldRow;
         UpdateWorldRow(newMatrix);
+    }
+    void DModel::SetWorldPosition(const Vector3& InPos)
+    {
+        m_worldRow.Translation(InPos);
+        UpdateWorldRow(m_worldRow);
     }
 
     void DModel::UpdateRotation(const Matrix& InDelta)
@@ -235,6 +246,8 @@ namespace hlab {
             m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
 
             m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
+
+            m_boundingBox.Extents = XMFLOAT3(m_boundingBox.Extents.x*m_scale, m_boundingBox.Extents.y * m_scale, m_boundingBox.Extents.z * m_scale);
         }
         else
         {

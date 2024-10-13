@@ -6,6 +6,7 @@
 #include <imgui_impl_win32.h>
 #include <iostream>
 #include <vector>
+#include <unordered_map>
 
 #include "Camera.h"
 #include "ComputePSO.h"
@@ -81,6 +82,7 @@ class AppBase {
     void SetShadowViewport();
     void ComputeShaderBarrier();
 
+    void KillObjects();
   public:
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
     // 변수 이름을 줄이기 위해 d3d는 생략했습니다.
@@ -188,17 +190,13 @@ class AppBase {
     vector<shared_ptr<Model>> m_objects; // 물리 엔진과 동기화 시켜줄 때 사용 TODO: actor list로 변경
 
     vector<shared_ptr<Object>> m_objectList;
-    vector<shared_ptr<Object>> m_physList;
+    
     //셋팅 했을 경우 해당 액터에 키가 바인딩 돼있다면 액터가 먹음
     shared_ptr<Actor> m_activateActor;
 
     // Physics Engine
     btAlignedObjectArray<btCollisionShape*> m_collisionShapes;
-    btDefaultCollisionConfiguration* m_collisionConfiguration;
-    btBroadphaseInterface* m_broadphase;
-    btCollisionDispatcher* m_dispatcher;
-    btConstraintSolver* m_solver;
-    btDiscreteDynamicsWorld* m_dynamicsWorld;
+
 };
 
 } // namespace hlab

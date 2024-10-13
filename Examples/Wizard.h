@@ -26,6 +26,9 @@ private:
 	void Jump();
 
 	void ShotFireBall();
+
+	bool bLeft = false;
+	bool bRight = false;
 };
 }
 

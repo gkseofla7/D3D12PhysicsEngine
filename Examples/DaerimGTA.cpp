@@ -4,13 +4,11 @@
 #include "DSkinnedMeshModel.h"
 #include "MeshLoadHelper.h"
 #include "ProjectileManager.h"
+#include "DaerimsEngineBase.h"
 
+#include "bullet/btBulletDynamicsCommon.h"
 #include "bullet/btBulletCollisionCommon.h"
-#include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
-#include "bullet/BulletDynamics/btBulletDynamicsCommon.h"
 #include "bullet/BulletCollision/btBulletCollisionCommon.h"
-#include "bullet/BulletCollision/CollisionDispatch/btCollisionWorldImporter.h"
-
 namespace hlab{
      
 using namespace std;
@@ -75,7 +73,7 @@ bool DaerimGTA::InitScene()
             wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
             wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
             wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-            wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+            wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) * Matrix::CreateRotationY(3.14f /2 *3)*
                 Matrix::CreateTranslation(center));
             wizardModel->SetScale(0.2f);
             shared_ptr<Wizard> wizardActor=
@@ -116,11 +114,8 @@ void DaerimGTA::InitAnimation()
 }
 void DaerimGTA::InitPhysics(bool interactive)
 {
-    DaerimsEngineBase::CreateEmptyDynamicsWorld(m_collisionConfiguration,m_dispatcher,m_broadphase,m_solver, m_dynamicsWorld);
+    DaerimsEngineBase::GetInstance().InitPhysEngine();
 	//m_dynamicsWorld->setGravity(btVector3(0,0,0));
-
-	if (m_dynamicsWorld->getDebugDrawer())
-		m_dynamicsWorld->getDebugDrawer()->setDebugMode(btIDebugDraw::DBG_DrawWireframe + btIDebugDraw::DBG_DrawContactPoints);
 
 	///create a few basic rigid bodies
 	// TODO. 두번째 파라미터 어디에..
@@ -137,7 +132,7 @@ void DaerimGTA::InitPhysics(bool interactive)
 
 	{
 		btScalar mass(0.);
-        DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld, mass, groundTransform, groundShape, 0.0f, btVector4(0, 0, 1, 1));
+        DaerimsEngineBase::GetInstance().CreateRigidBody(mass, groundTransform, groundShape, 0.0f, btVector4(0, 0, 1, 1));
 	}
 
 	for (unsigned int i = 0; i < 1; i++)
@@ -158,13 +153,13 @@ void DaerimGTA::Update(float dt) {
     // 이하 물리엔진 관련
     StepSimulation(dt);
     
-    
+    btDiscreteDynamicsWorld*  DynamicWorld = DaerimsEngineBase::GetInstance().GetDynamicWorld();
     int count = 0;
-    int numCollisionObjects = m_dynamicsWorld->getNumCollisionObjects();
+    int numCollisionObjects = DynamicWorld->getNumCollisionObjects();
     {
         for (int i = 0; i < numCollisionObjects; i++)
         {
-            btCollisionObject* colObj = m_dynamicsWorld->getCollisionObjectArray()[i];
+            btCollisionObject* colObj = DynamicWorld->getCollisionObjectArray()[i];
             if (colObj == nullptr)
             {
                 continue;
@@ -172,12 +167,24 @@ void DaerimGTA::Update(float dt) {
 
             if (!colObj->isStaticObject())
             {
+                std::weak_ptr<Object> obj = DaerimsEngineBase::GetInstance().GetPhysObject(colObj);
+                if (obj.expired())
+                {
+                    DaerimsEngineBase::GetInstance().RemovePhysMap(colObj);
+                    continue;
+                }
+                std::shared_ptr<Object> objectLock = obj.lock();
+                if (objectLock->IsUsePhsycsSimulation()== false)
+                {
+                    continue;
+                }
+                // TODO count 인덱스로 찾는게 아닌 map으로 검색하도록 수정
                 btCollisionShape* collisionShape = colObj->getCollisionShape();
                 btVector3 pos = colObj->getWorldTransform().getOrigin();
                 btQuaternion orn = colObj->getWorldTransform().getRotation();
                 //Matrix::CreateFromQuaternion(orn.get128())*
                 //    Matrix::CreateTranslation(pos.get128())*
-                m_physList[count]->UpdateWorldRow(Matrix::CreateTranslation(pos.get128())*
+                objectLock->UpdateWorldRow(Matrix::CreateTranslation(pos.get128())*
                     Matrix::CreateScale(m_simToRenderScale)); // PhysX to Render 스케일
                 //m_objectList[count]->UpdateConstantBuffers(m_device, m_context);
                 count++;
@@ -374,7 +381,7 @@ void DaerimGTA::CreateStack(const btTransform t, int numStacks,
 	//	//create a few dynamic rigidbodies
 //	// Re-using the same collision is better for memory usage and performance
      
-	btBoxShape* colShape = DaerimsEngineBase::CreateBoxShape(btVector3(halfExtent, halfExtent, halfExtent));
+	btBoxShape* colShape = DaerimsEngineBase::GetInstance().CreateBoxShape(btVector3(halfExtent, halfExtent, halfExtent));
 
 	//btCollisionShape* colShape = new btSphereShape(btScalar(1.));
 	m_collisionShapes.push_back(colShape);
@@ -401,7 +408,7 @@ void DaerimGTA::CreateStack(const btTransform t, int numStacks,
 				btScalar(i * 2 + 1) + 5.0, 0.0) *
 				halfExtent);
             localTm.setBasis(btMatrix3x3::getIdentity());
-			btRigidBody* body = DaerimsEngineBase::CreateRigidBody(m_dynamicsWorld,mass, t*localTm, colShape, 0.0f, btVector4(0, 0, 1, 1));
+			btRigidBody* body = DaerimsEngineBase::GetInstance().CreateRigidBody(mass, t*localTm, colShape, 0.0f, btVector4(0, 0, 1, 1));
 
 			auto newModel = std::make_shared<DModel>(
 				m_device, m_context, meshKey); // <- 우리 렌더러에 추가
@@ -409,18 +416,17 @@ void DaerimGTA::CreateStack(const btTransform t, int numStacks,
             
             auto newObj = std::make_shared<Object>();
             newObj->Initialize(m_device, m_context, newModel);
-            m_physList.push_back(newObj);
+            newObj->SetPhysicsBody(body);
+
+            DaerimsEngineBase::GetInstance().RegisterPhysMap(body, newObj);
             m_objectList.push_back(newObj);
+            newObj->SetUsePhsycisSimulation(true);
 		}
 	}
 }
 
 void DaerimGTA::StepSimulation(float deltaTime)
 {
-    if (m_dynamicsWorld)
-    {
-        m_dynamicsWorld->stepSimulation(deltaTime);
-    }
+    DaerimsEngineBase::GetInstance().StepSimulation(deltaTime);
 }
-
 }

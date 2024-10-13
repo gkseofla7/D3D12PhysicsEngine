@@ -2,26 +2,33 @@
 #include "DModel.h"
 #include "BillboardModel.h"
 #include "DSkinnedMeshModel.h"
+#include "BulletDynamics/btBulletDynamicsCommon.h"
 
-#include "DaerimsEngineBase.h"
 namespace hlab {
-
     void Object::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         shared_ptr<DModel> InModel)
     {
+        m_objectId = ObjectNumberGenerator::GetInstance().GetNewObjectNumber();
         m_model = InModel;
     }
     void Object::Tick(float dt)
     {
-        if (m_physicsBody != nullptr)
+        if (m_model)
         {
-            if (m_physicsBody->hasContactResponse())
+            m_model->Tick(dt);
+        }
+        if (IsUsePhsycsSimulation() == false)
+        {
+            if (m_physicsBody)
             {
-                int a = 1;
+                Vector3 WorldPos = GetWorldPosition();
+                static const float simToRenderScale = 0.01f;
+                btTransform t = btTransform(btQuaternion(), btVector3(WorldPos.x, WorldPos.y, WorldPos.z) /
+                    simToRenderScale);
+                m_physicsBody->setWorldTransform(t);
             }
         }
     }
-
 
     void Object::Render(ComPtr<ID3D11DeviceContext>& context)
     {
@@ -42,7 +49,10 @@ namespace hlab {
     {
         m_model->UpdateRotation(Matrix::CreateRotationY(InDelta));
     }
-
+    Vector3 Object::GetWorldPosition()
+    {
+        return m_model->GetWorldPosition();
+    }
     shared_ptr<DSkinnedMeshModel> Object::GetSkinnedMeshModel()
     { 
         return std::dynamic_pointer_cast<DSkinnedMeshModel>(m_model);
