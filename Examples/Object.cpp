@@ -62,4 +62,14 @@ namespace hlab {
     {
         return std::dynamic_pointer_cast<BillboardModel>(m_model);
     }
+
+    void Object::AddEnergy(const float InEnergy, Vector3 InDir)
+    {
+        if (m_physicsBody == nullptr)
+        {
+            return;
+        }
+        InDir.Normalize();
+        Vector3 Force = sqrt(InEnergy / m_physicsBody->getMass()) * InDir;
+    }
 }
