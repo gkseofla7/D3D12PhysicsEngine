@@ -8,7 +8,7 @@
 namespace hlab {
 using std::vector;
 
-template <typename T_ELEMENT> class StructuredBuffer {
+template <typename T_ELEMENT> class StructuredBuffer :public std::enable_shared_from_this<StructuredBuffer<T_ELEMENT>> {
   public:
     virtual void Initialize(ComPtr<ID3D11Device> &device,
                             const UINT numElements) {
@@ -31,12 +31,22 @@ template <typename T_ELEMENT> class StructuredBuffer {
 
     void Upload(ComPtr<ID3D11DeviceContext> &context,
                 vector<T_ELEMENT> &arrCpu) {
+        assert(arrCpu.size() == m_cpu.size());
+        ThreadPool& tPool = ThreadPool::getInstance();
+        auto self = this->shared_from_this();  // Get a shared_ptr to 'this'
+        auto func = [self, &context, &arrCpu]() {
+            return self->UploadImpl(context, arrCpu); };
+        tPool.EnqueueRenderJob(func);
+    }
+
+    void UploadImpl(ComPtr<ID3D11DeviceContext>& context,
+        vector<T_ELEMENT>& arrCpu) {
 
         assert(arrCpu.size() == m_cpu.size());
 
         D3D11Utils::CopyToStagingBuffer(context, m_staging,
-                                        UINT(arrCpu.size() * sizeof(T_ELEMENT)),
-                                        arrCpu.data());
+            UINT(arrCpu.size() * sizeof(T_ELEMENT)),
+            arrCpu.data());
         context->CopyResource(m_gpu.Get(), m_staging.Get());
     }
 
@@ -48,12 +58,24 @@ template <typename T_ELEMENT> class StructuredBuffer {
                   vector<T_ELEMENT> &arrCpu) {
 
         assert(arrCpu.size() == m_cpu.size());
+        auto self = this->shared_from_this();  // Get a shared_ptr to 'this'
+
+        ThreadPool& tPool = ThreadPool::getInstance();
+        auto func = [self, &context, &arrCpu]() {
+            return self->DownloadImpl(context, arrCpu); };
+        tPool.EnqueueRenderJob(func);
+    }
+    void DownloadImpl(ComPtr<ID3D11DeviceContext>& context,
+        vector<T_ELEMENT>& arrCpu) {
+
+        assert(arrCpu.size() == m_cpu.size());
 
         context->CopyResource(m_staging.Get(), m_gpu.Get());
         D3D11Utils::CopyFromStagingBuffer(
             context, m_staging, UINT(arrCpu.size() * sizeof(T_ELEMENT)),
             arrCpu.data());
     }
+
 
     const auto GetBuffer() { return m_gpu.Get(); }
     const auto GetSRV() { return m_srv.Get(); }

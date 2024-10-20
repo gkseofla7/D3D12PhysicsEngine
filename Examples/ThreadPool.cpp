@@ -58,9 +58,11 @@ namespace hlab {
             lock.unlock();
             job();
 
+            lock.lock();
             if (m_renderJobs_.empty())
             {
                 m_finishRenderThread = true;
+                lock.unlock();
                 cv_render_job_q_.notify_one();
             }
         }

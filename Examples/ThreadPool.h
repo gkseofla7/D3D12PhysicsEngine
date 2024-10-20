@@ -12,6 +12,7 @@
 #include <thread>
 #include <vector>
 #include <cassert>
+#include <iostream>
 namespace hlab {
 
     class ThreadPool {

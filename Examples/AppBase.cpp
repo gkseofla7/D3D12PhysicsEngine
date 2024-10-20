@@ -96,8 +96,6 @@ int AppBase::Run() {
                 threadPool.SetUsingMainThreadUsingRendering(true);
             }
             Render(); 
-            threadPool.SetUsingMainThreadUsingRendering(false);
-            threadPool.cv_render_job_q_.notify_one();
 
 
             // Example의 Render()에서 RT 설정을 해주지 않았을 경우에도
@@ -112,6 +110,9 @@ int AppBase::Run() {
 
             // GUI 렌더링 후에 Present() 호출
             m_swapChain->Present(1, 0);
+
+            threadPool.SetUsingMainThreadUsingRendering(false);
+            threadPool.cv_render_job_q_.notify_one();
         }
     }
 

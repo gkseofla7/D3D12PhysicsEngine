@@ -93,14 +93,14 @@ bool AnimHelper::LoadAnimation(DSkinnedMeshModel* InModel, string InState, bool&
 			return false;
 		}
 	}
-	if (InModel->m_boneTransforms.m_cpu.size() != AnimBlock.AniData.clipMaps[InState].keys.size())
+	if (InModel->m_boneTransforms->m_cpu.size() != AnimBlock.AniData.clipMaps[InState].keys.size())
 	{
 		bInit = true;
-		InModel->m_boneTransforms.m_cpu.resize(AnimBlock.AniData.clipMaps[InState].keys.size());
+		InModel->m_boneTransforms->m_cpu.resize(AnimBlock.AniData.clipMaps[InState].keys.size());
 		// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
 		for (int i = 0; i < AnimBlock.AniData.clipMaps[InState].keys.size(); i++)
-			InModel->m_boneTransforms.m_cpu[i] = Matrix();
-		InModel->m_boneTransforms.Initialize(m_device);
+			InModel->m_boneTransforms->m_cpu[i] = Matrix();
+		InModel->m_boneTransforms->Initialize(m_device);
 	}
 
 	return true;
@@ -134,15 +134,15 @@ bool AnimHelper::UpdateAnimation(Actor* InActor, string InState,
 	vector<Matrix> BoneTransform;
 	BoneTransform.resize(m_animDatas[ModelId].AniData.boneTransforms.size());
 	m_animDatas[ModelId].AniData.GetBoneTransform(InActor->GetObjectId(),InState, frame, SkinnedMeshModel->GetAccumulatedRootTransform(), BoneTransform, bInit, type);
-	for (int i = 0; i < SkinnedMeshModel->m_boneTransforms.m_cpu.size(); i++) {
-		SkinnedMeshModel->m_boneTransforms.m_cpu[i] =
+	for (int i = 0; i < SkinnedMeshModel->m_boneTransforms->m_cpu.size(); i++) {
+		SkinnedMeshModel->m_boneTransforms->m_cpu[i] =
 			m_animDatas[ModelId].AniData.GetAnimationTransform(i, BoneTransform[i]).Transpose();
 		if (i == 0)
 		{
 			SkinnedMeshModel->SetAccumulatedRootTransformToLocal( m_animDatas[ModelId].AniData.GetAnimationTransform(i, BoneTransform[i]));
 		}
 	}
-	SkinnedMeshModel->m_boneTransforms.Upload(m_context);
+	SkinnedMeshModel->m_boneTransforms->Upload(m_context);
 	return true;
 }
 

@@ -13,6 +13,7 @@ namespace hlab {
             const string& basePath,
             const string& filename)
         {
+            m_boneTransforms = make_shared< StructuredBuffer<Matrix>>();
             Initialize(device, context, basePath, filename);
         }
         DSkinnedMeshModel::DSkinnedMeshModel(ComPtr<ID3D11Device>& device,
@@ -53,7 +54,7 @@ namespace hlab {
             // ConstBuffer 대신 StructuredBuffer 사용
             // context->VSSetConstantBuffers(3, 1, m_skinnedConsts.GetAddressOf());
             context->VSSetShaderResources(
-                9, 1, m_boneTransforms.GetAddressOfSRV()); // 항상 slot index 주의
+                9, 1, m_boneTransforms->GetAddressOfSRV()); // 항상 slot index 주의
             
             // Skinned VS/PS는 GetPSO()를 통해서 지정되기 때문에
             // Model::Render(.)를 같이 사용 가능

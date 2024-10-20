@@ -70,7 +70,7 @@ namespace hlab {
         void IntegrateRootTransformToWorldTransform(ComPtr<ID3D11DeviceContext>& context);
     public:
         // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
-        StructuredBuffer<Matrix> m_boneTransforms;
+        shared_ptr<StructuredBuffer<Matrix>> m_boneTransforms;
     private:
         Matrix m_accumulatedRootTransform;
         Matrix m_accumulatedRootTransformToLocal;
