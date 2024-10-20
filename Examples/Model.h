@@ -70,7 +70,7 @@ class Model {
     bool m_drawNormals = false;
     bool m_isVisible = true;
     bool m_castShadow = true;
-    bool m_isPickable = true; // 마우스로 선택/조작 가능 여부
+    bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
     bool m_isCollision = false;
 
     vector<shared_ptr<Mesh>> m_meshes;

@@ -1,13 +1,14 @@
 #include "Projectile.h"
 #include "BillboardModel.h"
 #include "DModel.h"
+#include "GameUtility.h"
 
 #include "DaerimsEngineBase.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "bullet/btBulletDynamicsCommon.h"
 
 namespace hlab {
-    bool isObjectInContact(btCollisionObject* obj, btCollisionWorld* world) {
+    bool isObjectInContact(btCollisionObject* obj, btCollisionWorld* world, btCollisionObjectWrapper* & OutCollisionObject) {
         class SimpleContactCallback : public btCollisionWorld::ContactResultCallback {
         public:
             bool hasCollided = false;
@@ -49,6 +50,7 @@ namespace hlab {
     void Projectile::Tick(float dt)
     {
         Object::Tick(dt);
+        static const float simToRenderScale = 0.01f;
         // TODO. 쏜 사람에 대해서는 예외처리하는게 더 낫지 않을지..
         m_elasedSeconds += dt;
         static const float notCollapsedTime = 0.3f;
@@ -60,9 +62,23 @@ namespace hlab {
                 if (m_startPendingKill == false)
                 {
                     btCollisionObject* collisionObj = (btCollisionObject*)(m_physicsBody);
-                    if (isObjectInContact(collisionObj, DaerimsEngineBase::GetInstance().GetDynamicWorld()))
+                    btCollisionObjectWrapper* CollisionObjectWrapper = nullptr;
+                    if (isObjectInContact(collisionObj, DaerimsEngineBase::GetInstance().GetDynamicWorld(), CollisionObjectWrapper))
                     {
                         m_startPendingKill = true;
+                        if (CollisionObjectWrapper != nullptr)
+                        {
+                            btRigidBody* OtherCollision = dynamic_cast<btRigidBody*>(const_cast<btCollisionObject*>( CollisionObjectWrapper->getCollisionObject()));
+                            std::weak_ptr<Object>  Obj = DaerimsEngineBase::GetInstance().GetPhysObject(OtherCollision);
+                            std::shared_ptr<Object> ObjLock = Obj.lock();
+                            if (ObjLock.get() != nullptr)
+                            {
+
+                                Vector3 MyVel = TransfromVector(m_physicsBody->getLinearVelocity())* simToRenderScale;
+                                float Energy = m_physicsBody->getMass() *(MyVel.Length())* MyVel.Length()/2.0f;
+                                ObjLock->AddEnergy(Energy, MyVel);
+                            }
+                        }
                     }
                 }
                 else
