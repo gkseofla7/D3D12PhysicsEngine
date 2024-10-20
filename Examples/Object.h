@@ -53,9 +53,6 @@ public:
 	void SetPendingKill(bool InPendingKill) { m_pendingKill = InPendingKill; }
 	Vector3 GetWorldPosition();
 	float GetVelocity() { return m_velocity; }
-
-	void AddEnergy(const float InEnergy, Vector3 InDir);
-
 	bool IsPickable() { return m_isPickable; }
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
 
