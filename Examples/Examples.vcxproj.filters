@@ -203,7 +203,6 @@
     </ClCompile>
     <ClCompile Include="IdleState.cpp" />
     <ClCompile Include="AttackState.cpp" />
-    <ClCompile Include="ProjectileManager.cpp" />
     <ClCompile Include="ActorState.cpp">
       <Filter>Examples\DaerimsProject</Filter>
     </ClCompile>
@@ -213,8 +212,11 @@
     <ClCompile Include="MoveState.cpp">
       <Filter>Examples\DaerimsProject</Filter>
     </ClCompile>
-    <ClCompile Include="JumpState.cpp" />
     <ClCompile Include="FlyAwayState.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="ProjectileManager.cpp" />
+    <ClCompile Include="JumpState.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AppBase.h" />
@@ -401,7 +403,6 @@
     </ClInclude>
     <ClInclude Include="IdleState.h" />
     <ClInclude Include="AttackState.h" />
-    <ClInclude Include="ProjectileManager.h" />
     <ClInclude Include="ActorState.h">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
@@ -411,8 +412,14 @@
     <ClInclude Include="MoveState.h">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
-    <ClInclude Include="JumpState.h" />
     <ClInclude Include="FlyAwayState.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="GameUtility.h">
+      <Filter>Examples\DaerimsProject</Filter>
+    </ClInclude>
+    <ClInclude Include="ProjectileManager.h" />
+    <ClInclude Include="Projectile.h" />
+    <ClInclude Include="JumpState.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

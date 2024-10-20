@@ -155,6 +155,24 @@ void D3D11Utils::CreatePixelShader(ComPtr<ID3D11Device> &device,
 void D3D11Utils::CreateIndexBuffer(ComPtr<ID3D11Device> &device,
                                    const std::vector<uint32_t> &indices,
                                    ComPtr<ID3D11Buffer> &indexBuffer) {
+    ThreadPool& tPool = ThreadPool::getInstance();
+    auto func = [&device, &indices, &indexBuffer]() {
+        return CreateIndexBufferImpl(device, indices, indexBuffer); };
+    tPool.EnqueueRenderJob(func);
+}
+
+void D3D11Utils::CreateIndexBuffer(ComPtr<ID3D11Device>& device,
+    const std::vector<uint32_t>&& indices,
+    ComPtr<ID3D11Buffer>& indexBuffer) {
+    ThreadPool& tPool = ThreadPool::getInstance();
+    auto func = [&device, indices = std::move(indices), &indexBuffer]() {
+        return CreateIndexBufferImpl(device, indices, indexBuffer); };
+    tPool.EnqueueRenderJob(func);
+}
+
+void D3D11Utils::CreateIndexBufferImpl(ComPtr<ID3D11Device>& device,
+    const std::vector<uint32_t>& indices,
+    ComPtr<ID3D11Buffer>& indexBuffer) {
     D3D11_BUFFER_DESC bufferDesc = {};
     bufferDesc.Usage = D3D11_USAGE_IMMUTABLE; // 초기화 후 변경X
     bufferDesc.ByteWidth = UINT(sizeof(uint32_t) * indices.size());
@@ -162,13 +180,13 @@ void D3D11Utils::CreateIndexBuffer(ComPtr<ID3D11Device> &device,
     bufferDesc.CPUAccessFlags = 0; // 0 if no CPU access is necessary.
     bufferDesc.StructureByteStride = sizeof(uint32_t);
 
-    D3D11_SUBRESOURCE_DATA indexBufferData = {0};
+    D3D11_SUBRESOURCE_DATA indexBufferData = { 0 };
     indexBufferData.pSysMem = indices.data();
     indexBufferData.SysMemPitch = 0;
     indexBufferData.SysMemSlicePitch = 0;
 
     device->CreateBuffer(&bufferDesc, &indexBufferData,
-                         indexBuffer.GetAddressOf());
+        indexBuffer.GetAddressOf());
 }
 
 void D3D11Utils::CreateGeometryShader(
@@ -349,21 +367,23 @@ ComPtr<ID3D11Texture2D> D3D11Utils::CreateStagingTexture(
     txtDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
 
     ComPtr<ID3D11Texture2D> stagingTexture;
-    if (FAILED(device->CreateTexture2D(&txtDesc, NULL,
-                                       stagingTexture.GetAddressOf()))) {
+    HRESULT stageTextHr = device->CreateTexture2D(&txtDesc, NULL,
+        stagingTexture.GetAddressOf());
+    if (FAILED(stageTextHr)) {
         cout << "Failed()" << endl;
+        return nullptr; 
     }
 
     size_t pixelSize = GetPixelSize(pixelFormat);
-
     D3D11_MAPPED_SUBRESOURCE ms;
-    context->Map(stagingTexture.Get(), NULL, D3D11_MAP_WRITE, NULL, &ms);
+    HRESULT  hr = context->Map(stagingTexture.Get(), NULL, D3D11_MAP_WRITE, NULL, &ms);
+
     uint8_t *pData = (uint8_t *)ms.pData;
     for (UINT h = 0; h < UINT(height); h++) { // 가로줄 한 줄씩 복사
         memcpy(&pData[h * ms.RowPitch], &image[h * width * pixelSize],
                width * pixelSize);
     }
-    context->Unmap(stagingTexture.Get(), NULL);
+    context->Unmap(stagingTexture.Get(), 0);
 
     return stagingTexture;
 }
@@ -392,13 +412,40 @@ ComPtr<ID3D11Texture3D> D3D11Utils::CreateStagingTexture3D(
     return stagingTexture;
 }
 
-void CreateTextureHelper(ComPtr<ID3D11Device> &device,
+void D3D11Utils::CreateTextureHelper(ComPtr<ID3D11Device> &device,
                          ComPtr<ID3D11DeviceContext> &context, const int width,
                          const int height, const vector<uint8_t> &image,
                          const DXGI_FORMAT pixelFormat,
                          ComPtr<ID3D11Texture2D> &texture,
                          ComPtr<ID3D11ShaderResourceView> &srv) {
 
+    ThreadPool& tPool = ThreadPool::getInstance();
+    auto func = [&device, &context, width, height, &image, pixelFormat, &texture, &srv]() {
+        return CreateTextureHelperImpl(device, context, width, height, image, pixelFormat
+            , texture, srv); };
+    tPool.EnqueueRenderJob(func);
+}
+
+void D3D11Utils::CreateTextureHelper(ComPtr<ID3D11Device>& device,
+    ComPtr<ID3D11DeviceContext>& context, const int width,
+    const int height, const vector<uint8_t>&& image,
+    const DXGI_FORMAT pixelFormat,
+    ComPtr<ID3D11Texture2D>& texture,
+    ComPtr<ID3D11ShaderResourceView>& srv) {
+
+    ThreadPool& tPool = ThreadPool::getInstance();
+    auto func = [&device, &context, width, height, pixelFormat, &texture, &srv,image = std::move(image)]() {
+        return CreateTextureHelperImpl(device, context, width, height, image, pixelFormat
+            , texture, srv); };
+    tPool.EnqueueRenderJob(func);
+}
+
+void D3D11Utils::CreateTextureHelperImpl(ComPtr<ID3D11Device>& device,
+    ComPtr<ID3D11DeviceContext>& context, const int width,
+    const int height, const vector<uint8_t>& image,
+    const DXGI_FORMAT pixelFormat,
+    ComPtr<ID3D11Texture2D>& texture,
+    ComPtr<ID3D11ShaderResourceView>& srv) {
     // 스테이징 텍스춰 만들고 CPU에서 이미지를 복사합니다.
     ComPtr<ID3D11Texture2D> stagingTexture = D3D11Utils::CreateStagingTexture(
         device, context, width, height, image, pixelFormat);
@@ -426,7 +473,7 @@ void CreateTextureHelper(ComPtr<ID3D11Device> &device,
 
     // 스테이징 텍스춰로부터 가장 해상도가 높은 이미지 복사
     context->CopySubresourceRegion(texture.Get(), 0, 0, 0, 0,
-                                   stagingTexture.Get(), 0, NULL);
+        stagingTexture.Get(), 0, NULL);
 
     // ResourceView 만들기
     device->CreateShaderResourceView(texture.Get(), 0, srv.GetAddressOf());
@@ -437,11 +484,13 @@ void CreateTextureHelper(ComPtr<ID3D11Device> &device,
     // HLSL 쉐이더 안에서는 SampleLevel() 사용
 }
 
+
 void D3D11Utils::CreateMetallicRoughnessTexture(
-    ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+    ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
     const std::string metallicFilename, const std::string roughnessFilename,
-    ComPtr<ID3D11Texture2D> &texture, ComPtr<ID3D11ShaderResourceView> &srv, bool onlyCpu) 
+    ComPtr<ID3D11Texture2D>& texture, ComPtr<ID3D11ShaderResourceView>& srv)
 {
+    std::cout << "CreateMetallicRoughnessTextureImpl" << std::endl;
     string filename = metallicFilename + '_' + roughnessFilename;
     if (imageMap.find(filename) == imageMap.end())
     {
@@ -488,23 +537,15 @@ void D3D11Utils::CreateMetallicRoughnessTexture(
                     imageMap[filename].image[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
             }
         }
-
-   
-        if (onlyCpu == false)
-        {
-            CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image,
-                DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
-        }
-
+        CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image,
+            DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
     }
 }
-
 void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context,
                                const std::string filename, const bool usSRGB,
                                ComPtr<ID3D11Texture2D> &tex,
-                               ComPtr<ID3D11ShaderResourceView> &srv,
-                               bool onlyCpu) {
+                               ComPtr<ID3D11ShaderResourceView> &srv) {
     if (imageMap.find(filename) == imageMap.end())
     {
         imageMap[filename] = ImageInfo();
@@ -522,23 +563,18 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
             ReadImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
         }
     }
-   
-    if (onlyCpu == false)
-    {
-        CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat, tex,
+    CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat, tex,
             srv);
-    }
-
 }
 
-void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
-                               ComPtr<ID3D11DeviceContext> &context,
-                               const std::string albedoFilename,
-                               const std::string opacityFilename,
-                               const bool usSRGB,
-                               ComPtr<ID3D11Texture2D> &texture,
-                               ComPtr<ID3D11ShaderResourceView> &srv,
-                                bool onlyCpu) {
+
+void D3D11Utils::CreateTexture(ComPtr<ID3D11Device>& device,
+    ComPtr<ID3D11DeviceContext>& context,
+    const std::string albedoFilename,
+    const std::string opacityFilename,
+    const bool usSRGB,
+    ComPtr<ID3D11Texture2D>& texture,
+    ComPtr<ID3D11ShaderResourceView>& srv) {
     string filename = albedoFilename + '_' + opacityFilename;
     if (imageMap.find(filename) == imageMap.end())
     {
@@ -551,11 +587,8 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device,
 
         ReadImage(albedoFilename, opacityFilename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
     }
-    if (onlyCpu == false)
-    {
-        CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat,
-            texture, srv);
-    }
+    CreateTextureHelper(device, context, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat,
+        texture, srv);
 }
 
 void D3D11Utils::CreateUATexture(ComPtr<ID3D11Device> &device, const int width,
@@ -861,9 +894,20 @@ void D3D11Utils::CreateTextureArray(
 }
 
 void D3D11Utils::CreateDDSTexture(
-    ComPtr<ID3D11Device> &device, const wchar_t *filename, bool isCubeMap,
-    ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
+    ComPtr<ID3D11Device>& device, const wstring&& filename, bool isCubeMap,
+    ComPtr<ID3D11ShaderResourceView>& textureResourceView) {
 
+    ThreadPool& tPool = ThreadPool::getInstance();
+    auto func = [&device, filename = std::move(filename), &isCubeMap, &textureResourceView]() {
+        return CreateDDSTextureImpl(device, std::move(filename), isCubeMap, textureResourceView); };
+    std::cout << "CreateDDSTexture" << std::endl;
+    tPool.EnqueueRenderJob(func);
+}
+
+void D3D11Utils::CreateDDSTextureImpl(
+    ComPtr<ID3D11Device> &device, const wstring&& filename, bool isCubeMap,
+    ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
+    std::cout << "CreateDDSTextureImpl" << std::endl;
     ComPtr<ID3D11Texture2D> texture;
 
     UINT miscFlags = 0;
@@ -873,7 +917,7 @@ void D3D11Utils::CreateDDSTexture(
 
     // https://github.com/microsoft/DirectXTK/wiki/DDSTextureLoader
     ThrowIfFailed(CreateDDSTextureFromFileEx(
-        device.Get(), filename, 0, D3D11_USAGE_DEFAULT,
+        device.Get(), filename.c_str(), 0, D3D11_USAGE_DEFAULT,
         D3D11_BIND_SHADER_RESOURCE, 0, miscFlags, DDS_LOADER_FLAGS(false),
         (ID3D11Resource **)texture.GetAddressOf(),
         textureResourceView.GetAddressOf(), NULL));

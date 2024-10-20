@@ -24,8 +24,11 @@ class Model {
     Model() {}
     Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
           const string &basePath, const string &filename);
-    Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-          const vector<MeshData> &meshes);
+    Model(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+        const vector<MeshData>& meshes);
+
+    //Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+    //      const vector<MeshData> && meshes);
 
     virtual void Initialize(ComPtr<ID3D11Device> &device,
                             ComPtr<ID3D11DeviceContext> &context);
@@ -41,6 +44,9 @@ class Model {
     void Initialize(ComPtr<ID3D11Device> &device,
                     ComPtr<ID3D11DeviceContext> &context,
                     const vector<MeshData> &meshes);
+    void Initialize(ComPtr<ID3D11Device>& device,
+        ComPtr<ID3D11DeviceContext>& context,
+        const vector<MeshData>&& meshes);
 
     void UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                ComPtr<ID3D11DeviceContext> &context);
@@ -80,6 +86,9 @@ class Model {
   private:
     shared_ptr<Mesh> m_boundingBoxMesh;
     shared_ptr<Mesh> m_boundingSphereMesh;
+
+    // TODO. 제거 필요, 모두 비동기로 로딩하기때매 임시로
+    vector<MeshData> m_meshData;
 };
 
 } // namespace hlab

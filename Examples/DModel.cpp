@@ -239,11 +239,12 @@ namespace hlab {
         {
             MeshLoadHelper::GetBoundingMesh(m_meshKey, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
             MeshLoadHelper::GetMaterial(m_meshKey, m_materialConsts.GetCpu());
-            m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
-            m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
 
-            m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
-            m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
+            //m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
+            //m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
+
+            //m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
+            //m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
 
             m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
 

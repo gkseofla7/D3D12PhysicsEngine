@@ -12,6 +12,7 @@
 #include <thread>
 #include <vector>
 #include "ThreadPool.h"
+#include <iostream>
 namespace hlab {
 
     ThreadPool::ThreadPool(size_t num_threads)
@@ -20,6 +21,8 @@ namespace hlab {
         for (size_t i = 0; i < num_threads_; ++i) {
             worker_threads_.emplace_back([this]() { this->WorkerThread(); });
         }
+
+        m_renderThread = std::thread(([this]() { this->RenderThread(); }));
     }
     void ThreadPool::WorkerThread() {
         while (true) {
@@ -38,6 +41,30 @@ namespace hlab {
             job();
         }
     }
+
+    void ThreadPool::RenderThread() {
+        while (true) {
+            
+            std::unique_lock<std::mutex> lock(m_render_job_q_);
+            // renderjob이 있으면 깨움
+            cv_render_job_q_.wait(lock, [this]() { return (!this->m_renderJobs_.empty()&& !m_isMainThreadUsingRendering) || stop_all; });
+            if (stop_all && this->m_renderJobs_.empty()) {
+                return;
+            }
+            m_finishRenderThread = false;
+            std::function<void()> job = std::move(m_renderJobs_.front());
+            assert(job);
+            m_renderJobs_.pop();
+            lock.unlock();
+            job();
+
+            if (m_renderJobs_.empty())
+            {
+                m_finishRenderThread = true;
+                cv_render_job_q_.notify_one();
+            }
+        }
+    }
     ThreadPool::~ThreadPool() {
         stop_all = true;
         cv_job_q_.notify_all();
@@ -45,6 +72,7 @@ namespace hlab {
         for (auto& t : worker_threads_) {
             t.join();
         }
+        m_renderThread.join();
     }
 
 

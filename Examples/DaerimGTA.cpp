@@ -29,7 +29,7 @@ bool DaerimGTA::InitScene()
 	AppBase::m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
 		0.0654498f);
 
-	AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
+AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
@@ -37,6 +37,7 @@ bool DaerimGTA::InitScene()
     InitAnimation();
     // 바닥(거울)
     {
+        
         // https://freepbr.com/materials/stringy-marble-pbr/
         auto mesh = GeometryGenerator::MakeSquare(5.0, { 10.0f, 10.0f });
         string path = "../Assets/Textures/PBR/stringy-marble-ue/";
@@ -60,11 +61,13 @@ bool DaerimGTA::InitScene()
         // m_mirror = ground; // 바닥에 거울처럼 반사 구현
 
         m_basicList.push_back(ground); // 거울은 리스트에 등록 X
+        
     }
 
 
     // Main Object
     {
+        
         {
             string path = "../Assets/Characters/Mixamo/";
             string characterName = "character.fbx";
@@ -99,7 +102,7 @@ bool DaerimGTA::InitScene()
             wizardActor->Initialize(m_device, m_context, wizardModel);
             m_objectList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
         }
-
+        
     }
      
     InitPhysics(true);

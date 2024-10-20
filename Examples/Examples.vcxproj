@@ -113,6 +113,7 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
       <AdditionalOptions>/D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\Users\DaerimHan\vcpkg\installed\x64-windows\include\bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -204,7 +205,9 @@
     <ClCompile Include="MeshLoadHelper.cpp" />
     <ClCompile Include="MoveState.cpp" />
     <ClCompile Include="Noise.cpp" />
+    <ClCompile Include="Object.cpp" />
     <ClCompile Include="PostProcess.cpp" />
+    <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="ProjectileManager.cpp" />
     <ClCompile Include="SkeletalMeshActor.cpp" />
     <ClCompile Include="SphSimulation.cpp" />
@@ -262,6 +265,7 @@
     <ClInclude Include="FluidSimulationCPU.h" />
     <ClInclude Include="FlyAwayState.h" />
     <ClInclude Include="GameDef.h" />
+    <ClInclude Include="GameUtility.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="GraphicsCommon.h" />
     <ClInclude Include="GraphicsPSO.h" />
@@ -271,6 +275,8 @@
     <ClInclude Include="JumpState.h" />
     <ClInclude Include="MeshLoadHelper.h" />
     <ClInclude Include="MoveState.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="Projectile.h" />
     <ClInclude Include="ProjectileManager.h" />
     <ClInclude Include="RigidBodyActor.h" />
     <ClInclude Include="SkeletalMeshActor.h" />

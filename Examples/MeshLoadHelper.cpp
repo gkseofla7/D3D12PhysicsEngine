@@ -66,21 +66,9 @@ void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<I
             ThreadPool& tPool = ThreadPool::getInstance();
             //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
             auto func = [&device,&context, &Pair]() {
-                return LoadModel(device, nullptr, Pair.first); };
-            mBloock.LoadCommandList = tPool.EnqueueJob(func);
+                return LoadModel(device, context, Pair.first); };
+            tPool.EnqueueJob(func);
         } 
-        else if (mBloock.MeshLoadType == ELoadType::Loading && mBloock.LoadCommandList._Is_ready() == true)
-        { 
-            // 4. 주 스레드에서 Immediate Context를 사용해 명령 리스트 실행
-            ID3D11CommandList* CommandList = mBloock.LoadCommandList.get();
-            context->ExecuteCommandList(CommandList, FALSE);
-            CommandList->Release();
-            mBloock.deferredContext = nullptr; 
-            //mBloock.deferredContext->Release();
-            // 텍스처는 메인에서 생성
-            LoadModel(device, context, Pair.first); 
-            mBloock.MeshLoadType = ELoadType::Loaded;
-        }
     }
 }
 bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& InPath, const string& InName, vector<Mesh>* OutMeshes)
@@ -128,37 +116,36 @@ bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InC
     InConstants.useRoughnessMap = MeshMap[InMeshKey].useRoughnessMap;
     return true;
 }
-ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, const string& key)
+void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& key)
 {
-    bool deferred = context == nullptr;
     {
         std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
 
         if (MeshMap.find(key) == MeshMap.end())
         {
-            return nullptr;
+            return;
         }
         // MeshData 로드 안됨
         if (MeshMap[key].MeshDataLoadType == ELoadType::NotLoaded)
         {
-            return nullptr;
+            return;
         }
         // MeshData 로딩중
         if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == false)
         {
-            return nullptr;
+            return;
         }
-        // 이미 모델 로딩중
-        if ((MeshMap[key].MeshLoadType == ELoadType::Loading && deferred == true)
+        // 이미 모델 로딩중 or Loaded
+        if (MeshMap[key].MeshLoadType == ELoadType::Loading
             || MeshMap[key].MeshLoadType == ELoadType::Loaded)
         {
-            return nullptr;
+            return;
         }
 
         // 동시에 여기에 들어오면 이슈 발생,,
         MeshMap[key].MeshLoadType = ELoadType::Loading;
     }
-    // 1. Deferred Context 생성
+
     std::vector<MeshData>& MeshDatas = MeshMap[key].MeshDatas;
     if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == true)
     {
@@ -166,19 +153,6 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         MeshMap[key].MeshDataLoadType = ELoadType::Loaded;
     }
 
-    ComPtr<ID3D11DeviceContext> deferredContext = nullptr;
-    if (deferred)
-    {
-        device->CreateDeferredContext(0, &deferredContext); 
-        MeshMap[key].deferredContext = deferredContext;
-        
-    }
-    else
-    {
-        deferredContext = context; 
-    }
-    
-    // 이 부분도 따로 멀티스레딩으로 뺄수없을까?
     MeshBlock& MeshBlock = MeshMap[key];
     vector<Mesh>& meshes = MeshBlock.Meshes;
     int index = 0;
@@ -190,43 +164,39 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         }
         Mesh& newMesh = meshes[index];
          
-        if (deferred)
+        if (meshData.skinnedVertices.size() > 0)
         {
-            if (meshData.skinnedVertices.size() > 0)
-            {
-                D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
-                    newMesh.vertexBuffer);
-                newMesh.indexCount = UINT(meshData.indices.size());
-                newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
-                newMesh.stride = UINT(sizeof(SkinnedVertex));
-                D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                    newMesh.indexBuffer);
-            }
-            else
-            {
-                D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-                    newMesh.vertexBuffer);
-                newMesh.indexCount = UINT(meshData.indices.size());
-                newMesh.vertexCount = UINT(meshData.vertices.size());
-                newMesh.stride = UINT(sizeof(Vertex));
-                D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                    newMesh.indexBuffer);
-            }
+            D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
+                newMesh.vertexBuffer);
+            newMesh.indexCount = UINT(meshData.indices.size());
+            newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
+            newMesh.stride = UINT(sizeof(SkinnedVertex));
+            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                newMesh.indexBuffer);
         }
-
+        else
+        {
+            D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+                newMesh.vertexBuffer);
+            newMesh.indexCount = UINT(meshData.indices.size());
+            newMesh.vertexCount = UINT(meshData.vertices.size());
+            newMesh.stride = UINT(sizeof(Vertex));
+            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+                newMesh.indexBuffer);
+        }
 
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
                 if (!meshData.opacityTextureFilename.empty()) {
                     D3D11Utils::CreateTexture(
-                        device, deferredContext, meshData.albedoTextureFilename,
+                        device, context, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, false,
-                        newMesh.albedoTexture, newMesh.albedoSRV, deferred);
+                        newMesh.albedoTexture, newMesh.albedoSRV);
                 }
                 else {
                     D3D11Utils::CreateTexture(
-                        device, deferredContext, meshData.albedoTextureFilename, true,
-                        newMesh.albedoTexture, newMesh.albedoSRV, deferred);
+                        device, context, meshData.albedoTextureFilename, true,
+                        newMesh.albedoTexture, newMesh.albedoSRV);
                 }
                 MeshBlock.useAlbedoMap = true;
             }
@@ -239,8 +209,8 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         if (!meshData.emissiveTextureFilename.empty()) {
             if (filesystem::exists(meshData.emissiveTextureFilename)) {
                 D3D11Utils::CreateTexture(
-                    device, deferredContext, meshData.emissiveTextureFilename, true,
-                    newMesh.emissiveTexture, newMesh.emissiveSRV, deferred);
+                    device, context, meshData.emissiveTextureFilename, true,
+                    newMesh.emissiveTexture, newMesh.emissiveSRV);
                 MeshBlock.useEmissiveMap = true;
             }
             else {
@@ -252,8 +222,8 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         if (!meshData.normalTextureFilename.empty()) {
             if (filesystem::exists(meshData.normalTextureFilename)) {
                 D3D11Utils::CreateTexture(
-                    device, deferredContext, meshData.normalTextureFilename, false,
-                    newMesh.normalTexture, newMesh.normalSRV, deferred);
+                    device, context, meshData.normalTextureFilename, false,
+                    newMesh.normalTexture, newMesh.normalSRV);
                 MeshBlock.useNormalMap = true;
             }
             else {
@@ -265,8 +235,8 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         if (!meshData.heightTextureFilename.empty()) {
             if (filesystem::exists(meshData.heightTextureFilename)) {
                 D3D11Utils::CreateTexture(
-                    device, deferredContext, meshData.heightTextureFilename, false,
-                    newMesh.heightTexture, newMesh.heightSRV, deferred);
+                    device, context, meshData.heightTextureFilename, false,
+                    newMesh.heightTexture, newMesh.heightSRV);
                 MeshBlock.useHeightMap = true;
             }
             else {
@@ -277,9 +247,9 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
          
         if (!meshData.aoTextureFilename.empty()) {
             if (filesystem::exists(meshData.aoTextureFilename)) {
-                D3D11Utils::CreateTexture(device, deferredContext,
+                D3D11Utils::CreateTexture(device, context,
                     meshData.aoTextureFilename, false,
-                    newMesh.aoTexture, newMesh.aoSRV, deferred);
+                    newMesh.aoTexture, newMesh.aoSRV);
                 MeshBlock.useAOMap = true;
             }
             else {
@@ -297,10 +267,10 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
                 filesystem::exists(meshData.roughnessTextureFilename)) {
 
                 D3D11Utils::CreateMetallicRoughnessTexture(
-                    device, deferredContext, meshData.metallicTextureFilename,
+                    device, context, meshData.metallicTextureFilename,
                     meshData.roughnessTextureFilename,
                     newMesh.metallicRoughnessTexture,
-                    newMesh.metallicRoughnessSRV, deferred);
+                    newMesh.metallicRoughnessSRV);
             }
             else {
                 cout << meshData.metallicTextureFilename << " or "
@@ -318,67 +288,54 @@ ID3D11CommandList* MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPt
         }
         index++;
     } 
-    if (deferred)
+    // Initialize Bounding Box
     {
-        // Initialize Bounding Box
-        {
-            MeshBlock.boundingBox = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
-            for (size_t i = 1; i < MeshDatas.size(); i++) {
-                auto bb = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
-                GetExtendBoundingBox(bb, MeshBlock.boundingBox);
-            }
-            auto meshData = GeometryGenerator::MakeWireBox(
-                MeshBlock.boundingBox.Center,
-                Vector3(MeshBlock.boundingBox.Extents) + Vector3(1e-3f));
-            MeshBlock.boundingBoxMesh = std::make_shared<Mesh>();
-            D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-                MeshBlock.boundingBoxMesh->vertexBuffer);
-            MeshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
-            MeshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
-            MeshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
-            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                MeshBlock.boundingBoxMesh->indexBuffer);
+        MeshBlock.boundingBox = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
+        for (size_t i = 1; i < MeshDatas.size(); i++) {
+            auto bb = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
+            GetExtendBoundingBox(bb, MeshBlock.boundingBox);
         }
 
-        // Initialize Bounding Sphere
-        {
-            float maxRadius = 0.0f;
-            for (auto& mesh : MeshDatas) {
-                for (auto& v : mesh.vertices) {
-                    maxRadius = std::max(
-                        (Vector3(MeshBlock.boundingBox.Center) - v.position).Length(),
-                        maxRadius);
-                }
+        auto meshData = GeometryGenerator::MakeWireBox(
+            MeshBlock.boundingBox.Center,
+            Vector3(MeshBlock.boundingBox.Extents) + Vector3(1e-3f));
+        MeshBlock.boundingBoxMesh = std::make_shared<Mesh>();
+
+        MeshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
+        MeshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
+        MeshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
+
+        D3D11Utils::CreateVertexBuffer(device, std::move(meshData.vertices),
+            MeshBlock.boundingBoxMesh->vertexBuffer);
+        D3D11Utils::CreateIndexBuffer(device, std::move(meshData.indices),
+            MeshBlock.boundingBoxMesh->indexBuffer);
+    }
+
+    // Initialize Bounding Sphere
+    {
+        float maxRadius = 0.0f;
+        for (auto& mesh : MeshDatas) {
+            for (auto& v : mesh.vertices) {
+                maxRadius = std::max(
+                    (Vector3(MeshBlock.boundingBox.Center) - v.position).Length(),
+                    maxRadius);
             }
-            maxRadius += 1e-2f; // 살짝 크게 설정
-            MeshBlock.boundingSphere = BoundingSphere(MeshBlock.boundingBox.Center, maxRadius);
-            auto meshData = GeometryGenerator::MakeWireSphere(
-                MeshBlock.boundingSphere.Center, MeshBlock.boundingSphere.Radius);
-            MeshBlock.boundingSphereMesh = std::make_shared<Mesh>();
-            D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-                MeshBlock.boundingSphereMesh->vertexBuffer);
-            MeshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
-            MeshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
-            MeshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
-            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                MeshBlock.boundingSphereMesh->indexBuffer);
         }
-    }
+        maxRadius += 1e-2f; // 살짝 크게 설정
+        MeshBlock.boundingSphere = BoundingSphere(MeshBlock.boundingBox.Center, maxRadius);
+        auto meshData = GeometryGenerator::MakeWireSphere(
+            MeshBlock.boundingSphere.Center, MeshBlock.boundingSphere.Radius);
+        MeshBlock.boundingSphereMesh = std::make_shared<Mesh>();
 
-
-    // 3. 명령 리스트로 마무리
-    if (deferred)
-    {
-        ID3D11CommandList* commandList = nullptr;
-        deferredContext->FinishCommandList(FALSE, &commandList);
-        // 4. 주 스레드에서 Immediate Context를 사용해 명령 리스트 실행
-        return commandList;
+        MeshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
+        MeshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
+        MeshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
+        D3D11Utils::CreateVertexBuffer(device, std::move(meshData.vertices),
+            MeshBlock.boundingSphereMesh->vertexBuffer);
+        D3D11Utils::CreateIndexBuffer(device, std::move(meshData.indices),
+            MeshBlock.boundingSphereMesh->indexBuffer);
     }
-    else
-    {
-        MeshMap[key].MeshLoadType = ELoadType::Loaded;
-        return nullptr;
-    }
+    MeshMap[key].MeshLoadType = ELoadType::Loaded;
 }
 
 
@@ -429,7 +386,7 @@ bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
 
     return true;
 }
-string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext> context, float InHalfExtent)
+string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float InHalfExtent)
 {
     string Key = "Box"  + std::to_string(InHalfExtent);
     if (MeshMap.find(Key) == MeshMap.end())
@@ -439,9 +396,9 @@ string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
         MeshMap[Key].MeshDataLoadType = ELoadType::Loaded;
 
         auto func = [&device, &context, Key]() {
-            return LoadModel(device, nullptr, Key); };
+            return LoadModel(device, context, Key); };
         ThreadPool& tPool = ThreadPool::getInstance();
-        MeshMap[Key].LoadCommandList = tPool.EnqueueJob(func);
+       tPool.EnqueueJob(func);
     }
     return Key;
 }

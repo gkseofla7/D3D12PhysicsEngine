@@ -88,6 +88,7 @@ namespace hlab {
 
         int m_maxFrame = 0;
     protected:
+        // Node : 이 값이 true여도 gpu 메모리에 올라간것은 보장되지 않는다.
         bool m_initializeMesh = false;
     private:
         string m_basePath;

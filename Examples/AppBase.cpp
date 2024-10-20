@@ -85,10 +85,20 @@ int AppBase::Run() {
 
             ImGui::End();
             ImGui::Render();
-
             Update(ImGui::GetIO().DeltaTime);
 
-            Render(); // <- 중요: 우리가 구현한 렌더링
+            ThreadPool& threadPool = ThreadPool::getInstance();
+
+            // 렌더 스레드 작업 완료를 기다림
+            {
+                std::unique_lock<std::mutex> lock(threadPool.m_render_job_q_);
+                threadPool.cv_render_job_q_.wait(lock, [&]() { return threadPool.IsRenderThreadDone(); });
+                threadPool.SetUsingMainThreadUsingRendering(true);
+            }
+            Render(); 
+            threadPool.SetUsingMainThreadUsingRendering(false);
+            threadPool.cv_render_job_q_.notify_one();
+
 
             // Example의 Render()에서 RT 설정을 해주지 않았을 경우에도
             // 백 버퍼에 GUI를 그리기위해 RT 설정
@@ -112,8 +122,16 @@ bool AppBase::Initialize() {
 
     if (!InitMainWindow())
         return false;
+    ThreadPool& tPool = ThreadPool::getInstance();
+    {
+        std::unique_lock<std::mutex> lock(tPool.m_render_job_q_);
+        tPool.SetUsingMainThreadUsingRendering(true);
+    }
+    bool bInitDirect = InitDirect3D();
+    tPool.SetUsingMainThreadUsingRendering(false);
+    tPool.cv_render_job_q_.notify_one();
 
-    if (!InitDirect3D())
+    if (!bInitDirect)
         return false;
 
     if (!InitGUI())
@@ -164,6 +182,8 @@ bool AppBase::InitScene() {
         m_globalConstsCPU.lights[2].type = LIGHT_OFF;
     }
 
+    // TODO. 모두 Object로 변환 필요
+    return true;
     // 조명 위치 표시
     {
         for (int i = 0; i < MAX_LIGHTS; i++) {
@@ -227,11 +247,11 @@ void AppBase::Update(float dt) {
         m_mirror->UpdateConstantBuffers(m_device, m_context);
 
     // 조명의 위치 반영
-    for (int i = 0; i < MAX_LIGHTS; i++)
-        m_lightSphere[i]->UpdateWorldRow(
-            Matrix::CreateScale(
-                std::max(0.01f, m_globalConstsCPU.lights[i].radius)) *
-            Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
+    //for (int i = 0; i < MAX_LIGHTS; i++)
+    //    m_lightSphere[i]->UpdateWorldRow(
+    //        Matrix::CreateScale(
+    //            std::max(0.01f, m_globalConstsCPU.lights[i].radius)) *
+    //        Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
 
     ProcessMouseControl();
     for (auto &i : m_basicList) {
@@ -534,6 +554,8 @@ void AppBase::RenderMirror() {
 }
 
 void AppBase::Render() {
+    // Note : 사실 렌더링을 렌더스레드한테 요청한다면
+    // 딱히 기다리면서 할 일이 없으니 그냥 메인 스레드에서 돌리도록한다.
 
     AppBase::SetMainViewport();
 
@@ -558,6 +580,7 @@ void AppBase::Render() {
 
     RenderMirror();
 }
+
 
 void AppBase::OnMouseMove(int mouseX, int mouseY) {
 
@@ -1031,10 +1054,10 @@ void AppBase::ProcessMouseControl() {
             activeModel->m_worldRow.Translation();
 
         // 충돌 지점에 작은 구 그리기
-        m_cursorSphere->m_isVisible = true;
-        m_cursorSphere->UpdateWorldRow(Matrix::CreateTranslation(pickPoint));
+        //m_cursorSphere->m_isVisible = true;
+        //m_cursorSphere->UpdateWorldRow(Matrix::CreateTranslation(pickPoint));
     } else {
-        m_cursorSphere->m_isVisible = false;
+        //m_cursorSphere->m_isVisible = false;
     }
 }
 
@@ -1080,7 +1103,6 @@ bool AppBase::InitMainWindow() {
 }
 
 bool AppBase::InitDirect3D() {
-
     const D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_HARDWARE;
     // const D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_WARP;
 
@@ -1122,6 +1144,14 @@ bool AppBase::InitDirect3D() {
         cout << "D3D Feature Level 11 unsupported." << endl;
         return false;
     }
+
+
+    ID3D11Debug* debugDevice = nullptr;
+    if (SUCCEEDED(m_device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDevice)))) {
+        debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+        debugDevice->Release();
+    }
+
 
     Graphics::InitCommonStates(m_device);
 

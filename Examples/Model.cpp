@@ -15,8 +15,14 @@ Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
 
 Model::Model(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
              const std::vector<MeshData> &meshes) {
-    Initialize(device, context, meshes);
+    m_meshData = meshes;
+    Initialize(device, context, m_meshData);
 }
+//
+//Model::Model(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+//    const std::vector<MeshData>&& meshes) {
+//    //Initialize(device, context, std::move(meshes));
+//}
 
 void Model::Initialize(ComPtr<ID3D11Device> &device,
                        ComPtr<ID3D11DeviceContext> &context) {
@@ -197,7 +203,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
 
         this->m_meshes.push_back(newMesh);
     }
-
+    /*
     // Initialize Bounding Box
     {
         m_boundingBox = GetBoundingBox(meshes[0].vertices);
@@ -245,6 +251,7 @@ void Model::Initialize(ComPtr<ID3D11Device> &device,
         m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
         m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
     }
+    */
 }
 
 void Model::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
@@ -270,6 +277,11 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
     if (m_isVisible) {
         for (const auto &mesh : m_meshes) {
 
+            if (mesh->materialConstsGPU.Get() == nullptr)
+            {
+                mesh->meshConstsGPU = m_meshConsts.Get();
+                mesh->materialConstsGPU = m_materialConsts.Get();
+            }
             ID3D11Buffer *constBuffers[2] = {mesh->meshConstsGPU.Get(),
                                              mesh->materialConstsGPU.Get()};
             context->VSSetConstantBuffers(1, 2, constBuffers);

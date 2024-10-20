@@ -9,7 +9,7 @@ void BillboardModel::Initialize(ComPtr<ID3D11Device> &device,
                                 const std::vector<Vector4> &points,
                                 const float width,
                                 const ComPtr<ID3D11PixelShader> &pixelShader) {
-
+    
     BillboardModel::m_castShadow = false;
 
     D3D11Utils::CreateVertexBuffer(device, points, m_vertexBuffer);

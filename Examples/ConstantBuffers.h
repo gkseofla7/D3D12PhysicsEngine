@@ -140,7 +140,10 @@ template <typename T_CONSTS> class ConstantBuffer {
     }
 
     void Upload(ComPtr<ID3D11DeviceContext> &context) {
-        D3D11Utils::UpdateBuffer(context, m_cpu, m_gpu);
+        if (m_gpu != nullptr)
+        {
+            D3D11Utils::UpdateBuffer(context, m_cpu, m_gpu);
+        }
     }
 
   public:
