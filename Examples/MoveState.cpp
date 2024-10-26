@@ -53,7 +53,7 @@ namespace hlab {
 		if (m_moveState == EMoveStateType::MoveStateWalk)
 		{
 			//actorLock.get()->UpdatePosition(Vector3(0., 0., -dt * 3.0f));
-			actorLock->SetVelocity(3.0f);
+			actorLock->SetVelocity(1.5f);
 
 			if ((bRoateLeft || bRotateRight) && bRoateLeft != bRotateRight) {
 				float sign = bRotateRight == true ? 1.0f : -1.0f;

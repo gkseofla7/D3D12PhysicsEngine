@@ -455,8 +455,8 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreateVertexShaderAndInputLayout(
         device, L"DepthOnlyVS.hlsl", skinnedIEs, depthOnlySkinnedVS, skinnedIL,
         vector<D3D_SHADER_MACRO>{{"SKINNED", "1"}, {NULL, NULL}});
-    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"Ex1802_GrassVS.hlsl",
-                                                 grassIEs, grassVS, grassIL);
+    //D3D11Utils::CreateVertexShaderAndInputLayout(device, L"Ex1802_GrassVS.hlsl",
+    //                                             grassIEs, grassVS, grassIL);
     D3D11Utils::CreateVertexShaderAndInputLayout(
         device, L"BillboardVS.hlsl", billboardIEs, billboardVS, billboardIL);
 
@@ -469,8 +469,8 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreatePixelShader(device, L"DepthOnlyPS.hlsl", depthOnlyPS);
     D3D11Utils::CreatePixelShader(device, L"PostEffectsPS.hlsl", postEffectsPS);
     D3D11Utils::CreatePixelShader(device, L"ColorPS.hlsl", colorPS);
-    D3D11Utils::CreatePixelShader(device, L"Ex1802_GrassPS.hlsl", grassPS);
-    D3D11Utils::CreatePixelShader(device, L"Ex1803_OceanPS.hlsl", oceanPS);
+    //D3D11Utils::CreatePixelShader(device, L"Ex1802_GrassPS.hlsl", grassPS);
+    //D3D11Utils::CreatePixelShader(device, L"Ex1803_OceanPS.hlsl", oceanPS);
     D3D11Utils::CreatePixelShader(device, L"GameExplosionPS.hlsl",
                                   gameExplosionPS);
     D3D11Utils::CreatePixelShader(device, L"VolumetricFirePS.hlsl",

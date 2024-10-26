@@ -78,7 +78,7 @@ protected:
 	btRigidBody* m_physicsBody = nullptr;
 
 	float m_velocity = 0.0f;
-	bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
+	bool m_isPickable = true; // 마우스로 선택/조작 가능 여부
 
 	bool m_needRegisterPhysics = false;
 	bool m_usePhysicsSimulation = false;
