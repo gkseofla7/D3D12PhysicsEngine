@@ -2,7 +2,7 @@
 # 영상
 https://github.com/user-attachments/assets/0dd9a327-22c1-4db6-9243-89e9853470e1
 https://github.com/user-attachments/assets/d772295b-8fd0-453f-b019-172f44d873f
-D3D11과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
+#D3D11과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
 # Mesh, Animation등에 대한 데이터 모두 비동기 로딩
 - Mesh 로딩에 경우엔 MeshLoadHelper 클래스, Animation 로딩에 경우엔 AnimHelper에서 로딩을 담당하고 있다.
 - Loading에 관여하는 Thread 5개를 Thread Pool를 사용해서 로드한다. (ThreadPool.h)
