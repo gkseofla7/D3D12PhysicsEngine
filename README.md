@@ -30,11 +30,7 @@ bullet3 물리 엔진 연동 및 컬리전, 물리 시뮬레이션 사용
 - ActorState.h를 확인
 # 앞으로 계획
 - 나무 DaerimD3D11PhysicsEngine
-- 액터에 대해 각 업데이트를
-
-
-
- 병렬처리로 수정하고, 각 액터마다 Tick을 Tick_Concurrency, Tick_GameThread 두개로 분리할 예정이다.
+- 액터에 대해 각 업데이트를 병렬처리로 수정하고, 각 액터마다 Tick을 Tick_Concurrency, Tick_GameThread 두개로 분리할 예정이다.
 - 물리에 관심이 있다보니, 좀 더 물리 관련 로직들을 짜고 싶다..
 
 
