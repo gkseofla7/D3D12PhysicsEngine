@@ -1,7 +1,12 @@
 # DaerimD3D11PhysicsEngine
 # 영상
 https://github.com/user-attachments/assets/0dd9a327-22c1-4db6-9243-89e9853470e1
-https://github.com/user-attachments/assets/d772295b-8fd0-453f-b019-172f44d873f
+
+
+
+https://github.com/user-attachments/assets/d9505000-f7c9-4412-9f97-73a42c80c271
+
+
 # D3D11과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
 # Mesh, Animation등에 대한 데이터 모두 비동기 로딩
 - Mesh 로딩에 경우엔 MeshLoadHelper 클래스, Animation 로딩에 경우엔 AnimHelper에서 로딩을 담당하고 있다.
