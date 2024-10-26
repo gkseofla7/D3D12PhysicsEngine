@@ -1,9 +1,9 @@
 # DaerimD3D11PhysicsEngine
 D3D11과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
-Mesh, Animation등에 대한 데이터 모두 비동기 로딩
+# Mesh, Animation등에 대한 데이터 모두 비동기 로딩
 - Mesh 로딩에 경우엔 MeshLoadHelper 클래스, Animation 로딩에 경우엔 AnimHelper에서 로딩을 담당하고 있다.
 - Loading에 관여하는 Thread 5개를 Thread Pool를 사용해서 로드한다. (ThreadPool.h)
-Render Thread 분리
+# Render Thread 분리
 - Render Thread를 먼저 분리한 이유는 https://www.notion.so/daerimustudypage/eaa2eb07127a445ba0747d0073256e17 에 정리돼있다(당연하게도 cpu가 gpu를 기다리는 시간을 최소화하기 위해서)
 - 간단하게 분리하게된 이유를 설명하자면 D3D11의 Device와 Context는 멀티스레드 접근을 지원해주지 않기 때문에 Deffered Context를 활용하였다.
 - Mesh, Animation등을 비동기 로딩처리하면서 텍스처 데이터를 매핑하고 중간 중간에 Buffer에 업데이트를 해야했는데 이런 부분들은 Deffered Context를 사용할 수 없게 돼있다..
