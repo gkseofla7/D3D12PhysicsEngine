@@ -5,24 +5,32 @@
 #include "Actor.h"
 #include "MoveState.h"
 #include "JumpState.h"
+#include "FlyAwayState.h"
 namespace hlab {
 std::shared_ptr<ActorState> ActorStateFactory::CreateActorState(EActorStateType InType, std::shared_ptr<Actor> InActor)
 {
-	if (InType == EActorStateType::Idle)
+	switch (InType)
+	{
+	case  EActorStateType::Idle:
 	{
 		return std::make_shared<IdleState>(InActor);
 	}
-	else if (InType == EActorStateType::Attack)
+	case  EActorStateType::Attack:
 	{
 		return std::make_shared<AttackState>(InActor);
 	}
-	else if (InType == EActorStateType::Move)
+	case  EActorStateType::Move:
 	{
 		return std::make_shared<MoveState>(InActor);
 	}
-	else if (InType == EActorStateType::Jump)
+	case  EActorStateType::Jump:
 	{
 		return std::make_shared<JumpState>(InActor);
+	}
+	case  EActorStateType::FlyAway:
+	{
+		return std::make_shared<FlyAwayState>(InActor);
+	}
 	}
 	return std::make_shared<IdleState>(InActor);
 }

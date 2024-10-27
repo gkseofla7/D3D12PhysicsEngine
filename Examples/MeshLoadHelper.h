@@ -40,18 +40,18 @@ class MeshLoadHelper
 {
 public:
 	static void LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
-	static bool GetMesh( const string& InPath, const string& InName, vector<Mesh>*& OutMesh);
+	static bool GetMesh( const string& inPath, const string& inName, vector<Mesh>*& OutMesh);
 	static bool GetMesh(const string& InKey, vector<Mesh>*& OutMesh);
-	static bool GetBoundingMesh(const string& InPath, const string& InName, 
-		DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
-		shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh);
+	static bool GetBoundingMesh(const string& inPath, const string& inName, 
+		DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
+		shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh);
 	static bool GetBoundingMesh(const string& InMeshKey,
-		DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
-		shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh);
+		DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
+		shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh);
 
-	static bool LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& InPath, const string& InName, vector<Mesh>* OutModel);
+	static bool LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& inPath, const string& inName, vector<Mesh>* OutModel);
 	static void LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& key);
-	static bool GetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants);
+	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants);
 	static bool GetMaterial(const string& InMeshKey, MaterialConstants& InConstants);
 	static string LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float InHalfExtent);
 public:

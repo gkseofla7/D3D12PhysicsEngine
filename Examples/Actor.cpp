@@ -1,23 +1,23 @@
 #include "Actor.h"
 #include "Camera.h"
 #include "MeshLoadHelper.h"
-#include "ActorStateFactory.h"
+#include "ActorStateFactory.h" 
 #include "ActorState.h"
-
+  
 #include "BulletDynamics/btBulletDynamicsCommon.h"
 #include "DaerimsEngineBase.h"
 namespace hlab {
     Actor::Actor() {}
     Actor::Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel> InModel)
+        shared_ptr<DModel> inModel)
     {
-        Initialize(device, context, InModel);
-        m_model = InModel;
+        Initialize(device, context, inModel);
+        m_model = inModel;
     }
     void Actor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel> InModel)
+        shared_ptr<DModel> inModel)
     {
-        Object::Initialize(device, context, InModel);
+        Object::Initialize(device, context, inModel);
         SetState(EActorStateType::Idle);
        
     }
@@ -47,22 +47,30 @@ namespace hlab {
         Object::Tick( dt);
         if (m_physicsBody == nullptr && m_model->IsMeshInitialized())
         {
-            Vector3 WorldPos = GetWorldPosition();
+            Vector3 worldPos = GetWorldPosition();
             static const float simToRenderScale = 0.01f;
-            btTransform t = btTransform(btQuaternion(), btVector3(WorldPos.x, WorldPos.y, WorldPos.z) /
+            btTransform t = btTransform(btQuaternion(0.0, 0.0, 0.0), btVector3(worldPos.x, worldPos.y, worldPos.z) /
                 simToRenderScale);
 
-            btVector3 CylinderExtent = btVector3(m_model->m_boundingBox.Extents.x/ simToRenderScale,
+            btVector3 cylinderExtent = btVector3(m_model->m_boundingBox.Extents.x/ simToRenderScale,
                 m_model->m_boundingBox.Extents.y/ simToRenderScale, m_model->m_boundingBox.Extents.z/ simToRenderScale);
-            btCylinderShape* CylinderShape = new btCylinderShape(CylinderExtent);
+            btCylinderShape* cylinderShape = new btCylinderShape(cylinderExtent);
             btRigidBody* dynamic =
-                DaerimsEngineBase::GetInstance().CreateRigidBody(5.0, t, CylinderShape, 0.5f, btVector4(0, 0, 1, 1));
+                DaerimsEngineBase::GetInstance().CreateRigidBody(5.0, t, cylinderShape, 0.5f, btVector4(0, 0, 1, 1));
             DaerimsEngineBase::GetInstance().RegisterPhysMap(dynamic, shared_from_this());
             m_physicsBody = dynamic;
         }
 
-        Vector3 DeltaPos = m_velocity * Vector3(0., 0., -dt);
-        UpdatePosition(DeltaPos);
+
+        Vector3 deltaPos = m_velocity * Vector3(0., 0., -dt);
+        if (m_externalForce > 0.0f) 
+        {
+            // TODO. 현재 Model에대한 방향에대한 Delta값을 받고있어 액터의 반대방향으로 이동하도록 해둠
+            // 나중에 힘 방향으로 날라가도록 수정 예정(힘의 반대방향으로 액터를 회전시켜뒀기때문에 지금은 괜찮)
+            deltaPos += m_externalForce*Vector3(0., 0., dt);
+            //m_externalForce = m_externalForce - m_externalForce / m_externalForce.Length() * 0.1f;
+        }
+        UpdatePosition(deltaPos);
         UpdateState();
 
     }

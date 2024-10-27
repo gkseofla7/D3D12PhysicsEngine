@@ -9,9 +9,9 @@ class SkeletalMeshActor : public Actor {
 public:
     SkeletalMeshActor() {}
     SkeletalMeshActor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel>  InModel);
+        shared_ptr<DModel>  inModel);
     void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel>  InModel);
+        shared_ptr<DModel>  inModel);
     virtual void Tick(float dt) override;
     virtual void InitializeAnimation() {}
 

@@ -9,7 +9,7 @@ namespace hlab {
 	{
 	public:
 		FlyAwayState() {}
-		FlyAwayState(std::weak_ptr<Actor> InModel);
+		FlyAwayState(std::weak_ptr<Actor> inModel);
 
 		virtual void Initialize();
 		virtual void Tick(float dt);

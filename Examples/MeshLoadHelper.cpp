@@ -71,16 +71,16 @@ void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<I
         } 
     }
 }
-bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& InPath, const string& InName, vector<Mesh>* OutMeshes)
+bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& inPath, const string& inName, vector<Mesh>* OutMeshes)
 {
-	string key = InPath + InName;
+	string key = inPath + inName;
 	if (MeshMap.find(key) == MeshMap.end())
 	{
 		MeshMap[key] = MeshBlock();
          
         MeshBlock& meshBlocks = MeshMap[key];
-        meshBlocks.PathName = InPath;
-        meshBlocks.FileName = InName;
+        meshBlocks.PathName = inPath;
+        meshBlocks.FileName = inName;
 
 		ThreadPool& tPool =  ThreadPool::getInstance();
         //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
@@ -93,10 +93,10 @@ bool MeshLoadHelper::LoadModelData(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
 	
     return MeshMap[key].MeshDataLoadType == ELoadType::Loaded;
 }
-bool MeshLoadHelper::GetMaterial(const string& InPath, const string& InName, MaterialConstants& InConstants)
+bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
 {
-    string key = InPath + InName;
-    return GetMaterial(key, InName, InConstants);
+    string key = inPath + inName;
+    return GetMaterial(key, inName, InConstants);
 }
 bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
 {
@@ -141,22 +141,20 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         {
             return;
         }
-
-        // 동시에 여기에 들어오면 이슈 발생,,
         MeshMap[key].MeshLoadType = ELoadType::Loading;
     }
 
-    std::vector<MeshData>& MeshDatas = MeshMap[key].MeshDatas;
+    std::vector<MeshData>& meshDatas = MeshMap[key].MeshDatas;
     if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == true)
     {
-        MeshDatas = MeshMap[key].Loader.get();
+        meshDatas = MeshMap[key].Loader.get();
         MeshMap[key].MeshDataLoadType = ELoadType::Loaded;
     }
 
-    MeshBlock& MeshBlock = MeshMap[key];
-    vector<Mesh>& meshes = MeshBlock.Meshes;
+    MeshBlock& meshBlock = MeshMap[key];
+    vector<Mesh>& meshes = meshBlock.Meshes;
     int index = 0;
-    for (const auto& meshData : MeshDatas) { 
+    for (const auto& meshData : meshDatas) { 
         if (meshes.size()<= index)
         {
             meshes.push_back(Mesh());
@@ -198,7 +196,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                         device, context, meshData.albedoTextureFilename, true,
                         newMesh.albedoTexture, newMesh.albedoSRV);
                 }
-                MeshBlock.useAlbedoMap = true;
+                meshBlock.useAlbedoMap = true;
             }
             else {
                 cout << meshData.albedoTextureFilename
@@ -211,7 +209,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                 D3D11Utils::CreateTexture(
                     device, context, meshData.emissiveTextureFilename, true,
                     newMesh.emissiveTexture, newMesh.emissiveSRV);
-                MeshBlock.useEmissiveMap = true;
+                meshBlock.useEmissiveMap = true;
             }
             else {
                 cout << meshData.emissiveTextureFilename
@@ -224,7 +222,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                 D3D11Utils::CreateTexture(
                     device, context, meshData.normalTextureFilename, false,
                     newMesh.normalTexture, newMesh.normalSRV);
-                MeshBlock.useNormalMap = true;
+                meshBlock.useNormalMap = true;
             }
             else {
                 cout << meshData.normalTextureFilename
@@ -237,7 +235,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                 D3D11Utils::CreateTexture(
                     device, context, meshData.heightTextureFilename, false,
                     newMesh.heightTexture, newMesh.heightSRV);
-                MeshBlock.useHeightMap = true;
+                meshBlock.useHeightMap = true;
             }
             else {
                 cout << meshData.heightTextureFilename
@@ -250,7 +248,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
                 D3D11Utils::CreateTexture(device, context,
                     meshData.aoTextureFilename, false,
                     newMesh.aoTexture, newMesh.aoSRV);
-                MeshBlock.useAOMap = true;
+                meshBlock.useAOMap = true;
             }
             else {
                 cout << meshData.aoTextureFilename
@@ -280,68 +278,68 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
         }
 
         if (!meshData.metallicTextureFilename.empty()) {
-            MeshBlock.useMetalicMap = true;
+            meshBlock.useMetalicMap = true;
         }
 
         if (!meshData.roughnessTextureFilename.empty()) {
-            MeshBlock.useRoughnessMap = true;
+            meshBlock.useRoughnessMap = true;
         }
         index++;
     } 
     // Initialize Bounding Box
     {
-        MeshBlock.boundingBox = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
-        for (size_t i = 1; i < MeshDatas.size(); i++) {
-            auto bb = GetBoundingBoxFromVertices(MeshDatas[0].vertices);
-            GetExtendBoundingBox(bb, MeshBlock.boundingBox);
+        meshBlock.boundingBox = GetBoundingBoxFromVertices(meshDatas[0].vertices);
+        for (size_t i = 1; i < meshDatas.size(); i++) {
+            auto bb = GetBoundingBoxFromVertices(meshDatas[0].vertices);
+            GetExtendBoundingBox(bb, meshBlock.boundingBox);
         }
 
         auto meshData = GeometryGenerator::MakeWireBox(
-            MeshBlock.boundingBox.Center,
-            Vector3(MeshBlock.boundingBox.Extents) + Vector3(1e-3f));
-        MeshBlock.boundingBoxMesh = std::make_shared<Mesh>();
+            meshBlock.boundingBox.Center,
+            Vector3(meshBlock.boundingBox.Extents) + Vector3(1e-3f));
+        meshBlock.boundingBoxMesh = std::make_shared<Mesh>();
 
-        MeshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
-        MeshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
-        MeshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
+        meshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
+        meshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
+        meshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
 
         D3D11Utils::CreateVertexBuffer(device, std::move(meshData.vertices),
-            MeshBlock.boundingBoxMesh->vertexBuffer);
+            meshBlock.boundingBoxMesh->vertexBuffer);
         D3D11Utils::CreateIndexBuffer(device, std::move(meshData.indices),
-            MeshBlock.boundingBoxMesh->indexBuffer);
+            meshBlock.boundingBoxMesh->indexBuffer);
     }
 
     // Initialize Bounding Sphere
     {
         float maxRadius = 0.0f;
-        for (auto& mesh : MeshDatas) {
+        for (auto& mesh : meshDatas) {
             for (auto& v : mesh.vertices) {
                 maxRadius = std::max(
-                    (Vector3(MeshBlock.boundingBox.Center) - v.position).Length(),
+                    (Vector3(meshBlock.boundingBox.Center) - v.position).Length(),
                     maxRadius);
             }
         }
         maxRadius += 1e-2f; // 살짝 크게 설정
-        MeshBlock.boundingSphere = BoundingSphere(MeshBlock.boundingBox.Center, maxRadius);
+        meshBlock.boundingSphere = BoundingSphere(meshBlock.boundingBox.Center, maxRadius);
         auto meshData = GeometryGenerator::MakeWireSphere(
-            MeshBlock.boundingSphere.Center, MeshBlock.boundingSphere.Radius);
-        MeshBlock.boundingSphereMesh = std::make_shared<Mesh>();
+            meshBlock.boundingSphere.Center, meshBlock.boundingSphere.Radius);
+        meshBlock.boundingSphereMesh = std::make_shared<Mesh>();
 
-        MeshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
-        MeshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
-        MeshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
+        meshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
+        meshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
+        meshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
         D3D11Utils::CreateVertexBuffer(device, std::move(meshData.vertices),
-            MeshBlock.boundingSphereMesh->vertexBuffer);
+            meshBlock.boundingSphereMesh->vertexBuffer);
         D3D11Utils::CreateIndexBuffer(device, std::move(meshData.indices),
-            MeshBlock.boundingSphereMesh->indexBuffer);
+            meshBlock.boundingSphereMesh->indexBuffer);
     }
     MeshMap[key].MeshLoadType = ELoadType::Loaded;
 }
 
 
-bool MeshLoadHelper::GetMesh(const string& InPath, const string& InName, vector<Mesh>*& OutMesh)
+bool MeshLoadHelper::GetMesh(const string& inPath, const string& inName, vector<Mesh>*& OutMesh)
 {
-    string key = InPath + InName;
+    string key = inPath + inName;
     return GetMesh(key, OutMesh);
 }
 
@@ -359,16 +357,16 @@ bool MeshLoadHelper::GetMesh(const string& InKey, vector<Mesh>*& OutMesh)
     return true;
 }
 
-bool MeshLoadHelper::GetBoundingMesh(const string& InPath, const string& InName, 
-    DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
-    shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh)
+bool MeshLoadHelper::GetBoundingMesh(const string& inPath, const string& inName, 
+    DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
+    shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh)
 {
-    string key = InPath + InName;
-    return GetBoundingMesh(key, OutSphere, OutBox, OutSphereMesh, OutBoxMesh);
+    string key = inPath + inName;
+    return GetBoundingMesh(key, outSphere, outBox, outSphereMesh, outBoxMesh);
 }
 bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
-    DirectX::BoundingSphere& OutSphere, DirectX::BoundingBox& OutBox,
-    shared_ptr<Mesh>& OutSphereMesh, shared_ptr<Mesh>& OutBoxMesh)
+    DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
+    shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh)
 {
     if (MeshMap.find(InMeshKey) == MeshMap.end())
     {
@@ -379,10 +377,10 @@ bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
         return false;
     }
 
-    OutBox = MeshMap[InMeshKey].boundingBox;
-    OutBoxMesh = MeshMap[InMeshKey].boundingBoxMesh;
-    OutSphere = MeshMap[InMeshKey].boundingSphere;
-    OutSphereMesh = MeshMap[InMeshKey].boundingSphereMesh;
+    outBox = MeshMap[InMeshKey].boundingBox;
+    outBoxMesh = MeshMap[InMeshKey].boundingBoxMesh;
+    outSphere = MeshMap[InMeshKey].boundingSphere;
+    outSphereMesh = MeshMap[InMeshKey].boundingSphereMesh;
 
     return true;
 }
@@ -391,8 +389,8 @@ string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
     string Key = "Box"  + std::to_string(InHalfExtent);
     if (MeshMap.find(Key) == MeshMap.end())
     {
-        std::vector<MeshData>& MeshDatas = MeshMap[Key].MeshDatas;
-        MeshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
+        std::vector<MeshData>& meshDatas = MeshMap[Key].MeshDatas;
+        meshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
         MeshMap[Key].MeshDataLoadType = ELoadType::Loaded;
 
         auto func = [&device, &context, Key]() {

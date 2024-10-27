@@ -7,7 +7,7 @@ namespace hlab {
 	{
 	public:
 		JumpState() {}
-		JumpState(std::weak_ptr<Actor> InModel);
+		JumpState(std::weak_ptr<Actor> inModel);
 
 		virtual void Initialize();
 		virtual void Tick(float dt);

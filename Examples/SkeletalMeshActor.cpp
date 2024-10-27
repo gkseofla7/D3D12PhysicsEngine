@@ -4,14 +4,14 @@
 
 namespace hlab {
     SkeletalMeshActor::SkeletalMeshActor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel> InModel)
-        :Actor(device, context, InModel)
+        shared_ptr<DModel> inModel)
+        :Actor(device, context, inModel)
     {
     }
     void SkeletalMeshActor::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel>  InModel)
+        shared_ptr<DModel>  inModel)
     {
-        Actor::Initialize(device, context, InModel);
+        Actor::Initialize(device, context, inModel);
     }
     void SkeletalMeshActor::Tick(float dt)
     {

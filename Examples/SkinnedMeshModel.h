@@ -7,9 +7,9 @@ namespace hlab {
 
 using std::make_shared;
 
-class SkinnedMeshModel : public Model {
+class skinnedMeshModel : public Model {
   public:
-    SkinnedMeshModel(ComPtr<ID3D11Device> &device,
+    skinnedMeshModel(ComPtr<ID3D11Device> &device,
                      ComPtr<ID3D11DeviceContext> &context,
                      const vector<MeshData> &meshes,
                      const AnimationData &aniData) {

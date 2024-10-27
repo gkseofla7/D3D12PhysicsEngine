@@ -1,7 +1,7 @@
 #pragma once
 #include "AppBase.h"
 #include "BillboardModel.h"
-#include "SkinnedMeshModel.h"
+#include "skinnedMeshModel.h"
 #include "SkeletalMeshActor.h"
 #include "DaerimsEngineBase.h"
 namespace hlab

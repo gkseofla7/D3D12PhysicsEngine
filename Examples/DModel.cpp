@@ -21,6 +21,7 @@ namespace hlab {
     }
     void DModel::Initialize(ComPtr<ID3D11Device>& device,
         ComPtr<ID3D11DeviceContext>& context) {
+        m_direction = Vector3(1.0f, 0.0f, 0.0f);
         std::cout << "Model::Initialize(ComPtr<ID3D11Device> &device, "
             "ComPtr<ID3D11DeviceContext> &context) was not implemented."
             << std::endl;
@@ -88,9 +89,9 @@ namespace hlab {
             }
         }
     }
-    void DModel::UpdatePosition(const Vector3& InDelta)
+    void DModel::UpdatePosition(const Vector3& inDelta)
     {
-        Matrix newMatrix = Matrix::CreateTranslation(InDelta)* m_worldRow;
+        Matrix newMatrix = Matrix::CreateTranslation(inDelta)* m_worldRow;
         UpdateWorldRow(newMatrix);
     }
     void DModel::SetWorldPosition(const Vector3& InPos)
@@ -99,13 +100,26 @@ namespace hlab {
         UpdateWorldRow(m_worldRow);
     }
 
-    void DModel::UpdateRotation(const Matrix& InDelta)
+    void DModel::UpdateRotation(const Matrix& inDelta)
     {
+        m_direction =Vector3::Transform( m_direction,inDelta);
+        m_direction.Normalize();
+
         Vector3 ModelPos = m_worldRow.Translation();
         m_worldRow.Translation(Vector3(0.0f));
-        Matrix newMatrix = m_worldRow*InDelta;
+        Matrix newMatrix = m_worldRow*inDelta;
         newMatrix.Translation(ModelPos);
         UpdateWorldRow(newMatrix);
+    }
+    void DModel::SetDirection(const Vector3& inDirection)
+    {
+        Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
+        dir = Vector4::Transform(
+            dir, m_worldRow);
+        dir.Normalize();
+        Vector3 dir3 = Vector3(dir.x, dir.y, dir.z);
+        float theta = acos(dir3.Dot(inDirection) / (dir3.Length() * inDirection.Length()));
+        UpdateRotation(Matrix::CreateRotationY(theta));
     }
     GraphicsPSO& DModel::GetPSO(const bool wired) {
         return wired ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO;
@@ -163,7 +177,7 @@ namespace hlab {
 
     void DModel::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, string clipId,
         int frame, int type = 0) {
-        // class SkinnedMeshModel에서 override
+        // class skinnedMeshModel에서 override
         cout << "Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, "
             "int clipId, int frame) was not implemented."
             << endl;

@@ -37,6 +37,8 @@ protected:
 	bool m_pauseFrame = false;
 
 	std::weak_ptr<Actor> m_actor;
+
+	float m_elapsedTime = 0.0f;
 private:
 	bool m_finished = false;
 

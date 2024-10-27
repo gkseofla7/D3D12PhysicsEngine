@@ -33,15 +33,16 @@ class Object
 {
 public:
 	virtual void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-		shared_ptr<DModel> InModel);
+		shared_ptr<DModel> inModel);
 	virtual void Tick(float dt);
 
 	void SetPhysicsBody(btRigidBody* InPhysicsBody) { m_physicsBody = InPhysicsBody; }
 
 	// 위치 이동 관련
 	void UpdateWorldRow(const Matrix& worldRow);
-	void UpdatePosition(const Vector3& InDelta);
-	void UpdateRotationY(float InDelta);
+	void UpdatePosition(const Vector3& inDelta);
+	void UpdateRotationY(float inDelta);
+	void UpdateRoationWithDirection(const Vector3& inLookingDir);
 	void SetVelocity(float InVelocity) {
 		if (InVelocity < 0.0)
 		{
@@ -54,7 +55,7 @@ public:
 	Vector3 GetWorldPosition();
 	float GetVelocity() { return m_velocity; }
 
-	void AddEnergy(const float InEnergy, Vector3 InDir);
+	void AddMomentum(const float InEnergy, Vector3 inDir);
 
 	bool IsPickable() { return m_isPickable; }
 	virtual void Render(ComPtr<ID3D11DeviceContext>& context);
@@ -66,11 +67,14 @@ public:
 	shared_ptr<DSkinnedMeshModel> GetSkinnedMeshModel();
 	shared_ptr<BillboardModel> GetBillboardModel();
 	btRigidBody* GetPhysicsBody() { return m_physicsBody; }
-
 	int GetObjectId() { return m_objectId; }
 
 	void SetUsePhsycisSimulation(bool InUse) { m_usePhysicsSimulation = InUse; }
+	void ResetExternalForce() { m_externalForce = 0.0f; }
 
+	void SubtractExternalForce(float inForceSub);
+	float GetExternalForce() { return m_externalForce; }
+	virtual void ReactProjectileHitted() {}
 	bool IsPendingKill() { return m_pendingKill; }
 	bool IsUsePhsycsSimulation() { return m_usePhysicsSimulation; }
 protected:
@@ -79,6 +83,8 @@ protected:
 
 	float m_velocity = 0.0f;
 	bool m_isPickable = true; // 마우스로 선택/조작 가능 여부
+	
+	float m_externalForce = 0.0f;
 
 	bool m_needRegisterPhysics = false;
 	bool m_usePhysicsSimulation = false;

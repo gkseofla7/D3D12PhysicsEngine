@@ -14,9 +14,9 @@ class Actor : public Object, public std::enable_shared_from_this<Actor> {
 public:
 	Actor();
 	Actor(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-		shared_ptr<DModel> InModel);
+		shared_ptr<DModel> inModel);
 	virtual void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-		shared_ptr<DModel> InModel);
+		shared_ptr<DModel> inModel);
 	virtual void Tick(float dt);
 	
 	// State

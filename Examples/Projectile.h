@@ -17,5 +17,8 @@ namespace hlab {
 
         bool m_startPendingKill = false;
         float m_pendingKillElapsedSeconds = 0.0;
+
+        // TODO. Object Velocity랑 중복된다, 수정이 필요하다.
+        Vector3 m_projectileVelocity;
     };
 }

@@ -21,7 +21,7 @@ btRigidBody* ProjectileManager::CreateProjectile(const Vector3& tV,
 {
     static const float simToRenderScale = 0.01f;
     
-    btTransform t = btTransform(btQuaternion(), btVector3(tV.x, tV.y, tV.z) /
+    btTransform t = btTransform(btQuaternion(0.0f, 0.0f, 0.0f), btVector3(tV.x, tV.y, tV.z) /
         simToRenderScale);
     btVector3 velocity = btVector3(Invelocity.x, Invelocity.y, Invelocity.z);
     btSphereShape* SphereShape = new btSphereShape(InRadius * 0.5);

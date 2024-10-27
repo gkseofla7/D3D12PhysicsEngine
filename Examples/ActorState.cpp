@@ -13,6 +13,7 @@ ActorState::ActorState(std::weak_ptr<Actor> InActor)
 }
 void ActorState::Tick(float dt)
 {
+	m_elapsedTime += dt;
 	std::shared_ptr<Actor> actorLock = m_actor.lock();
 	if (actorLock.get() == nullptr)
 	{

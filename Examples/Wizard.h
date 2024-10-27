@@ -6,15 +6,17 @@ class Wizard : public SkeletalMeshActor
 {
 public:
 	Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-		shared_ptr<DModel> InModel);
+		shared_ptr<DModel> inModel);
 	void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-		shared_ptr<DModel> InModel) override;
+		shared_ptr<DModel> inModel) override;
 	void Tick(float dt);
+
+	virtual void ReactProjectileHitted() override;
 private:
 	// TODO. Actor로 옮길 예정
 	// 초기화
 	void InitAnimPath();
-	void LoadAnimAsync(string InState);
+	void LoadAnimAsync(string inState);
 	virtual void InitBoundingKey() override;
 
 	// 인푼 관련 함수

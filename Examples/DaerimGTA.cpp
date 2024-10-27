@@ -67,7 +67,7 @@ AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
 
     // Main Object
     {
-        //for (int i = 0; i < 10; i++)
+        //for (int i = 0; i < 10; i++) 
         //{
         //    for(int j = 0; j<10; j++)
         //    {
@@ -88,12 +88,28 @@ AppBase::InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
         //        m_objectList.push_back(wizardActor);
         //    }
         //}
-
-
+         
         {
             string path = "../Assets/Characters/Mixamo/";
             string characterName = "character.fbx";
             Vector3 center(0.5f, 0.1f, 1.0f);
+            shared_ptr<DSkinnedMeshModel> wizardModel = make_shared<DSkinnedMeshModel>(m_device, m_context, path, characterName);
+            wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+            wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+            wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+            wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+                Matrix::CreateTranslation(center));
+            wizardModel->SetScale(0.2f);
+            shared_ptr<Wizard> wizardActor =
+                make_shared<Wizard>(m_device, m_context, wizardModel);
+            wizardActor->Initialize(m_device, m_context, wizardModel);
+            m_objectList.push_back(wizardActor); // 리스트에 등록, 이거 왜..?
+        }
+
+        {
+            string path = "../Assets/Characters/Mixamo/";
+            string characterName = "character.fbx";
+            Vector3 center(0.5f + 1.0f, 0.1f, 1.0f);
             shared_ptr<DSkinnedMeshModel> wizardModel = make_shared<DSkinnedMeshModel>(m_device, m_context, path, characterName);
             wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
             wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
@@ -137,7 +153,7 @@ void DaerimGTA::InitPhysics(bool interactive)
 	groundTransform.setIdentity();
 	groundTransform.setOrigin(btVector3(0, 0, 0));
 
-	{
+	{ 
 		btScalar mass(0.);
         DaerimsEngineBase::GetInstance().CreateRigidBody(mass, groundTransform, groundShape, 0.0f, btVector4(0, 0, 1, 1));
 	}
@@ -411,6 +427,7 @@ void DaerimGTA::CreateStack(const btTransform t, int numStacks,
 		for (int j = 0; j < numWidth - i; j++) 
 		{
             btTransform localTm;
+            localTm.setIdentity();
 			localTm.setOrigin(btVector3(btScalar(j * 2) - btScalar(numWidth - i),
 				btScalar(i * 2 + 1) + 5.0, 0.0) *
 				halfExtent);

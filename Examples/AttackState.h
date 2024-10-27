@@ -7,7 +7,7 @@ class AttackState : public ActorState
 {
 public:
 	AttackState(){}
-	AttackState(std::weak_ptr<Actor> InModel);
+	AttackState(std::weak_ptr<Actor> inModel);
 
 	virtual void Initialize();
 	virtual void Tick(float dt);

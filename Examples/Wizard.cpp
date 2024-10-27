@@ -10,15 +10,15 @@
 namespace hlab {
 
 Wizard::Wizard(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-	shared_ptr<DModel> InModel)
-    :SkeletalMeshActor(device, context, InModel)
+	shared_ptr<DModel> inModel)
+    :SkeletalMeshActor(device, context, inModel)
 {
-	//Initialize(device, context, InModel);
+	//Initialize(device, context, inModel);
 }
 void Wizard::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-	shared_ptr<DModel> InModel)
+	shared_ptr<DModel> inModel)
 {
-    SkeletalMeshActor::Initialize(device, context,InModel);
+    SkeletalMeshActor::Initialize(device, context,inModel);
     m_model->m_modelId = 1;
 
 	InitBoundingKey();
@@ -52,6 +52,11 @@ void Wizard::Tick(float dt)
     m_curFrame += 1;
 }
 
+void Wizard::ReactProjectileHitted()
+{
+    SetState(EActorStateType::FlyAway);
+}
+
 void Wizard::InitAnimPath()
 {
     // 애니메이션 관련, 따로 테이블을 만들어서 관리하는게..
@@ -59,31 +64,31 @@ void Wizard::InitAnimPath()
     AnimHelper::GetInstance().AddAnimPath(m_model->m_modelId, path);
     // Idle
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::Idle).data());
+    LoadAnimAsync(magic_enum::enum_name(EActorStateType::Idle).data());
     // Attack
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Attack).data(), "Fireball.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::Attack).data());
+    LoadAnimAsync(magic_enum::enum_name(EActorStateType::Attack).data());
     // Move
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data());
+    LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data());
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateWalk).data(), "Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalk).data());
+    LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalk).data());
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data());
+    LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data());
     // Jumping
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data(), "Jumping.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data());
+    LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data());
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EJumpStateType::JumpStateRunning).data(), "Jump.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateRunning).data());
+    LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateRunning).data());
     
     // 쓰러짐
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::FlyAway).data(), "Stunned.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::FlyAway).data());
+    LoadAnimAsync(magic_enum::enum_name(EActorStateType::FlyAway).data());
 }
 
-void Wizard::LoadAnimAsync(string InState)
+void Wizard::LoadAnimAsync(string inState)
 {
-
+    AnimHelper::GetInstance().LoadAnimation(GetSkinnedMeshModel().get(), inState);
 }
 
 void Wizard::InitBoundingKey()

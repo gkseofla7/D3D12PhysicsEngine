@@ -36,20 +36,20 @@ public:
 	static AnimHelper& GetInstance();
 	void Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	void AddAnimPath(int InActorId, string InPathName);
-	void AddAnimStateToAnim(int InActorId, string InState, string InAnimName);
-	bool LoadAnimation(DSkinnedMeshModel* InActor, string InState);
-	bool UpdateAnimation(Actor* InActor, string InState,
+	void AddAnimStateToAnim(int InActorId, string inState, string inAnimName);
+	bool LoadAnimation(DSkinnedMeshModel* InActor, string inState);
+	bool UpdateAnimation(Actor* InActor, string inState,
 		int frame, int type = 0);
 
 private:
-	bool LoadAnimation(DSkinnedMeshModel* InActor, string InState, bool& bInit);
+	bool LoadAnimation(DSkinnedMeshModel* InActor, string inState, bool& bInit);
 private:
 	ComPtr<ID3D11Device> m_device;
 	ComPtr<ID3D11DeviceContext> m_context;
 
 	map<int ,map<string, string>> m_animStateToAnim;
 	map<int, string> m_pathMap;
-	// ModelId -> AnimationBlock
+	// modelId -> AnimationBlock
 	map<int, AnimationBlock> m_animDatas;
 
 	// 액터의 현재 애니메이션

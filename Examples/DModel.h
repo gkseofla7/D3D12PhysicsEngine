@@ -43,12 +43,13 @@ namespace hlab {
         virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
             ComPtr<ID3D11DeviceContext>& context,
             string clipId, int frame, int type = 0) {}
-        virtual void UpdatePosition(const Vector3& InDelta);
+        virtual void UpdatePosition(const Vector3& inDelta);
         void SetWorldPosition(const Vector3& InPos);
-        virtual void UpdateRotation(const Matrix& InDelta);
+        virtual void UpdateRotation(const Matrix& inDelta);
         virtual void UpdateVelocity(float dt) {}
+        void SetDirection(const Vector3& inDirection);
         Vector3 GetWorldPosition() { return m_worldRow.Translation(); }
-        
+        Vector3 GetDirection() { return m_direction; }
         virtual GraphicsPSO& GetPSO(const bool wired);
         virtual GraphicsPSO& GetDepthOnlyPSO();
         virtual GraphicsPSO& GetReflectPSO(const bool wired);
@@ -101,6 +102,8 @@ namespace hlab {
 
         float m_scale = 1.0f;
         bool m_initializeBoundingVolume = false;
+
+        Vector3 m_direction;
     };
 
 } // namespace hlab

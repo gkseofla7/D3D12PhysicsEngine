@@ -6,7 +6,7 @@ class MoveState : public ActorState
 {
 public:
 	MoveState() {}
-	MoveState(std::weak_ptr<Actor> InModel);
+	MoveState(std::weak_ptr<Actor> inModel);
 
 	virtual void Initialize();
 	virtual void Tick(float dt);
@@ -19,7 +19,7 @@ public:
 	void RotateRight(bool InOn) { bRotateRight = InOn; }
 private:
 	EMoveStateType m_moveState;
-	bool bRoateLeft;
-	bool bRotateRight;
+	bool bRoateLeft = false;
+	bool bRotateRight = false;
 };
 }

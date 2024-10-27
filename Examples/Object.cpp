@@ -6,10 +6,10 @@
 
 namespace hlab {
     void Object::Initialize(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        shared_ptr<DModel> InModel)
+        shared_ptr<DModel> inModel)
     {
         m_objectId = ObjectNumberGenerator::GetInstance().GetNewObjectNumber();
-        m_model = InModel;
+        m_model = inModel;
     }
     void Object::Tick(float dt)
     {
@@ -21,9 +21,9 @@ namespace hlab {
         {
             if (m_physicsBody)
             {
-                Vector3 WorldPos = GetWorldPosition();
+                Vector3 worldPos = GetWorldPosition();
                 static const float simToRenderScale = 0.01f;
-                btTransform t = btTransform(btQuaternion(), btVector3(WorldPos.x, WorldPos.y, WorldPos.z) /
+                btTransform t = btTransform(btQuaternion(0.0f, 0.0f, 0.0f), btVector3(worldPos.x, worldPos.y, worldPos.z) /
                     simToRenderScale);
                 m_physicsBody->setWorldTransform(t);
             }
@@ -40,14 +40,18 @@ namespace hlab {
     {
         m_model->UpdateWorldRow(worldRow);
     }
-    void Object::UpdatePosition(const Vector3& InDelta)
+    void Object::UpdatePosition(const Vector3& inDelta)
     {
-        m_model->UpdatePosition(InDelta);
+        m_model->UpdatePosition(inDelta);
     }
 
-    void Object::UpdateRotationY(float InDelta)
+    void Object::UpdateRotationY(float inDelta)
     {
-        m_model->UpdateRotation(Matrix::CreateRotationY(InDelta));
+        m_model->UpdateRotation(Matrix::CreateRotationY(inDelta));
+    }
+    void Object::UpdateRoationWithDirection(const Vector3& inLookingDir)
+    {
+        m_model->SetDirection(inLookingDir);
     }
     Vector3 Object::GetWorldPosition()
     {
@@ -62,14 +66,27 @@ namespace hlab {
     {
         return std::dynamic_pointer_cast<BillboardModel>(m_model);
     }
-
-    void Object::AddEnergy(const float InEnergy, Vector3 InDir)
+    
+    void Object::SubtractExternalForce(float inForceSub)
     {
+        if (m_externalForce > 0.0f)
+        {
+            m_externalForce -= inForceSub;
+        }
+        if (m_externalForce < 0.0f)
+        {
+            m_externalForce = 0.0f;
+        }
+    }
+    void Object::AddMomentum(const float inMomentum, Vector3 inDir)
+    { 
         if (m_physicsBody == nullptr)
         {
-            return;
+            return; 
         }
-        InDir.Normalize();
-        Vector3 Force = sqrt(InEnergy / m_physicsBody->getMass()) * InDir;
+        inDir.Normalize();
+        // 3을 곱한 이유는 과한 효과를 위해
+        m_externalForce = 3.0f*sqrt(inMomentum / m_physicsBody->getMass());
+        UpdateRoationWithDirection(-inDir);
     }
 }

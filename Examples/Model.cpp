@@ -320,7 +320,7 @@ void Model::Render(ComPtr<ID3D11DeviceContext> &context) {
 
 void Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, int clipId,
                             int frame, int type = 0) {
-    // class SkinnedMeshModel에서 override
+    // class skinnedMeshModel에서 override
     cout << "Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, "
             "int clipId, int frame) was not implemented."
          << endl;

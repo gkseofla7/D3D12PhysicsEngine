@@ -1,7 +1,14 @@
-﻿  DaerimGTA.cpp
+﻿  AnimHelper.cpp
+  DSkinnedMeshModel.cpp
+  DaerimGTA.cpp
+  Ex1701_SkeletalAnimation.cpp
+  Ex2001_GamePlay.cpp
+  SkeletalMeshActor.cpp
+  main.cpp
+C:\Users\DaerimHan\Desktop\GraphicsProject\d3d11DaerimPhysicsEngine\Examples\DaerimGTA.cpp(409,25): warning C4244: '인수': 'double'에서 'const btScalar'(으)로 변환하면서 데이터가 손실될 수 있습니다.
   코드를 생성하고 있습니다.
-  10 of 6873 functions ( 0.1%) were compiled, the rest were copied from previous compilation.
+  2 of 8231 functions (<0.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    24 functions had inline decision re-evaluated but remain unchanged
+    26 functions had inline decision re-evaluated but remain unchanged
   코드를 생성했습니다.
   Examples.vcxproj -> C:\Users\DaerimHan\Desktop\GraphicsProject\d3d11DaerimPhysicsEngine\Examples\x64\Release\Examples.exe

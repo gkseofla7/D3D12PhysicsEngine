@@ -7,6 +7,7 @@ namespace hlab {
 		:ActorState(InActor)
 	{
 		m_state = EActorStateType::FlyAway;
+		m_flyAwayState = EFlyAwayStateType::FlayAwayStateFlying;
 		m_loopState = false;
 	}
 	void FlyAwayState::Initialize()
@@ -24,6 +25,7 @@ namespace hlab {
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
 		actorLock->SetState(EActorStateType::Idle);
+		actorLock->ResetExternalForce();
 	}
 	// 인풋 받아 리천
 	void FlyAwayState::Transition()
@@ -32,6 +34,12 @@ namespace hlab {
 		{
 			m_flyAwayState = EFlyAwayStateType::FlayAwayStateLieDown;
 			m_pauseFrame = false;
+			std::shared_ptr<Actor> actorLock = m_actor.lock();
+			if (actorLock.get() != nullptr)
+			{
+				actorLock->ResetExternalForce();
+			}
+
 		}
 		else
 		{
@@ -49,9 +57,7 @@ namespace hlab {
 		}
 		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying)
 		{
-			float CurVel = actorLock.get()->GetVelocity();
-			actorLock.get()->SetVelocity(CurVel -dt*0.1f);
-			if (actorLock.get()->GetVelocity() == 0.0f)
+			if (m_elapsedTime > 1.0f)
 			{
 				Transition();
 			}
@@ -60,7 +66,7 @@ namespace hlab {
 
 	void FlyAwayState::PauseFrameIfFlyAway()
 	{
-		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying && m_frame >= 8)
+		if (m_flyAwayState == EFlyAwayStateType::FlayAwayStateFlying && m_frame >= 18)
 		{
 			m_pauseFrame = true;
 		}

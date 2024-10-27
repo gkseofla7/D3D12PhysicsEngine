@@ -52,13 +52,13 @@ namespace hlab {
         // virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext> &context);
         // virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>
         // &context);
-//        virtual void UpdatePosition(const Vector3& InDelta)
+//        virtual void UpdatePosition(const Vector3& inDelta)
 //        {
 ///*            m_accumulatedRootTransform =
-//                Matrix::CreateTranslation(InDelta) *
+//                Matrix::CreateTranslation(inDelta) *
 //                m_accumulatedRootTransform;    */       
 //            m_accumulatedRootTransform =
-//                Matrix::CreateTranslation(InDelta) *
+//                Matrix::CreateTranslation(inDelta) *
 //                m_accumulatedRootTransform;
 //        }
         Matrix& GetAccumulatedRootTransform() { return m_accumulatedRootTransform; }

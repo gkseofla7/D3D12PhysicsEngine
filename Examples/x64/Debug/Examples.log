@@ -1,2 +1,5 @@
-﻿  DaerimGTA.cpp
+﻿  ActorStateFactory.cpp
+  MoveState.cpp
+  Wizard.cpp
+C:\Users\DaerimHan\Desktop\GraphicsProject\d3d11DaerimPhysicsEngine\Examples\Wizard.cpp(228,61): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
   Examples.vcxproj -> C:\Users\DaerimHan\Desktop\GraphicsProject\d3d11DaerimPhysicsEngine\Examples\x64\Debug\Examples.exe
