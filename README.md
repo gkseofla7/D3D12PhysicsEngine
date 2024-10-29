@@ -26,6 +26,8 @@ bullet3 물리 엔진 연동 및 컬리전, 물리 시뮬레이션 사용
 # Actor State
 - 액터 상태에 따라 애니메이션을 틀어주기 위해 State에 Animation을 엮어서 자동으로 애니메이션이 틀어지도록 구현을 해둔 상태다. 사실 이렇게 구현하는게 좋을지는.. 좀더 개발하면서 수정해나갈 계획이다
 - ActorState.h를 확인
+# 애니메이션
+- 상체 하체 애니메이션 분리해서 사용가능하도록 기능 추가
 # 앞으로 계획
 - 나무 DaerimD3D11PhysicsEngine
 - 액터에 대해 각 업데이트를 병렬처리로 수정하고, 각 액터마다 Tick을 Tick_Concurrency, Tick_GameThread 두개로 분리할 예정이다.
