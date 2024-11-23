@@ -1,6 +1,6 @@
-ï»¿#pragma once
-
-#include <d3d11.h>
+#pragma once
+#include <d3d12.h>
+#include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <iostream>
 #include <memory>
@@ -10,11 +10,11 @@
 #include <wrl/client.h> // ComPtr
 #include <unordered_map>
 #include "ThreadPool.h"
-// AppBaseì™€ ExampleAppì„ ì •ë¦¬í•˜ê¸° ìœ„í•´
-// ë°˜ë³µí•´ì„œ ì‚¬ìš©ë˜ëŠ” ì‰ì´ë” ìƒì„±, ë²„í¼ ìƒì„± ë“±ì„ ë¶„ë¦¬
-// Parameterë¥¼ ë‚˜ì—´í•  ë•Œ constë¥¼ ì•ì— ë‘ëŠ” ê²ƒì´ ì¼ë°˜ì ì´ì§€ë§Œ
-// deviceëŠ” ë¬¸ë§¥ìƒì˜ ì¤‘ìš”ì„± ë•Œë¬¸ì— ì˜ˆì™¸ë¡œ ë§¨ ì•ì— ë’€ìŠµë‹ˆë‹¤.
-// ê°•ì˜ê°€ ì§„í–‰ë˜ë©´ì„œ ì¡°ê¸ˆì”© ê¸°ëŠ¥ì´ ì¶”ê°€ë©ë‹ˆë‹¤.
+// AppBase¿Í ExampleAppÀ» Á¤¸®ÇÏ±â À§ÇØ
+// ¹İº¹ÇØ¼­ »ç¿ëµÇ´Â ½¦ÀÌ´õ »ı¼º, ¹öÆÛ »ı¼º µîÀ» ºĞ¸®
+// Parameter¸¦ ³ª¿­ÇÒ ¶§ const¸¦ ¾Õ¿¡ µÎ´Â °ÍÀÌ ÀÏ¹İÀûÀÌÁö¸¸
+// device´Â ¹®¸Æ»óÀÇ Áß¿ä¼º ¶§¹®¿¡ ¿¹¿Ü·Î ¸Ç ¾Õ¿¡ µ×½À´Ï´Ù.
+// °­ÀÇ°¡ ÁøÇàµÇ¸é¼­ Á¶±İ¾¿ ±â´ÉÀÌ Ãß°¡µË´Ï´Ù.
 
 namespace hlab {
 
@@ -37,48 +37,24 @@ inline void ThrowIfFailed(HRESULT hr) {
     }
 }
 
-class D3D11Utils {
+class D3D12Utils {
   public:
-    static void CreateVertexShaderAndInputLayout(
-        ComPtr<ID3D11Device> &device, wstring filename,
-        const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,
-        ComPtr<ID3D11VertexShader> &m_vertexShader,
-        ComPtr<ID3D11InputLayout> &m_inputLayout,
-        const vector<D3D_SHADER_MACRO> shaderMacros = {/* Empty default */});
-    // ShaderMacros ì‚¬ìš©í•  ë•Œ ì˜ˆì‹œ
+      //    ComPtr<ID3D12PipelineState> m_pipelineState;
+      static void CreatePipelineState(ComPtr<ID3D12Device>& device, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc, ComPtr<ID3D12PipelineState>& OutPipelineState);
+    // ShaderMacros »ç¿ëÇÒ ¶§ ¿¹½Ã
     // {D3D_SHADER_MACRO("SKINNED", "1"), D3D_SHADER_MACRO(NULL, NULL)};
-    // ë§¨ ë’¤ì— NULL, NULL í•„ìˆ˜
+    // ¸Ç µÚ¿¡ NULL, NULL ÇÊ¼ö
 
-    static void CreateHullShader(ComPtr<ID3D11Device> &device,
-                                 const wstring &filename,
-                                 ComPtr<ID3D11HullShader> &m_hullShader);
-
-    static void CreateDomainShader(ComPtr<ID3D11Device> &device,
-                                   const wstring &filename,
-                                   ComPtr<ID3D11DomainShader> &m_domainShader);
-
-    static void
-    CreateGeometryShader(ComPtr<ID3D11Device> &device, const wstring &filename,
-                         ComPtr<ID3D11GeometryShader> &m_geometryShader);
-
-    static void
-    CreateComputeShader(ComPtr<ID3D11Device> &device, const wstring &filename,
-                        ComPtr<ID3D11ComputeShader> &m_computeShader);
-
-    static void CreatePixelShader(ComPtr<ID3D11Device> &device,
-                                  const wstring &filename,
-                                  ComPtr<ID3D11PixelShader> &m_pixelShader);
-
-    static void CreateIndexBuffer(ComPtr<ID3D11Device> &device,
+    static void CreateIndexBuffer(ComPtr<ID3D12Device> &device,
                                   const vector<uint32_t> &indices,
-                                  ComPtr<ID3D11Buffer> &indexBuffer);
-    static void CreateIndexBuffer(ComPtr<ID3D11Device>& device,
+                                  D3D12_INDEX_BUFFER_VIEW& OutIndexBufferView);
+    static void CreateIndexBuffer(ComPtr<ID3D12Device>& device,
         const vector<uint32_t>&& indices,
-        ComPtr<ID3D11Buffer>& indexBuffer);
+        D3D12_INDEX_BUFFER_VIEW& OutIndexBufferView);
 
-    static void CreateIndexBufferImpl(ComPtr<ID3D11Device>& device,
+    static void CreateIndexBufferImpl(ComPtr<ID3D12Device>& device,
         const vector<uint32_t>& indices,
-        ComPtr<ID3D11Buffer>& indexBuffer);
+        D3D12_INDEX_BUFFER_VIEW& OutIndexBufferView);
 
     template <typename T_VERTEX>
     static void CreateVertexBuffer(ComPtr<ID3D11Device>& device,
@@ -118,7 +94,7 @@ class D3D11Utils {
         bufferDesc.StructureByteStride = sizeof(T_VERTEX);
 
         D3D11_SUBRESOURCE_DATA vertexBufferData = {
-            0 }; // MS ì˜ˆì œì—ì„œ ì´ˆê¸°í™”í•˜ëŠ” ë°©ì‹
+            0 }; // MS ¿¹Á¦¿¡¼­ ÃÊ±âÈ­ÇÏ´Â ¹æ½Ä
         vertexBufferData.pSysMem = vertices.data();
         vertexBufferData.SysMemPitch = 0;
         vertexBufferData.SysMemSlicePitch = 0;
@@ -154,17 +130,17 @@ class D3D11Utils {
                                      const vector<T_INSTANCE> &instances,
                                      ComPtr<ID3D11Buffer> &instanceBuffer) {
 
-        // ê¸°ë³¸ì ìœ¼ë¡œ VertexBufferì™€ ë¹„ìŠ·í•©ë‹ˆë‹¤.
+        // ±âº»ÀûÀ¸·Î VertexBuffer¿Í ºñ½ÁÇÕ´Ï´Ù.
         D3D11_BUFFER_DESC bufferDesc;
         ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC; // <- ì• ë‹ˆë©”ì´ì…˜ì— ì‚¬ìš©
+        bufferDesc.Usage = D3D11_USAGE_DYNAMIC; // <- ¾Ö´Ï¸ŞÀÌ¼Ç¿¡ »ç¿ë
         bufferDesc.ByteWidth = UINT(sizeof(T_INSTANCE) * instances.size());
         bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; // <- CPUì—ì„œ ë³µì‚¬
+        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; // <- CPU¿¡¼­ º¹»ç
         bufferDesc.StructureByteStride = sizeof(T_INSTANCE);
 
         D3D11_SUBRESOURCE_DATA vertexBufferData = {
-            0}; // MS ì˜ˆì œì—ì„œ ì´ˆê¸°í™”í•˜ëŠ” ë°©ì‹
+            0}; // MS ¿¹Á¦¿¡¼­ ÃÊ±âÈ­ÇÏ´Â ¹æ½Ä
         vertexBufferData.pSysMem = instances.data();
         vertexBufferData.SysMemPitch = 0;
         vertexBufferData.SysMemSlicePitch = 0;
@@ -225,8 +201,8 @@ class D3D11Utils {
     static void UpdateBuffer(ComPtr<ID3D11DeviceContext> &context,
                              const T_DATA &bufferData,
                              ComPtr<ID3D11Buffer> &buffer) {
-        // Note: GPU ë©”ëª¨ë¦¬ê°€ ì´ˆê¸°í™”ëì„ë•Œì—ë§Œ Bufferì— nullptrì´ ì•„ë‹í…ë°..
-        // ì•„ ë ˆí¼ëŸ°ìŠ¤ë¡œ ë°›ë‹¤ë³´ë‹ˆ ìƒê´€ì—†ë‹¤!!
+        // Note: GPU ¸Ş¸ğ¸®°¡ ÃÊ±âÈ­µÆÀ»¶§¿¡¸¸ Buffer¿¡ nullptrÀÌ ¾Æ´ÒÅÙµ¥..
+        // ¾Æ ·¹ÆÛ·±½º·Î ¹Ş´Ùº¸´Ï »ó°ü¾ø´Ù!!
         ThreadPool& tPool = ThreadPool::getInstance();
         auto func = [&context, &bufferData, &buffer]() {
             return UpdateBufferImpl(context, bufferData, buffer); };
@@ -279,26 +255,26 @@ class D3D11Utils {
 
 
 
-    static void CreateTextureHelper(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context, const int width,
+    static void CreateTextureHelper(ComPtr<ID3D12Device>& device, 
+        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
         const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
-        ComPtr<ID3D11Texture2D>& texture,
+        ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv);
-    static void CreateTextureHelper(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context, const int width,
+    static void CreateTextureHelper(ComPtr<ID3D12Device>& device, 
+        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
         const int height, const vector<uint8_t>&& image,
         const DXGI_FORMAT pixelFormat,
-        ComPtr<ID3D11Texture2D>& texture,
+        ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv);
-    static void CreateTextureHelperImpl(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context, const int width,
+    static void CreateTextureHelperImpl(ComPtr<ID3D12Device>& device, 
+        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
         const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
-        ComPtr<ID3D11Texture2D>& texture,
+        ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv);
 
-    // ì•„ì§ ì•ˆì“°ê³  ìˆê±°ë‚˜ ë¹„ë™ê¸° í•¨ìˆ˜ í˜¸ì¶œ ë‚´ë¶€ì—ì„œë§Œ ì“°ì´ê³  ìˆëŠ”ê±´ ëƒ…ë‘ 
+    // ¾ÆÁ÷ ¾È¾²°í ÀÖ°Å³ª ºñµ¿±â ÇÔ¼ö È£Ãâ ³»ºÎ¿¡¼­¸¸ ¾²ÀÌ°í ÀÖ´Â°Ç ³ÀµÒ
     static void CreateUATexture(ComPtr<ID3D11Device> &device, const int width,
                                 const int height, const DXGI_FORMAT pixelFormat,
                                 ComPtr<ID3D11Texture2D> &texture,

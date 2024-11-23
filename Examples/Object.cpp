@@ -2,6 +2,7 @@
 #include "DModel.h"
 #include "BillboardModel.h"
 #include "DSkinnedMeshModel.h"
+#include "bullet/BulletDynamics/btBulletDynamicsCommon.h"
 #include "BulletDynamics/btBulletDynamicsCommon.h"
 
 namespace hlab {
