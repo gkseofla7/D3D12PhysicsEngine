@@ -1,5 +1,6 @@
 // #define _CRT_SECURE_NO_WARNINGS // stb_image_write compile error fix
 #include "D3D12Utils.h"
+#include "GraphicsCommonD3D12.h"
 
 #include <DirectXTexEXR.h> // EXR 형식 HDRI 읽기
 #include <algorithm>
@@ -345,47 +346,41 @@ namespace hlab {
 
     void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
         ComPtr<ID3D12GraphicsCommandList>& commandList,
-        ComPtr<ID3D12CommandQueue>& commandQueue,
-        ComPtr<ID3D12DescriptorHeap>& srvHeap,
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
+        ComPtr<ID3D12CommandQueue>& commandQueue, 
         const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
-        ComPtr<ID3D11ShaderResourceView>& srv) {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle) {
 
         ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, &commandList, &commandQueue , &srvHeap, srvHandle, width, height, &image, pixelFormat, &texture, &srv]() {
-            return CreateTextureHelperImpl(device, commandList, commandQueue, srvHeap, srvHandle, width, height, image, pixelFormat
-                , texture, srv); };
+        auto func = [&device, &commandList, &commandQueue , &srvHandle, width, height, &image, pixelFormat, &texture]() {
+            return CreateTextureHelperImpl(device, commandList, commandQueue, width, height, image, pixelFormat
+                , texture, srvHandle); };
         tPool.EnqueueRenderJob(func);
     }
 
     void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
         ComPtr<ID3D12GraphicsCommandList>& commandList, 
         ComPtr<ID3D12CommandQueue>& commandQueue,
-        ComPtr<ID3D12DescriptorHeap>& srvHeap,
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
         const int width, const int height, const vector<uint8_t>&& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
-        ComPtr<ID3D11ShaderResourceView>& srv) {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle) {
 
         ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, &commandList, &commandQueue, &srvHeap, srvHandle,width, height, pixelFormat, &texture, &srv, image = std::move(image)]() {
-            return CreateTextureHelperImpl(device, commandList, commandQueue, srvHeap, srvHandle, width, height, image, pixelFormat
-                , texture, srv); };
+        auto func = [&device, &commandList, &commandQueue, &srvHandle,width, height, pixelFormat, &texture, image = std::move(image)]() {
+            return CreateTextureHelperImpl(device, commandList, commandQueue, width, height, image, pixelFormat
+                , texture, srvHandle); };
         tPool.EnqueueRenderJob(func);
     }
 
     void D3D12Utils::CreateTextureHelperImpl(ComPtr<ID3D12Device>& device,
         ComPtr<ID3D12GraphicsCommandList>& commandList,
         ComPtr<ID3D12CommandQueue>& commandQueue,
-        ComPtr<ID3D12DescriptorHeap>& srvHeap, 
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle,
         const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
-        ComPtr<ID3D11ShaderResourceView>& srv) {
+        CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle) {
         // Describe and create a Texture2D.
         D3D12_RESOURCE_DESC textureDesc = {};
         ZeroMemory(&textureDesc, sizeof(textureDesc));
@@ -439,7 +434,7 @@ namespace hlab {
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-        device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHandle);
+        Graphics::RegisterSrvCbvHeap(device, texture, srvDesc, srvHandle);
 
         ThrowIfFailed(commandList->Close());
         ID3D12CommandList* ppCommandLists[] = { commandList.Get() };

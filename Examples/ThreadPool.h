@@ -61,6 +61,7 @@ namespace hlab {
         bool stop_all;
 
         bool m_finishRenderThread = false;
+        // TODO. Atomic 연산 추가 필요
         bool m_isMainThreadUsingRendering = false;
         // Worker 쓰레드
         void WorkerThread();

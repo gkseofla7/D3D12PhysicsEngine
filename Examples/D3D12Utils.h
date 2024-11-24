@@ -2,6 +2,8 @@
 #include <d3d12.h>
 #include "d3dx12.h"
 #include <d3dcompiler.h>
+#include <d3d12.h>
+#include <dxgi1_6.h>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -266,30 +268,24 @@ class D3D12Utils {
     static void CreateTextureHelper(ComPtr<ID3D12Device>& device, 
         ComPtr<ID3D12GraphicsCommandList>& commandList,
         ComPtr<ID3D12CommandQueue>& commandQueue,
-        ComPtr<ID3D12DescriptorHeap>& srvHeap,
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
         const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
-        ComPtr<ID3D11ShaderResourceView>& srv);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle);
     static void CreateTextureHelper(ComPtr<ID3D12Device>& device, 
         ComPtr<ID3D12GraphicsCommandList>& commandList,
         ComPtr<ID3D12CommandQueue>& commandQueue,
-        ComPtr<ID3D12DescriptorHeap>& srvHeap,
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
         const int width, const int height, const vector<uint8_t>&& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
-        ComPtr<ID3D11ShaderResourceView>& srv);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle);
     static void CreateTextureHelperImpl(ComPtr<ID3D12Device>& device, 
         ComPtr<ID3D12GraphicsCommandList>& commandList,
         ComPtr<ID3D12CommandQueue>& commandQueue,
-        ComPtr<ID3D12DescriptorHeap>& srvHeap,
-        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
         const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
-        ComPtr<ID3D11ShaderResourceView>& srv);
+        CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle);
 
     // 아직 안쓰고 있거나 비동기 함수 호출 내부에서만 쓰이고 있는건 냅둠
     static void CreateUATexture(ComPtr<ID3D11Device> &device, const int width,

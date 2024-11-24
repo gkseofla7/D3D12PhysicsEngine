@@ -3,7 +3,7 @@ namespace hlab {
 
 namespace Graphics {
 
-ComPtr<ID3D12DescriptorHeap> rtvCbvHeap;
+ComPtr<ID3D12DescriptorHeap> srvCbvHeap;
 ComPtr<ID3D12DescriptorHeap> samplerHeap;
 
 ComPtr<ID3DBlob> basicVS;
@@ -15,6 +15,18 @@ ComPtr<ID3D12PipelineState> defaultSolidPSO;
 
 vector< D3D12_SAMPLER_DESC> sampDescs;
 vector< D3D12_BLEND_DESC> blendDescs;
+}
+
+
+void Graphics::InitCommonStates(ComPtr<ID3D12Device>& device) {
+
+    InitShaders(device);
+    InitSamplerDescs();
+    InitRasterizerDesc();
+    InitDescriptorHeap(device);
+    InitBlendStates();
+    InitRootSignature(device);
+    InitPipelineStates(device);
 }
 
 void Graphics::InitSamplerDescs()
@@ -72,14 +84,19 @@ void Graphics::InitSamplerDescs()
 
 void Graphics::InitDescriptorHeap(ComPtr<ID3D12Device>& device)
 {
+    D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+    rtvHeapDesc.NumDescriptors = 2;// TODO. 변수값 따로 global로 빼내기
+    rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
+
     D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
     HeapDesc.NumDescriptors = 6 + 1 + 3; //* FrameCount; // TODO. 각 Frame마다 따로 저장 예정
     HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-    ThrowIfFailed(device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&rtvCbvHeap)));
+    ThrowIfFailed(device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&srvCbvHeap)));
 
 
-    // 디스크립터 힙 생성
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
     samplerHeapDesc.NumDescriptors = static_cast<UINT>(sampDescs.size());
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
@@ -94,6 +111,8 @@ void Graphics::InitDescriptorHeap(ComPtr<ID3D12Device>& device)
         device->CreateSampler(&sampDescs[i], cpuHandle);
         cpuHandle.Offset(descriptorSize);  // 다음 샘플러의 주소로 이동
     }
+    rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+    srvCbvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 void Graphics::InitShaders(ComPtr<ID3D12Device>& device)
@@ -118,7 +137,7 @@ void Graphics::InitRasterizerDesc()
     solidRSDesc.MultisampleEnable = true;
 }
 
-void Graphics::InitBlendStates(ComPtr<ID3D12Device>& device)
+void Graphics::InitBlendStates()
 {
     // "이미 그려져있는 화면"과 어떻게 섞을지를 결정
 // Dest: 이미 그려져 있는 값들을 의미
@@ -223,4 +242,20 @@ void Graphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
     psoDesc.SampleDesc.Count = 1;
     ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&defaultSolidPSO)));
 }
+
+void Graphics::RegisterSrvCbvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
+    const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle)
+{
+    device->CreateShaderResourceView(resource.Get(), srvDesc, curSrvCbvHandle);
+    curSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
+}
+
+void Graphics::RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
+    const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& rtvHandle)
+{  
+    device->CreateRenderTargetView(resource.Get(), rtvDesc, curRtvHandle);
+    rtvHandle.Offset(1, rtvDescriptorSize);
+}
+
+
 }
