@@ -39,7 +39,15 @@ inline void ThrowIfFailed(HRESULT hr) {
 
 class D3D12Utils {
   public:
-      //    ComPtr<ID3D12PipelineState> m_pipelineState;
+      static void CreateVertexShader(
+          ComPtr<ID3D12Device>& device, wstring filename,
+          ComPtr<ID3DBlob>& vertexShader,
+          const vector<D3D_SHADER_MACRO> shaderMacros = {/* Empty default */ });
+      static void CreatePixelShader(ComPtr<ID3D12Device>& device,
+          const wstring& filename,
+          ComPtr<ID3DBlob>& pixelShader);
+      static void CreateRootSignature(ComPtr<ID3D12Device>& device,
+          ComPtr<ID3D12RootSignature>& rootSignature, vector<CD3DX12_ROOT_PARAMETER1>& rootParams);
       static void CreatePipelineState(ComPtr<ID3D12Device>& device, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc, ComPtr<ID3D12PipelineState>& OutPipelineState);
     // ShaderMacros 사용할 때 예시
     // {D3D_SHADER_MACRO("SKINNED", "1"), D3D_SHADER_MACRO(NULL, NULL)};
@@ -256,20 +264,29 @@ class D3D12Utils {
 
 
     static void CreateTextureHelper(ComPtr<ID3D12Device>& device, 
-        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
-        const int height, const vector<uint8_t>& image,
+        ComPtr<ID3D12GraphicsCommandList>& commandList,
+        ComPtr<ID3D12CommandQueue>& commandQueue,
+        ComPtr<ID3D12DescriptorHeap>& srvHeap,
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
+        const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv);
     static void CreateTextureHelper(ComPtr<ID3D12Device>& device, 
-        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
-        const int height, const vector<uint8_t>&& image,
+        ComPtr<ID3D12GraphicsCommandList>& commandList,
+        ComPtr<ID3D12CommandQueue>& commandQueue,
+        ComPtr<ID3D12DescriptorHeap>& srvHeap,
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
+        const int width, const int height, const vector<uint8_t>&& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv);
     static void CreateTextureHelperImpl(ComPtr<ID3D12Device>& device, 
-        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
-        const int height, const vector<uint8_t>& image,
+        ComPtr<ID3D12GraphicsCommandList>& commandList,
+        ComPtr<ID3D12CommandQueue>& commandQueue,
+        ComPtr<ID3D12DescriptorHeap>& srvHeap,
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
+        const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv);

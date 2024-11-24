@@ -37,64 +37,69 @@ namespace hlab {
         }
     }
 
-//    void D3D12Utils::CreatePipelineState(
-//        ComPtr<ID3D12Device>& device, wstring InVsFilename,
-//        wstring InPsFilename,
-//        const vector<D3D12_INPUT_ELEMENT_DESC>& InInputElements,
-//        ComPtr<ID3D12RootSignature> InRootSignature,
-//        ComPtr<ID3D12PipelineState>& OutPipelineState,
-//        const vector<D3D_SHADER_MACRO> InShaderMacros)
-//    {
-//
-//
-//
-//        UINT compileFlags = 0;
-//#if defined(DEBUG) || defined(_DEBUG)
-//        compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-//#endif
-//        ComPtr<ID3DBlob> vsShaderBlob;
-//        ComPtr<ID3DBlob> errorBlob;
-//        HRESULT hr = D3DCompileFromFile(
-//            InVsFilename.c_str(), InShaderMacros.empty() ? NULL : InShaderMacros.data(),
-//            D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "vs_5_0", compileFlags, 0,
-//            &vsShaderBlob, &errorBlob);
-//        CheckResult(hr, errorBlob.Get());
-//
-//        ComPtr<ID3DBlob> psShaderBlob;
-//        HRESULT hr = D3DCompileFromFile(
-//            InPsFilename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main",
-//            "ps_5_0", compileFlags, 0, &psShaderBlob, &errorBlob);
-//
-//        CheckResult(hr, errorBlob.Get());
-//        /*
-//            // .cso 파일을 읽어들이는 방식, D3DReadFileToBlob() 사용
-//            wstring path = L"x64/Release/";
-//        #if defined(DEBUG) || defined(_DEBUG)
-//            path = L"x64/Debug/";
-//        #endif
-//            filename.erase(filename.end() - 4, filename.end()); // 확장자 hlsl 삭제
-//            filename = path + filename + L"cso";
-//            HRESULT hr = D3DReadFileToBlob(filename.c_str(),
-//        shaderBlob.GetAddressOf());
-//        */
-//        // Describe and create the graphics pipeline state object (PSO).
-//        D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-//        psoDesc.InputLayout = { InInputElements.data(),  UINT(InInputElements.size()) };
-//        psoDesc.pRootSignature = InRootSignature.Get();
-//        psoDesc.VS = CD3DX12_SHADER_BYTECODE(vsShaderBlob.Get());
-//        psoDesc.PS = CD3DX12_SHADER_BYTECODE(psShaderBlob.Get());
-//        psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-//        psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-//        psoDesc.DepthStencilState.DepthEnable = FALSE;
-//        psoDesc.DepthStencilState.StencilEnable = FALSE;
-//        psoDesc.SampleMask = UINT_MAX;
-//        psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-//        psoDesc.NumRenderTargets = 1;
-//        psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-//        psoDesc.SampleDesc.Count = 1;
-//        ThrowIfFailed(m_device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_pipelineState)));
-//        
-//    }
+    void D3D12Utils::CreateVertexShader(
+        ComPtr<ID3D12Device>& device, wstring filename,
+        ComPtr<ID3DBlob>& vertexShader,
+        const vector<D3D_SHADER_MACRO> shaderMacros)
+    {
+
+        UINT compileFlags = 0;
+#if defined(DEBUG) || defined(_DEBUG)
+        compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+        ComPtr<ID3DBlob> errorBlob;
+        HRESULT hr = D3DCompileFromFile(
+            filename.c_str(), shaderMacros.empty() ? NULL : shaderMacros.data(),
+            D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "vs_5_0", compileFlags, 0,
+            &vertexShader, &errorBlob);
+        CheckResult(hr, errorBlob.Get());
+    }
+
+    void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device>& device,
+        const wstring& filename,
+        ComPtr<ID3DBlob>& pixelShader)
+    {
+        ComPtr<ID3DBlob> errorBlob;
+        UINT compileFlags = 0;
+#if defined(DEBUG) || defined(_DEBUG)
+        compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+        // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
+        // D3D_COMPILE_STANDARD_FILE_INCLUDE 추가: 쉐이더에서 include 사용
+        HRESULT hr = D3DCompileFromFile(
+            filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main",
+            "ps_5_0", compileFlags, 0, &pixelShader, &errorBlob);
+
+        CheckResult(hr, errorBlob.Get());
+    }
+
+    void D3D12Utils::CreateRootSignature(ComPtr<ID3D12Device>& device,
+        ComPtr<ID3D12RootSignature>& rootSignature, vector<CD3DX12_ROOT_PARAMETER1>& rootParams)
+    {
+        D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+
+        // This is the highest version the sample supports. If CheckFeatureSupport succeeds, the HighestVersion returned will not be greater than this.
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+
+        if (FAILED(device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))))
+        {
+            featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+        }
+
+        // Allow input layout and deny uneccessary access to certain pipeline stages.
+        D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init_1_1(static_cast<UINT>(rootParams.size()), rootParams.data(), 0, nullptr, rootSignatureFlags);
+
+
+        ComPtr<ID3DBlob> signature;
+        ComPtr<ID3DBlob> error;
+        ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
+        ThrowIfFailed(device->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
+    }
 
     void D3D12Utils::CreatePipelineState(ComPtr<ID3D12Device>& device, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc, ComPtr<ID3D12PipelineState>& OutPipelineState)
     {
@@ -339,36 +344,45 @@ namespace hlab {
     }
 
     void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
-        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
-        const int height, const vector<uint8_t>& image,
+        ComPtr<ID3D12GraphicsCommandList>& commandList,
+        ComPtr<ID3D12CommandQueue>& commandQueue,
+        ComPtr<ID3D12DescriptorHeap>& srvHeap,
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
+        const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv) {
 
         ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, &commandList, width, height, &image, pixelFormat, &texture, &srv]() {
-            return CreateTextureHelperImpl(device, commandList, width, height, image, pixelFormat
+        auto func = [&device, &commandList, &commandQueue , &srvHeap, srvHandle, width, height, &image, pixelFormat, &texture, &srv]() {
+            return CreateTextureHelperImpl(device, commandList, commandQueue, srvHeap, srvHandle, width, height, image, pixelFormat
                 , texture, srv); };
         tPool.EnqueueRenderJob(func);
     }
 
     void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
-        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
-        const int height, const vector<uint8_t>&& image,
+        ComPtr<ID3D12GraphicsCommandList>& commandList, 
+        ComPtr<ID3D12CommandQueue>& commandQueue,
+        ComPtr<ID3D12DescriptorHeap>& srvHeap,
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle, 
+        const int width, const int height, const vector<uint8_t>&& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv) {
 
         ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, &commandList,width, height, pixelFormat, &texture, &srv, image = std::move(image)]() {
-            return CreateTextureHelperImpl(device, commandList, width, height, image, pixelFormat
+        auto func = [&device, &commandList, &commandQueue, &srvHeap, srvHandle,width, height, pixelFormat, &texture, &srv, image = std::move(image)]() {
+            return CreateTextureHelperImpl(device, commandList, commandQueue, srvHeap, srvHandle, width, height, image, pixelFormat
                 , texture, srv); };
         tPool.EnqueueRenderJob(func);
     }
 
     void D3D12Utils::CreateTextureHelperImpl(ComPtr<ID3D12Device>& device,
-        ComPtr<ID3D12GraphicsCommandList>& commandList, const int width,
-        const int height, const vector<uint8_t>& image,
+        ComPtr<ID3D12GraphicsCommandList>& commandList,
+        ComPtr<ID3D12CommandQueue>& commandQueue,
+        ComPtr<ID3D12DescriptorHeap>& srvHeap, 
+        CD3DX12_CPU_DESCRIPTOR_HANDLE srvHandle,
+        const int width, const int height, const vector<uint8_t>& image,
         const DXGI_FORMAT pixelFormat,
         ComPtr<ID3D12Resource>& texture,
         ComPtr<ID3D11ShaderResourceView>& srv) {
@@ -424,20 +438,16 @@ namespace hlab {
         srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDesc.Texture2D.MipLevels = 1;
-        m_device->CreateShaderResourceView(m_texture.Get(), &srvDesc, m_srvHeap->GetCPUDescriptorHandleForHeapStart());
+        srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
+        device->CreateShaderResourceView(texture.Get(), &srvDesc, srvHandle);
 
-        // 스테이징 텍스춰로부터 가장 해상도가 높은 이미지 복사
-        context->CopySubresourceRegion(texture.Get(), 0, 0, 0, 0,
-            stagingTexture.Get(), 0, NULL);
-
-        // ResourceView 만들기
-        device->CreateShaderResourceView(texture.Get(), 0, srv.GetAddressOf());
-
+        ThrowIfFailed(commandList->Close());
+        ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
+        commandQueue->ExecuteCommandLists(_countof(ppCommandLists), ppCommandLists);
         // 해상도를 낮춰가며 밉맵 생성
-        context->GenerateMips(srv.Get());
+       // context->GenerateMips(srv.Get());
+        // TODO. MipMap 생성 필요
 
-        // HLSL 쉐이더 안에서는 SampleLevel() 사용
     }
 
 
