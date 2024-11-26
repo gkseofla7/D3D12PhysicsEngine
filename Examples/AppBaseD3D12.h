@@ -1,5 +1,5 @@
 #pragma once
-
+/*
 #include <directxtk/SimpleMath.h>
 #include <imgui.h>
 #include <imgui_impl_dx12.h>
@@ -154,7 +154,7 @@ namespace hlab {
 
         // 렌더링 -> PostEffects -> PostProcess
         PostEffectsConstants m_postEffectsConstsCPU;
-        ComPtr<ID3D11Buffer> m_postEffectsConstsGPU;
+        ComPtr<ID3D12Resource> m_postEffectsConstsGPU;
 
         PostProcess m_postProcess;
 
@@ -162,9 +162,9 @@ namespace hlab {
         GlobalConstants m_globalConstsCPU;
         GlobalConstants m_reflectGlobalConstsCPU;
         GlobalConstants m_shadowGlobalConstsCPU[MAX_LIGHTS];
-        ComPtr<ID3D11Buffer> m_globalConstsGPU;
-        ComPtr<ID3D11Buffer> m_reflectGlobalConstsGPU;
-        ComPtr<ID3D11Buffer> m_shadowGlobalConstsGPU[MAX_LIGHTS];
+        ComPtr<ID3D12Resource> m_globalConstsGPU;
+        ComPtr<ID3D12Resource> m_reflectGlobalConstsGPU;
+        ComPtr<ID3D12Resource> m_shadowGlobalConstsGPU[MAX_LIGHTS];
 
         // 공통으로 사용하는 텍스춰들
         ComPtr<ID3D11ShaderResourceView> m_envSRV;
@@ -176,7 +176,6 @@ namespace hlab {
         bool m_pauseAnimation = false;
 
         // 여러 예제들 공용
-        shared_ptr<Model> m_screenSquare; // PostEffect에 사용
         shared_ptr<Model> m_skybox;
         shared_ptr<Model> m_pickedModel;
         shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
@@ -201,3 +200,4 @@ namespace hlab {
     };
 
 } // namespace hlab
+*/
