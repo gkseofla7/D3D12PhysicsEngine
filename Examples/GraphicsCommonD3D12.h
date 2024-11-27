@@ -1,17 +1,21 @@
 #pragma once
-
+/*
 #include "D3D12Utils.h"
 namespace hlab {
 
 namespace Graphics{
+ComPtr<ID3D12CommandAllocator> commandAllocator;
+ComPtr<ID3D12GraphicsCommandList> commandList;
 
 extern ComPtr<ID3D12DescriptorHeap> srvCbvHeap;
 extern ComPtr<ID3D12DescriptorHeap> rtvHeap;
 extern ComPtr<ID3D12DescriptorHeap> samplerHeap;
 
 //CD3DX12_CPU_DESCRIPTOR_HANDLE
-extern CD3DX12_CPU_DESCRIPTOR_HANDLE curSrvCbvHandle;
-extern CD3DX12_CPU_DESCRIPTOR_HANDLE curRtvHandle;
+extern CD3DX12_CPU_DESCRIPTOR_HANDLE cpuSrvCbvHandle;
+extern CD3DX12_GPU_DESCRIPTOR_HANDLE gpuSrvCbvHandle;
+extern CD3DX12_CPU_DESCRIPTOR_HANDLE cpuRtvHandle;
+extern CD3DX12_GPU_DESCRIPTOR_HANDLE gpuRtvHandle;
 
 extern UINT srvCbvDescriptorSize;
 extern UINT rtvDescriptorSize;
@@ -50,3 +54,4 @@ void RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>&
 
 
 }
+*/

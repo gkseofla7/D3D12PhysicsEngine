@@ -1,10 +1,17 @@
 #include "GraphicsCommonD3D12.h"
+/*
 namespace hlab {
 
 namespace Graphics {
 
 ComPtr<ID3D12DescriptorHeap> srvCbvHeap;
+ComPtr<ID3D12DescriptorHeap> rtvHeap;
 ComPtr<ID3D12DescriptorHeap> samplerHeap;
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE cpuSrvCbvHandle;
+CD3DX12_GPU_DESCRIPTOR_HANDLE gpuSrvCbvHandle;
+CD3DX12_CPU_DESCRIPTOR_HANDLE cpuRtvHandle;
+CD3DX12_GPU_DESCRIPTOR_HANDLE gpuRtvHandle;
 
 ComPtr<ID3DBlob> basicVS;
 ComPtr<ID3DBlob> skinnedVS;
@@ -19,7 +26,7 @@ vector< D3D12_BLEND_DESC> blendDescs;
 
 
 void Graphics::InitCommonStates(ComPtr<ID3D12Device>& device) {
-
+    
     InitShaders(device);
     InitSamplerDescs();
     InitRasterizerDesc();
@@ -27,6 +34,8 @@ void Graphics::InitCommonStates(ComPtr<ID3D12Device>& device) {
     InitBlendStates();
     InitRootSignature(device);
     InitPipelineStates(device);
+    ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
+    ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), defaultSolidPSO.Get(), IID_PPV_ARGS(&commandList)));
 }
 
 void Graphics::InitSamplerDescs()
@@ -246,16 +255,19 @@ void Graphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
 void Graphics::RegisterSrvCbvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle)
 {
-    device->CreateShaderResourceView(resource.Get(), srvDesc, curSrvCbvHandle);
-    curSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
+    device->CreateShaderResourceView(resource.Get(), srvDesc, cpuSrvCbvHandle);
+    cpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
+    gpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
 }
 
 void Graphics::RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
     const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& rtvHandle)
 {  
-    device->CreateRenderTargetView(resource.Get(), rtvDesc, curRtvHandle);
-    rtvHandle.Offset(1, rtvDescriptorSize);
+    device->CreateRenderTargetView(resource.Get(), rtvDesc, cpuRtvHandle);
+    cpuRtvHandle.Offset(1, rtvDescriptorSize);
+    gpuRtvHandle.Offset(1, rtvDescriptorSize);
 }
 
 
 }
+*/
