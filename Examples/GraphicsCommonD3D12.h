@@ -1,9 +1,14 @@
 #pragma once
-/*
+
 #include "D3D12Utils.h"
+#include <dxgi.h>                       // DXGIFactory
+#include <dxgi1_4.h>                    // DXGIFactory4
 namespace hlab {
 
-namespace Graphics{
+namespace DGraphics{
+
+static const uint32_t s_NumDescriptorsPerHeap = 256;
+
 ComPtr<ID3D12CommandAllocator> commandAllocator;
 ComPtr<ID3D12GraphicsCommandList> commandList;
 
@@ -31,7 +36,8 @@ extern ComPtr<ID3D12RootSignature> defaultRootSignature;
 
 extern ComPtr<ID3D12PipelineState> defaultSolidPSO;
 
-extern vector< D3D12_SAMPLER_DESC> sampDescs;
+extern std::vector< D3D12_SAMPLER_DESC> sampDescs;
+extern std::vector< D3D12_BLEND_DESC> blendDescs;
 extern D3D12_BLEND_DESC mirrorBSDesc;
 extern D3D12_BLEND_DESC accumulateBSDesc;
 extern D3D12_BLEND_DESC alphaBSDesc;
@@ -45,8 +51,11 @@ void InitBlendStates();
 void InitRootSignature(ComPtr<ID3D12Device>& device);
 void InitPipelineStates(ComPtr<ID3D12Device>& device);
 
-void RegisterSrvCbvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource
+void RegisterSrvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource
 	, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle);
+void RegisterCBVHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
+	const D3D12_CONSTANT_BUFFER_VIEW_DESC* cbvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& cbvCPUHandle,
+	CD3DX12_GPU_DESCRIPTOR_HANDLE& cbvGPUHandle);
 void RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource
 	, const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
 
@@ -54,4 +63,4 @@ void RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>&
 
 
 }
-*/
+

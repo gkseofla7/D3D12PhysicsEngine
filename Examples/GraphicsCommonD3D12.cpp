@@ -1,9 +1,11 @@
 #include "GraphicsCommonD3D12.h"
-/*
+#include <dxgi.h>                       // DXGIFactory
+#include <dxgi1_4.h>   
+#include <vector>
 namespace hlab {
 
-namespace Graphics {
-
+namespace DGraphics {
+    
 ComPtr<ID3D12DescriptorHeap> srvCbvHeap;
 ComPtr<ID3D12DescriptorHeap> rtvHeap;
 ComPtr<ID3D12DescriptorHeap> samplerHeap;
@@ -17,28 +19,26 @@ ComPtr<ID3DBlob> basicVS;
 ComPtr<ID3DBlob> skinnedVS;
 ComPtr<ID3DBlob> basicPS;
 
-ComPtr<ID3D12RootSignature> defaultrootSignature;
+ComPtr<ID3D12RootSignature> defaultRootSignature;
 ComPtr<ID3D12PipelineState> defaultSolidPSO;
 
-vector< D3D12_SAMPLER_DESC> sampDescs;
-vector< D3D12_BLEND_DESC> blendDescs;
+std::vector< D3D12_SAMPLER_DESC> sampDescs;
+std::vector< D3D12_BLEND_DESC> blendDescs;
 }
 
 
-void Graphics::InitCommonStates(ComPtr<ID3D12Device>& device) {
+void DGraphics::InitCommonStates(ComPtr<ID3D12Device>& device) {
     
     InitShaders(device);
     InitSamplerDescs();
     InitRasterizerDesc();
     InitDescriptorHeap(device);
-    InitBlendStates();
+    //InitBlendStates();
     InitRootSignature(device);
     InitPipelineStates(device);
-    ThrowIfFailed(device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&commandAllocator)));
-    ThrowIfFailed(device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, commandAllocator.Get(), defaultSolidPSO.Get(), IID_PPV_ARGS(&commandList)));
 }
 
-void Graphics::InitSamplerDescs()
+void DGraphics::InitSamplerDescs()
 {
     D3D12_SAMPLER_DESC sampDesc = {};
     ZeroMemory(&sampDesc, sizeof(sampDesc));
@@ -91,28 +91,29 @@ void Graphics::InitSamplerDescs()
 
 }
 
-void Graphics::InitDescriptorHeap(ComPtr<ID3D12Device>& device)
+void DGraphics::InitDescriptorHeap(ComPtr<ID3D12Device>& device)
 {
     D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-    rtvHeapDesc.NumDescriptors = 2;// TODO. 변수값 따로 global로 빼내기
+    rtvHeapDesc.NumDescriptors = s_NumDescriptorsPerHeap;
     rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     ThrowIfFailed(device->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&rtvHeap)));
 
     D3D12_DESCRIPTOR_HEAP_DESC HeapDesc = {};
-    HeapDesc.NumDescriptors = 6 + 1 + 3; //* FrameCount; // TODO. 각 Frame마다 따로 저장 예정
+    HeapDesc.NumDescriptors = s_NumDescriptorsPerHeap; //* FrameCount; // TODO. 각 Frame마다 따로 저장 예정
     HeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     HeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     ThrowIfFailed(device->CreateDescriptorHeap(&HeapDesc, IID_PPV_ARGS(&srvCbvHeap)));
 
 
     D3D12_DESCRIPTOR_HEAP_DESC samplerHeapDesc = {};
-    samplerHeapDesc.NumDescriptors = static_cast<UINT>(sampDescs.size());
+    samplerHeapDesc.NumDescriptors = s_NumDescriptorsPerHeap;
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;  // 셰이더에서 참조할 수 있도록 설정
     ThrowIfFailed(device->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&samplerHeap)));
 
     // 샘플러 디스크립터를 디스크립터 힙에 추가
+    // DNote : 샘플러 이후 어떻게 셋팅하는지 확인 필요
     CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(samplerHeap->GetCPUDescriptorHandleForHeapStart());
     UINT descriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 
@@ -124,7 +125,7 @@ void Graphics::InitDescriptorHeap(ComPtr<ID3D12Device>& device)
     srvCbvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
-void Graphics::InitShaders(ComPtr<ID3D12Device>& device)
+void DGraphics::InitShaders(ComPtr<ID3D12Device>& device)
 {
     // Input Desc은 RootSignature에서 정의한다
 
@@ -134,7 +135,7 @@ void Graphics::InitShaders(ComPtr<ID3D12Device>& device)
     D3D12Utils::CreatePixelShader(device, L"BasicPS.hlsl", basicPS);
 }
 
-void Graphics::InitRasterizerDesc()
+void DGraphics::InitRasterizerDesc()
 {
     // Rasterizer States
     ZeroMemory(&solidRSDesc, sizeof(D3D12_RASTERIZER_DESC));
@@ -146,13 +147,13 @@ void Graphics::InitRasterizerDesc()
     solidRSDesc.MultisampleEnable = true;
 }
 
-void Graphics::InitBlendStates()
+void DGraphics::InitBlendStates()
 {
     // "이미 그려져있는 화면"과 어떻게 섞을지를 결정
 // Dest: 이미 그려져 있는 값들을 의미
 // Src: 픽셀 쉐이더가 계산한 값들을 의미 (여기서는 마지막 거울)
-
-    ZeroMemory(&mirrorBSDesc, sizeof(mirrorBSDesc));
+/*
+*     ZeroMemory(&mirrorBSDesc, sizeof(mirrorBSDesc));
     mirrorBSDesc.AlphaToCoverageEnable = true; // MSAA
     mirrorBSDesc.IndependentBlendEnable = false;
     // 개별 RenderTarget에 대해서 설정 (최대 8개)
@@ -195,11 +196,14 @@ void Graphics::InitBlendStates()
     alphaBSDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
     alphaBSDesc.RenderTarget[0].RenderTargetWriteMask =
         D3D12_COLOR_WRITE_ENABLE_ALL;
+*/
+
 }
 
-void Graphics::InitRootSignature(ComPtr<ID3D12Device>& device)
+void DGraphics::InitRootSignature(ComPtr<ID3D12Device>& device)
 {
     // 그동안 defaultSolidPSO쓸때 VIew 어떻게 넣었는지 확인
+    // DNote : 이렇게 되면 모든 셰이더에서 넣는 형태가 다르면 RootSignature도 다시 정의 필요?
     CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
     ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 10, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);//Texture
     ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);//Texture
@@ -218,10 +222,10 @@ void Graphics::InitRootSignature(ComPtr<ID3D12Device>& device)
     vector<CD3DX12_ROOT_PARAMETER1> rootParams(1);
     rootParams[3].InitAsDescriptorTable(static_cast<UINT>(sampleRanges.size()), sampleRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
 
-    D3D12Utils::CreateRootSignature(device, defaultrootSignature, rootParameters);
+    D3D12Utils::CreateRootSignature(device, defaultRootSignature, rootParameters);
 }
 
-void Graphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
+void DGraphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
 {
     D3D12_INPUT_ELEMENT_DESC basicIEs[] = {
     {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
@@ -236,7 +240,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
     // Describe and create the graphics pipeline state object (PSO).
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = { basicIEs, _countof(basicIEs)};
-    psoDesc.pRootSignature = defaultrootSignature.Get();
+    psoDesc.pRootSignature = defaultRootSignature.Get();
     psoDesc.VS = CD3DX12_SHADER_BYTECODE(basicVS.Get());
     psoDesc.PS = CD3DX12_SHADER_BYTECODE(basicPS.Get());
     psoDesc.RasterizerState = solidRSDesc;
@@ -252,15 +256,25 @@ void Graphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
     ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&defaultSolidPSO)));
 }
 
-void Graphics::RegisterSrvCbvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
+void DGraphics::RegisterSrvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
     const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle)
 {
     device->CreateShaderResourceView(resource.Get(), srvDesc, cpuSrvCbvHandle);
     cpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
+    //gpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
+}
+void DGraphics::RegisterCBVHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
+    const D3D12_CONSTANT_BUFFER_VIEW_DESC* cbvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& cbvCPUHandle,
+    CD3DX12_GPU_DESCRIPTOR_HANDLE& cbvGPUHandle)
+{
+
+    device->CreateConstantBufferView(cbvDesc, cbvCPUHandle);
+    cbvGPUHandle = gpuSrvCbvHandle;
+    cpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
     gpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
 }
 
-void Graphics::RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
+void DGraphics::RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
     const D3D12_RENDER_TARGET_VIEW_DESC* rtvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& rtvHandle)
 {  
     device->CreateRenderTargetView(resource.Get(), rtvDesc, cpuRtvHandle);
@@ -270,4 +284,3 @@ void Graphics::RegisterRtvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12
 
 
 }
-*/

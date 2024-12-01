@@ -1,5 +1,5 @@
+#include "DModel2.h"
 
-#include "DModel.h"
 #include "GeometryGenerator.h"
 #include "MeshLoadHelper.h"
 
@@ -10,34 +10,17 @@ namespace hlab {
     using namespace std;
     using namespace DirectX;
 
-
-    DModel::DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const std::string& basePath, const std::string& filename) {
-        Initialize(device, context, basePath, filename);
+    DModel2::DModel2(ComPtr<ID3D12Device>& device, const string& basePath, const string& filename) {
+        Initialize(device, basePath, filename);
     }
-    DModel::DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
-        const string& meshKey)
+    DModel2::DModel2(ComPtr<ID3D12Device>& device, const string& meshKey)
     {
-        Initialize(device, context, meshKey);
+        Initialize(device, meshKey);
     }
 
-    void DModel::InitMeshBuffers(ComPtr<ID3D11Device>& device,
-        const MeshData& meshData,
-        shared_ptr<Mesh>& newMesh) {
-
-        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-            newMesh->vertexBuffer);
-        newMesh->indexCount = UINT(meshData.indices.size());
-        newMesh->vertexCount = UINT(meshData.vertices.size());
-        newMesh->stride = UINT(sizeof(Vertex));
-        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-            newMesh->indexBuffer);
-    }
-
-    void DModel::Initialize(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context,
-        const std::string& basePath,
-        const std::string& filename) {
+    void DModel2::Initialize(ComPtr<ID3D12Device>& device,
+        const string& basePath,
+        const string& filename) {
         // 일반적으로는 Mesh들이 m_mesh/materialConsts를 각자 소유 가능
         // 여기서는 한 Model 안의 여러 Mesh들이 Consts를 모두 공유
         m_basePath = basePath;
@@ -52,14 +35,26 @@ namespace hlab {
             MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
         }
     }
-    void DModel::Initialize(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context,
+    void DModel2::Initialize(ComPtr<ID3D12Device>& device,
         const string& meshKey) {
         m_meshKey = meshKey;
 
         m_meshConsts.GetCpu().world = Matrix();
         m_meshConsts.Initialize(device);
         m_materialConsts.Initialize(device);
+    }
+
+    void DModel::InitMeshBuffers(ComPtr<ID3D11Device>& device,
+        const MeshData& meshData,
+        shared_ptr<Mesh>& newMesh) {
+
+        D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
+            newMesh->vertexBuffer);
+        newMesh->indexCount = UINT(meshData.indices.size());
+        newMesh->vertexCount = UINT(meshData.vertices.size());
+        newMesh->stride = UINT(sizeof(Vertex));
+        D3D11Utils::CreateIndexBuffer(device, meshData.indices,
+            newMesh->indexBuffer);
     }
     void DModel::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
         if (m_initializeMesh == false)
@@ -84,7 +79,7 @@ namespace hlab {
     }
     void DModel::UpdatePosition(const Vector3& inDelta)
     {
-        Matrix newMatrix = Matrix::CreateTranslation(inDelta)* m_worldRow;
+        Matrix newMatrix = Matrix::CreateTranslation(inDelta) * m_worldRow;
         UpdateWorldRow(newMatrix);
     }
     void DModel::SetWorldPosition(const Vector3& InPos)
@@ -95,12 +90,12 @@ namespace hlab {
 
     void DModel::UpdateRotation(const Matrix& inDelta)
     {
-        m_direction =Vector3::Transform( m_direction,inDelta);
+        m_direction = Vector3::Transform(m_direction, inDelta);
         m_direction.Normalize();
 
         Vector3 ModelPos = m_worldRow.Translation();
         m_worldRow.Translation(Vector3(0.0f));
-        Matrix newMatrix = m_worldRow*inDelta;
+        Matrix newMatrix = m_worldRow * inDelta;
         newMatrix.Translation(ModelPos);
         UpdateWorldRow(newMatrix);
     }
@@ -128,8 +123,8 @@ namespace hlab {
         if (m_initializeMesh == false)
         {
             return;
-        } 
-        if (m_isVisible) { 
+        }
+        if (m_isVisible) {
             for (auto& mesh : *m_meshes) {
                 //TODO mesh Consts를 없애자, Model 공용으로 사용
                 ID3D11Buffer* constBuffers[2] = { m_meshConsts.Get(),
@@ -255,7 +250,7 @@ namespace hlab {
 
             m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
 
-            m_boundingBox.Extents = XMFLOAT3(m_boundingBox.Extents.x*m_scale, m_boundingBox.Extents.y * m_scale, m_boundingBox.Extents.z * m_scale);
+            m_boundingBox.Extents = XMFLOAT3(m_boundingBox.Extents.x * m_scale, m_boundingBox.Extents.y * m_scale, m_boundingBox.Extents.z * m_scale);
         }
         else
         {

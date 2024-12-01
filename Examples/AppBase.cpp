@@ -258,7 +258,7 @@ void AppBase::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
-    int objectCount = m_objectList.size();
+
     for (int i  = 0; i<m_objectList.size(); i++)
     {
         m_objectList[i]->Tick(dt);
