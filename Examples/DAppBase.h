@@ -2,6 +2,7 @@
 #include "D3D12Utils.h"
 #include "GraphicsCommonD3D12.h"
 #include "ConstantBuffers.h"
+#include "SwapChain.h"
 
 #include <DirectXTexEXR.h> // EXR 형식 HDRI 읽기
 #include <algorithm>
@@ -20,6 +21,7 @@
 #include <imgui_impl_win32.h>
 
 #include "Camera.h"
+#include "GraphcisDescriptorHeap.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -51,6 +53,10 @@ private:
 	void LoadPipeline();
 	void LoadAssets();
 
+	void InitCubemaps(wstring basePath, wstring envFilename,
+		wstring specularFilename, wstring irradianceFilename,
+		wstring brdfFilename);
+
 	void SetMainViewport();
 	void SetCommonPipelineState(ID3D12GraphicsCommandList* pCommandList);
 
@@ -61,13 +67,14 @@ private:
 private:
 // 그래픽스 관련
 	ComPtr<ID3D12Device> m_device;
+	SwapChain m_swapChain;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;
-	ComPtr<IDXGISwapChain3> m_swapChain;
+	ComPtr<ID3D12GraphicsCommandList>	m_commandList;
 	ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 	ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
+	GraphicsDescriptorHeap m_descriptorHeap;
 
 	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
-	UINT m_frameIndex;
 
 	HWND m_mainWindow;
 	int m_screenWidth;
@@ -82,6 +89,10 @@ private:
 	D3D12_VIEWPORT m_screenViewport;
 	D3D12_RECT m_scissorRect;
 
+	CD3DX12_CPU_DESCRIPTOR_HANDLE m_envSRV;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE m_specularSRV;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE m_irradianceSRV;
+	CD3DX12_CPU_DESCRIPTOR_HANDLE m_brdfSRV;
 
 // 컨텐츠 관련
 	vector<shared_ptr<Object>> m_objectList;

@@ -5,13 +5,15 @@
 #include <DirectXTexEXR.h> // EXR 형식 HDRI 읽기
 #include <algorithm>
 #include <cctype>
-#include <directxtk/DDSTextureLoader.h> // 큐브맵 읽을 때 필요
 #include <dxgi.h>                       // DXGIFactory
 #include <dxgi1_4.h>                    // DXGIFactory4
 #include <execution>
 #include <fp16.h>
 #include <iostream>
 #include <string>
+
+#include <directxtk12/DDSTextureLoader.h>
+#include <directxtk12/ResourceUploadBatch.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -434,7 +436,7 @@ namespace hlab {
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-        Graphics::RegisterSrvCbvHeap(device, texture, srvDesc, srvHandle);
+        DGraphics::RegisterSrvHeap(device, texture, &srvDesc, srvHandle);
 
         ThrowIfFailed(commandList->Close());
         ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
@@ -860,33 +862,55 @@ namespace hlab {
     }
 
     void D3D12Utils::CreateDDSTexture(
-        ComPtr<ID3D11Device>& device, const wstring&& filename, bool isCubeMap,
-        ComPtr<ID3D11ShaderResourceView>& textureResourceView) {
+        ComPtr<ID3D12Device>& device, ComPtr<ID3D12CommandQueue> commandQueue, 
+        const wstring&& filename, bool isCubeMap,
+        CD3DX12_GPU_DESCRIPTOR_HANDLE& textureResourceView) {
 
         ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, filename = std::move(filename), &isCubeMap, &textureResourceView]() {
-            return CreateDDSTextureImpl(device, std::move(filename), isCubeMap, textureResourceView); };
+        auto func = [&device, &commandQueue,filename = std::move(filename), &isCubeMap, &textureResourceView]() {
+            return CreateDDSTextureImpl(device, commandQueue, std::move(filename), isCubeMap, textureResourceView); };
         std::cout << "CreateDDSTexture" << std::endl;
         tPool.EnqueueRenderJob(func);
     }
 
     void D3D12Utils::CreateDDSTextureImpl(
-        ComPtr<ID3D11Device>& device, const wstring&& filename, bool isCubeMap,
-        ComPtr<ID3D11ShaderResourceView>& textureResourceView) {
-        std::cout << "CreateDDSTextureImpl" << std::endl;
-        ComPtr<ID3D11Texture2D> texture;
+        ComPtr<ID3D12Device>& device, ComPtr<ID3D12CommandQueue> commandQueue, const wstring&& filename, bool isCubeMap,
+        CD3DX12_GPU_DESCRIPTOR_HANDLE& textureResourceView) {
+        
+        // Create a ResourceUploadBatch for handling resource uploads
+        ResourceUploadBatch uploadBatch(device.Get());
+        uploadBatch.Begin();
 
-        UINT miscFlags = 0;
-        if (isCubeMap) {
-            miscFlags |= D3D11_RESOURCE_MISC_TEXTURECUBE;
+        // Resource for the texture
+        ComPtr<ID3D12Resource> texture;
+
+        // Load the texture using DirectXTK's CreateDDSTextureFromFile
+        ThrowIfFailed(CreateDDSTextureFromFile(
+            device.Get(), uploadBatch, filename.c_str(), texture.ReleaseAndGetAddressOf()));
+
+        // End the upload batch and wait for completion
+        auto uploadFinished = uploadBatch.End(commandQueue.Get());
+        uploadFinished.wait();
+
+        // Describe and create a SRV (Shader Resource View)
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = texture->GetDesc().Format;
+
+        if (texture->GetDesc().DepthOrArraySize == 6 && isCubeMap) {
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+            srvDesc.TextureCube.MostDetailedMip = 0;
+            srvDesc.TextureCube.MipLevels = texture->GetDesc().MipLevels;
+            srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
         }
+        else {
+            srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+            srvDesc.Texture2D.MostDetailedMip = 0;
+            srvDesc.Texture2D.MipLevels = texture->GetDesc().MipLevels;
+            srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+        }
+        DGraphics::RegisterSrvHeap(device, texture, &srvDesc, textureResourceView);
 
-        // https://github.com/microsoft/DirectXTK/wiki/DDSTextureLoader
-        ThrowIfFailed(CreateDDSTextureFromFileEx(
-            device.Get(), filename.c_str(), 0, D3D11_USAGE_DEFAULT,
-            D3D11_BIND_SHADER_RESOURCE, 0, miscFlags, DDS_LOADER_FLAGS(false),
-            (ID3D11Resource**)texture.GetAddressOf(),
-            textureResourceView.GetAddressOf(), NULL));
     }
 
     void D3D12Utils::WriteToPngFile(ComPtr<ID3D11Device>& device,

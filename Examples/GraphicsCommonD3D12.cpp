@@ -210,17 +210,15 @@ void DGraphics::InitRootSignature(ComPtr<ID3D12Device>& device)
     ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 3, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
 
     vector<CD3DX12_ROOT_PARAMETER1> rootParameters;
-    rootParameters.resize(1);
-    rootParameters[0].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-    rootParameters[1].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-    rootParameters[2].InitAsDescriptorTable(1, &ranges[2], D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters.resize(2);
+    rootParameters[0].InitAsDescriptorTable(_countof(ranges), ranges, D3D12_SHADER_VISIBILITY_ALL);
+
 
     vector<CD3DX12_DESCRIPTOR_RANGE1> sampleRanges(sampDescs.size());
     for (size_t i = 0; i < sampDescs.size(); ++i) {
         sampleRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, i);  // 각 샘플러를 하나씩 할당
     }
-    vector<CD3DX12_ROOT_PARAMETER1> rootParams(1);
-    rootParams[3].InitAsDescriptorTable(static_cast<UINT>(sampleRanges.size()), sampleRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
+    rootParameters[1].InitAsDescriptorTable(static_cast<UINT>(sampleRanges.size()), sampleRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
 
     D3D12Utils::CreateRootSignature(device, defaultRootSignature, rootParameters);
 }
@@ -257,19 +255,24 @@ void DGraphics::InitPipelineStates(ComPtr<ID3D12Device>& device)
 }
 
 void DGraphics::RegisterSrvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
-    const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle)
+    const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvCpuHandle,
+    CD3DX12_GPU_DESCRIPTOR_HANDLE& srvGPUHandle)
 {
     device->CreateShaderResourceView(resource.Get(), srvDesc, cpuSrvCbvHandle);
+    srvCpuHandle = cpuSrvCbvHandle;
+    srvGPUHandle = gpuSrvCbvHandle;
+
     cpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
-    //gpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
+    gpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
 }
 void DGraphics::RegisterCBVHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
     const D3D12_CONSTANT_BUFFER_VIEW_DESC* cbvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& cbvCPUHandle,
     CD3DX12_GPU_DESCRIPTOR_HANDLE& cbvGPUHandle)
 {
-
     device->CreateConstantBufferView(cbvDesc, cbvCPUHandle);
+    cbvCPUHandle = cpuSrvCbvHandle;
     cbvGPUHandle = gpuSrvCbvHandle;
+
     cpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
     gpuSrvCbvHandle.Offset(1, srvCbvDescriptorSize);
 }

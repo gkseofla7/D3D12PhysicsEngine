@@ -52,7 +52,8 @@ void InitRootSignature(ComPtr<ID3D12Device>& device);
 void InitPipelineStates(ComPtr<ID3D12Device>& device);
 
 void RegisterSrvHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource
-	, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle);
+	, const D3D12_SHADER_RESOURCE_VIEW_DESC* srvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& srvHandle,
+	CD3DX12_GPU_DESCRIPTOR_HANDLE& cbvGPUHandle);
 void RegisterCBVHeap(ComPtr<ID3D12Device>& device, const ComPtr<ID3D12Resource>& resource,
 	const D3D12_CONSTANT_BUFFER_VIEW_DESC* cbvDesc, CD3DX12_CPU_DESCRIPTOR_HANDLE& cbvCPUHandle,
 	CD3DX12_GPU_DESCRIPTOR_HANDLE& cbvGPUHandle);

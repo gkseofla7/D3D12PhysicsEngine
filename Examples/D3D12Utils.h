@@ -353,12 +353,12 @@ class D3D12Utils {
                        ComPtr<ID3D11Texture2D> &texture,
                        ComPtr<ID3D11ShaderResourceView> &textureResourceView);
 
-    static void CreateDDSTexture(ComPtr<ID3D11Device> &device,
+    static void CreateDDSTexture(ComPtr<ID3D12Device> &device, ComPtr<ID3D12CommandQueue> m_commandQueue,
                                  const wstring&&filename, const bool isCubeMap,
-                                 ComPtr<ID3D11ShaderResourceView> &texResView);
-    static void CreateDDSTextureImpl(ComPtr<ID3D11Device>& device,
+        CD3DX12_GPU_DESCRIPTOR_HANDLE& texResView);
+    static void CreateDDSTextureImpl(ComPtr<ID3D12Device>& device, ComPtr<ID3D12CommandQueue> m_commandQueue,
         const wstring&& filename, const bool isCubeMap,
-        ComPtr<ID3D11ShaderResourceView>& texResView);
+        CD3DX12_GPU_DESCRIPTOR_HANDLE& texResView);
 
     static ComPtr<ID3D11Texture2D>
     CreateStagingTexture(ComPtr<ID3D11Device> &device,

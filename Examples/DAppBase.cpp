@@ -45,7 +45,6 @@ int DAppBase::Run() {
             // TODO 그리기 작업 마무리
             SetMainViewport();
 
-            m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(),
                 NULL);
 
             // GUI 렌더링
@@ -165,36 +164,15 @@ void DAppBase::LoadPipeline()
 
     ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
 
-    // Describe and create the swap chain.
-    DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
-    swapChainDesc.BufferCount = FrameCount;
-    swapChainDesc.Width = m_screenWidth;
-    swapChainDesc.Height = m_screenHeight;
-    swapChainDesc.Format = m_backBufferFormat;
-    swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-    swapChainDesc.SampleDesc.Count = 1;
-
-    ComPtr<IDXGISwapChain1> swapChain;
-    ThrowIfFailed(factory->CreateSwapChainForHwnd(
-        m_commandQueue.Get(),        // Swap chain needs the queue so that it can force a flush on it.
-        m_mainWindow,
-        &swapChainDesc,
-        nullptr,
-        nullptr,
-        &swapChain
-    ));
-
-    // This sample does not support fullscreen transitions.
-    ThrowIfFailed(factory->MakeWindowAssociation(m_mainWindow, DXGI_MWA_NO_ALT_ENTER));
-    // DNode : farmeIndex는 현재 그려야될곳? 보여지는 값이아닌
-    ThrowIfFailed(swapChain.As(&m_swapChain));
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+    m_swapChain.Init(m_mainWindow, factory, m_commandQueue, m_screenWidth, m_screenHeight);
 
     // Create Shader
     // Create descriptor heaps.
 
     ThrowIfFailed(m_device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_commandAllocator)));
+    m_device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_commandAllocator.Get(), nullptr, IID_PPV_ARGS(&m_commandList));
+    m_commandList->Close();
+
 
     m_screenViewport.TopLeftX = 0.0f;
     m_screenViewport.TopLeftY = 0.0f;
@@ -208,37 +186,55 @@ void DAppBase::LoadPipeline()
 }
 
 void DAppBase::Render() {
-    // Note : 사실 렌더링을 렌더스레드한테 요청한다면
-    // 딱히 기다리면서 할 일이 없으니 그냥 메인 스레드에서 돌리도록한다.
+    m_commandAllocator->Reset();
+    m_commandList->Reset(m_commandAllocator.Get(), nullptr);
+
+    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
+    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+        m_renderTargets[m_frameIndex].Get(),
+        D3D12_RESOURCE_STATE_PRESENT, // 화면 출력
+        D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
+
+    m_commandList->ResourceBarrier(1, &barrier);
+
+        // 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
+    m_descriptorHeap.SetSRV(m_device, m_envSRV, SRV_REGISTER::t10);
+    m_descriptorHeap.SetSRV(m_device, m_specularSRV, SRV_REGISTER::t11);
+    m_descriptorHeap.SetSRV(m_device, m_irradianceSRV, SRV_REGISTER::t12);
+    m_descriptorHeap.SetSRV(m_device, m_brdfSRV, SRV_REGISTER::t13);
+    m_descriptorHeap.CommitTable(m_commandList);
 
     SetMainViewport();
 
-    // 공통으로 사용하는 샘플러들 설정
-    m_context->VSSetSamplers(0, UINT(Graphics::sampleStates.size()),
-        Graphics::sampleStates.data());
-    m_context->PSSetSamplers(0, UINT(Graphics::sampleStates.size()),
-        Graphics::sampleStates.data());
 
-    // 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
-    vector<ID3D11ShaderResourceView*> commonSRVs = {
-        m_envSRV.Get(), m_specularSRV.Get(), m_irradianceSRV.Get(),
-        m_brdfSRV.Get() };
-    m_context->PSSetShaderResources(10, UINT(commonSRVs.size()),
-        commonSRVs.data());
+    // Render
 
-    RenderDepthOnly();
 
-    RenderShadowMaps();
+    {
+        INT8 backIndex = m_swapChain->GetCurrentBackBufferIndex();
+        D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+            m_renderTargets[backIndex].Get(),
+            D3D12_RESOURCE_STATE_RENDER_TARGET, // 화면 출력
+            D3D12_RESOURCE_STATE_PRESENT); // 외주 결과물
+    }
+    m_commandList->ResourceBarrier(1, &barrier);
+    m_commandList->Close();
 
-    RenderOpaqueObjects();
+    // 커맨드 리스트 수행
+    ID3D12CommandList* cmdListArr[] = { m_commandList.Get() };
+    m_commandQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
+    m_swapChain->Present(0, 0);
 
-    RenderMirror();
+    WaitSync();
+
+    _swapChain->SwapIndex();
 }
 
 void DAppBase::LoadAssets()
 {
     DGraphics::InitCommonStates(m_device);
 
+    m_descriptorHeap.Init(m_device);
     // Create temporary command list for initial GPU setup.
     ComPtr<ID3D12GraphicsCommandList> commandList;
     // DNote pipelineState nullptr 셋팅 확인
@@ -287,6 +283,22 @@ void DAppBase::LoadAssets()
     }
 }
 
+void DAppBase::InitCubemaps(wstring basePath, wstring envFilename,
+    wstring specularFilename, wstring irradianceFilename,
+    wstring brdfFilename)
+{
+    // BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
+    D3D12Utils::CreateDDSTexture(m_device, m_commandQueue,(basePath + envFilename).c_str(),
+        true, m_envSRV);
+    D3D12Utils::CreateDDSTexture(
+        m_device, m_commandQueue,(basePath + specularFilename).c_str(), true, m_specularSRV);
+    D3D12Utils::CreateDDSTexture(m_device, m_commandQueue,
+        (basePath + irradianceFilename).c_str(), true,
+        m_irradianceSRV);
+    D3D12Utils::CreateDDSTexture(m_device, m_commandQueue, (basePath + brdfFilename).c_str(),
+        false, m_brdfSRV);
+}
+
 void DAppBase::SetMainViewport() {
 
     // 뷰포트 초기화
@@ -317,14 +329,21 @@ void DAppBase::SetCommonPipelineState(ID3D12GraphicsCommandList* pCommandList)
 {
     pCommandList->SetGraphicsRootSignature(DGraphics::defaultRootSignature.Get());
 
-    ID3D12DescriptorHeap* ppHeaps[] = { DGraphics::srvCbvHeap.Get(),  DGraphics::rtvHeap.Get(),
+    ID3D12DescriptorHeap* ppHeaps[] = { DGraphics::srvCbvHeap.Get(),
          DGraphics::samplerHeap.Get()};
     pCommandList->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
 
     pCommandList->RSSetViewports(1, &m_screenViewport);
     pCommandList->RSSetScissorRects(1, &m_scissorRect);
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // SRV 공용 텍스처
     pCommandList->SetGraphicsRootDescriptorTable(0, m_globalConstBuffer.m_gpuHandle);
+    pCommandList->SetGraphicsRootDescriptorTable(1, m_globalConstBuffer.m_gpuHandle);
+    // CBV
+    pCommandList->SetGraphicsRootDescriptorTable(2, m_globalConstBuffer.m_gpuHandle);
+    // Sampler
+    pCommandList->SetGraphicsRootDescriptorTable(3, DGraphics::samplerHeap->GetGPUDescriptorHandleForHeapStart());
+
     pCommandList->OMSetStencilRef(0);// DNote : 확인 필요
 }
 
