@@ -436,7 +436,7 @@ namespace hlab {
         srvDesc.Format = textureDesc.Format;
         srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
         srvDesc.Texture2D.MipLevels = textureDesc.MipLevels;
-        DGraphics::RegisterSrvHeap(device, texture, &srvDesc, srvHandle);
+        DGraphics::RegisterSrvHeap(texture, &srvDesc, srvHandle);
 
         ThrowIfFailed(commandList->Close());
         ID3D12CommandList* ppCommandLists[] = { commandList.Get() };
@@ -909,7 +909,7 @@ namespace hlab {
             srvDesc.Texture2D.MipLevels = texture->GetDesc().MipLevels;
             srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
         }
-        DGraphics::RegisterSrvHeap(device, texture, &srvDesc, textureResourceView);
+        DGraphics::RegisterSrvHeap(texture, &srvDesc, textureResourceView);
 
     }
 

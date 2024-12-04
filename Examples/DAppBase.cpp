@@ -6,6 +6,7 @@
 #include "Actor.h"
 #include "DaerimsEngineBase.h"
 #include "Object.h"
+#include "SwapChain.h"
 namespace hlab {
 void GetHardwareAdapter(
     IDXGIFactory1* pFactory,
@@ -45,16 +46,15 @@ int DAppBase::Run() {
             // TODO 그리기 작업 마무리
             SetMainViewport();
 
-                NULL);
 
             // GUI 렌더링
             ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), Graphics::commandList.Get());
 
             // GUI 렌더링 후에 Present() 호출
-            m_swapChain->Present(1, 0);
+            //m_swapChain->Present(1, 0);
 
-            threadPool.SetUsingMainThreadUsingRendering(false);
-            threadPool.cv_render_job_q_.notify_one();
+            //threadPool.SetUsingMainThreadUsingRendering(false);
+            //threadPool.cv_render_job_q_.notify_one();
         }
     }
 
@@ -164,7 +164,8 @@ void DAppBase::LoadPipeline()
 
     ThrowIfFailed(m_device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_commandQueue)));
 
-    m_swapChain.Init(m_mainWindow, factory, m_commandQueue, m_screenWidth, m_screenHeight);
+    m_swapChain = make_shared<SwapChain>();
+    m_swapChain->Init(m_mainWindow, factory, m_commandQueue, m_screenWidth, m_screenHeight);
 
     // Create Shader
     // Create descriptor heaps.
@@ -189,13 +190,6 @@ void DAppBase::Render() {
     m_commandAllocator->Reset();
     m_commandList->Reset(m_commandAllocator.Get(), nullptr);
 
-    m_frameIndex = m_swapChain->GetCurrentBackBufferIndex();
-    D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
-        m_renderTargets[m_frameIndex].Get(),
-        D3D12_RESOURCE_STATE_PRESENT, // 화면 출력
-        D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
-
-    m_commandList->ResourceBarrier(1, &barrier);
 
         // 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
     m_descriptorHeap.SetSRV(m_device, m_envSRV, SRV_REGISTER::t10);

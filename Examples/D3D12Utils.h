@@ -1,17 +1,6 @@
 #pragma once
-#include <d3d12.h>
-#include "d3dx12.h"
-#include <d3dcompiler.h>
-#include <d3d12.h>
-#include <dxgi1_6.h>
-#include <iostream>
-#include <memory>
-#include <string>
-#include <vector>
-#include <windows.h>
-#include <wrl/client.h> // ComPtr
-#include <unordered_map>
-#include "ThreadPool.h"
+#include "EnginePch.h"
+
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
 // Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만

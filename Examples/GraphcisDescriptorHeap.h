@@ -1,52 +1,7 @@
 #pragma once
 #include "D3D12Utils.h"
+#include "EngineDef.h"
 namespace hlab {
-
-
-enum class CBV_REGISTER : UINT8
-{
-	b0,
-	b1,
-	b2,
-	b3,
-	b4,
-
-	END
-};
-
-enum class SRV_REGISTER : UINT8
-{
-	t0 = static_cast<UINT8>(CBV_REGISTER::END),
-	t1,
-	t2,
-	t3,
-	t4,
-	t5,
-	t6,
-	t7,
-	t8,
-	t9,
-	t10,
-	t11,
-	t12,
-	t13,
-	t14,
-	t15,
-
-	END
-};
-
-enum class SAMPLE_REGISTER : UINT8
-{
-	s0,
-	s1,
-	s2,
-	s3,
-	s4,
-	s5,
-
-	END
-};
 
 // ************************
 // GraphicsDescriptorHeap

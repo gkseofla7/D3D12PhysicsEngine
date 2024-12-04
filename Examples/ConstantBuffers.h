@@ -167,7 +167,7 @@ public:
         CBVDesc.BufferLocation = m_globalConstsGPU->GetGPUVirtualAddress();
         const UINT constantBufferSize = sizeof(m_globalConstsCPU);
         CBVDesc.SizeInBytes = constantBufferSize;
-        Graphics::RegisterCBVHeap(device, m_gpu, CBVDesc, m_cpuHandle, m_gpuHandle);
+        Graphics::RegisterCBVHeap(m_gpu, CBVDesc, m_cpuHandle, m_gpuHandle);
 
     }
 

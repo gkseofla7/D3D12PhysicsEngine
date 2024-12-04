@@ -2,7 +2,6 @@
 #include "D3D12Utils.h"
 #include "GraphicsCommonD3D12.h"
 #include "ConstantBuffers.h"
-#include "SwapChain.h"
 
 #include <DirectXTexEXR.h> // EXR 형식 HDRI 읽기
 #include <algorithm>
@@ -41,6 +40,9 @@ using namespace DirectX;
 static const UINT FrameCount = 2;
 static const UINT NumContexts = 2;
 
+class GraphicsCommandQueue;
+class SwapChain;
+
 class DAppBase
 {
 public:
@@ -49,6 +51,11 @@ public:
 	void Init();
 	void Update(float dt);
 	void Render();
+
+public:
+	ComPtr<ID3D12Device> GetDevice() { return m_device; }
+	shared_ptr<GraphicsCommandQueue> GetGraphicsCmdQueue() { return m_graphcisCmdQueue; }
+	ComPtr<ID3D12Resource> GetRenderTarget(int Index) { return m_renderTargets[Index]; }
 private:
 	void LoadPipeline();
 	void LoadAssets();
@@ -67,12 +74,13 @@ private:
 private:
 // 그래픽스 관련
 	ComPtr<ID3D12Device> m_device;
-	SwapChain m_swapChain;
+	shared_ptr<SwapChain> m_swapChain;
 	ComPtr<ID3D12CommandQueue> m_commandQueue;
 	ComPtr<ID3D12GraphicsCommandList>	m_commandList;
 	ComPtr<ID3D12CommandAllocator> m_commandAllocator;
 	ComPtr<ID3D12Resource> m_renderTargets[FrameCount];
 	GraphicsDescriptorHeap m_descriptorHeap;
+	shared_ptr<GraphicsCommandQueue> m_graphcisCmdQueue;
 
 	DXGI_FORMAT m_backBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
 
@@ -95,7 +103,7 @@ private:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_brdfSRV;
 
 // 컨텐츠 관련
-	vector<shared_ptr<Object>> m_objectList;
+	//vector<shared_ptr<Object>> m_objectList;
 	Camera m_camera;
 	bool m_keyPressed[256] = {
 	false,
