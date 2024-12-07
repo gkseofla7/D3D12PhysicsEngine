@@ -221,7 +221,7 @@ void DAppBase::Render() {
 
     WaitSync();
 
-    _swapChain->SwapIndex();
+    m_swapChain->SwapIndex();
 }
 
 void DAppBase::LoadAssets()

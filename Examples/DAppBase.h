@@ -1,4 +1,5 @@
 #pragma once
+#include "D3D12Core/EnginePch.h"
 #include "D3D12Utils.h"
 #include "GraphicsCommonD3D12.h"
 #include "ConstantBuffers.h"
@@ -42,7 +43,7 @@ static const UINT NumContexts = 2;
 
 class GraphicsCommandQueue;
 class SwapChain;
-
+class RenderTargetGroup;
 class DAppBase
 {
 public:
@@ -71,6 +72,8 @@ private:
 	void UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 		const Matrix& viewRow, const Matrix& projRow,
 		const Matrix& refl = Matrix());
+
+	shared_ptr<RenderTargetGroup> GetRTGroup(RENDER_TARGET_GROUP_TYPE type) { return m_rtGroups[static_cast<uint8>(type)]; }
 private:
 // 그래픽스 관련
 	ComPtr<ID3D12Device> m_device;
@@ -101,6 +104,8 @@ private:
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_specularSRV;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_irradianceSRV;
 	CD3DX12_CPU_DESCRIPTOR_HANDLE m_brdfSRV;
+
+	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 
 // 컨텐츠 관련
 	//vector<shared_ptr<Object>> m_objectList;

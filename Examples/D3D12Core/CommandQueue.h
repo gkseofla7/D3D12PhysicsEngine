@@ -1,14 +1,9 @@
 #pragma once
-#include "D3D12Utils.h"
 #include "EnginePch.h"
-
-using Microsoft::WRL::ComPtr;
-
-// ************************
-// GraphicsCommandQueue
-// ************************
-namespace hlab {
 class SwapChain;
+class DescriptorHeap;
+
+namespace hlab {
 class GraphicsCommandQueue
 {
 public:
@@ -42,4 +37,3 @@ private:
 };
 
 }
-
