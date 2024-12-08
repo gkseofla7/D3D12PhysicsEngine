@@ -68,8 +68,6 @@ void GraphicsCommandQueue::RenderBegin()
 		D3D12_RESOURCE_STATE_PRESENT, // 화면 출력
 		D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
 
-	m_cmdList->SetGraphicsRootSignature(GRAPHICS_ROOT_SIGNATURE.Get());
-
 	GEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear();
 	GEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
 

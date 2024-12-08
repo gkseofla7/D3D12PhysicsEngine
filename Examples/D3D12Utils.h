@@ -1,5 +1,5 @@
 #pragma once
-#include "EnginePch.h"
+#include "D3D12Core/EnginePch.h"
 
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
@@ -22,19 +22,14 @@ struct ImageInfo
     DXGI_FORMAT pixelFormat;
 };
 
-inline void ThrowIfFailed(HRESULT hr) {
-    if (FAILED(hr)) {
-        throw std::exception();
-    }
-}
 
 class D3D12Utils {
   public:
       static void CreateVertexShader(
-          ComPtr<ID3D12Device>& device, wstring filename,
+          ComPtr<ID3D12Device> device, wstring filename,
           ComPtr<ID3DBlob>& vertexShader,
           const vector<D3D_SHADER_MACRO> shaderMacros = {/* Empty default */ });
-      static void CreatePixelShader(ComPtr<ID3D12Device>& device,
+      static void CreatePixelShader(ComPtr<ID3D12Device> device,
           const wstring& filename,
           ComPtr<ID3DBlob>& pixelShader);
       static void CreateRootSignature(ComPtr<ID3D12Device>& device,

@@ -4,6 +4,8 @@
 #include <d3dcompiler.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include "DirectXTex.h"
+#include "DirectXTex.inl"
 #include <iostream>
 #include <memory>
 #include <string>
@@ -79,7 +81,7 @@ enum
 	SWAP_CHAIN_BUFFER_COUNT = 2,
 	CBV_REGISTER_COUNT = CBV_REGISTER::END,
 	SRV_REGISTER_COUNT = static_cast<uint8>(SRV_REGISTER::END) - CBV_REGISTER_COUNT,
-	//CBV_SRV_REGISTER_COUNT = CBV_REGISTER_COUNT + SRV_REGISTER_COUNT,
+	CBV_SRV_REGISTER_COUNT = CBV_REGISTER_COUNT + SRV_REGISTER_COUNT,
 	//UAV_REGISTER_COUNT = static_cast<uint8>(UAV_REGISTER::END) - CBV_SRV_REGISTER_COUNT,
 	//TOTAL_REGISTER_COUNT = CBV_SRV_REGISTER_COUNT + UAV_REGISTER_COUNT
 	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END)
@@ -102,7 +104,9 @@ struct WindowInfo
 	bool	windowed; // 창모드 or 전체화면
 };
 
-#define DEVICE				GEngine->GetDevice()->GetDevice();
+#define DEVICE				GEngine->GetDevice()->GetDevice()
+#define ROOTSIGNATURE		GEngine->GetRootSignature()
+#define SHADER				GEngine->GetShader()
 #define GRAPHICS_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetGraphicsCmdList()
 #define RESOURCE_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetResourceCmdList()
 
@@ -116,4 +120,10 @@ using DirectX::SimpleMath::Vector4;
 
 extern std::unique_ptr<class Engine> GEngine;
 
+
+inline void ThrowIfFailed(HRESULT hr) {
+	if (FAILED(hr)) {
+		throw std::exception();
+	}
+}
 }

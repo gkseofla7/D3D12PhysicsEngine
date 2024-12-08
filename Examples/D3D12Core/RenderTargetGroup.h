@@ -2,7 +2,7 @@
 #include "Texture.h"
 
 namespace hlab {
-	enum class RENDER_TARGET_GROUP_TYPE : uint8
+enum class RENDER_TARGET_GROUP_TYPE : uint8
 {
 	SWAP_CHAIN, // BACK_BUFFER, FRONT_BUFFER
 	SHADOW, // SHADOW

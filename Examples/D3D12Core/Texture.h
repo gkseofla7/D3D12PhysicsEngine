@@ -8,7 +8,7 @@ public:
 	Texture();
 	virtual ~Texture();
 
-	void Load(const wstring& path);
+	void Load(const wstring& path, bool isCubeMap = false);
 
 public:
 	void Create(DXGI_FORMAT format, uint32 width, uint32 height,

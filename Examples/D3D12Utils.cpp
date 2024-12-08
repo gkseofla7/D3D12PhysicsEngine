@@ -41,7 +41,7 @@ namespace hlab {
     }
 
     void D3D12Utils::CreateVertexShader(
-        ComPtr<ID3D12Device>& device, wstring filename,
+        ComPtr<ID3D12Device> device, wstring filename,
         ComPtr<ID3DBlob>& vertexShader,
         const vector<D3D_SHADER_MACRO> shaderMacros)
     {
@@ -59,7 +59,7 @@ namespace hlab {
         CheckResult(hr, errorBlob.Get());
     }
 
-    void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device>& device,
+    void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device> device,
         const wstring& filename,
         ComPtr<ID3DBlob>& pixelShader)
     {
@@ -78,7 +78,7 @@ namespace hlab {
         CheckResult(hr, errorBlob.Get());
     }
 
-    void D3D12Utils::CreateRootSignature(ComPtr<ID3D12Device>& device,
+    void D3D12Utils::CreateRootSignature(ComPtr<ID3D12Device> device,
         ComPtr<ID3D12RootSignature>& rootSignature, vector<CD3DX12_ROOT_PARAMETER1>& rootParams)
     {
         D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};

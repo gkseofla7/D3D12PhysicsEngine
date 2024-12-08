@@ -1,8 +1,7 @@
 #include "Texture.h"
-#include "DirectXTex.h"
-#include "DirectXTex.inl"
 #include "Engine.h"
 #include "CommandQueue.h"
+#include "Device.h"
 //#include "Engine.h"
 namespace hlab {
 Texture::Texture()
@@ -15,7 +14,7 @@ Texture::~Texture()
 
 }
 
-void Texture::Load(const wstring& path)
+void Texture::Load(const wstring& path, bool isCubeMap)
 {
 	// 파일 확장자 얻기
 	wstring ext = fs::path(path).extension();
@@ -74,6 +73,8 @@ void Texture::Load(const wstring& path)
 	srvHeapDesc.NumDescriptors = 1;
 	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+
+
 	DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
 
 	m_srvHeapBegin = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -83,6 +84,18 @@ void Texture::Load(const wstring& path)
 	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Texture2D.MipLevels = 1;
+	if (m_tex2D->GetDesc().DepthOrArraySize == 6 && isCubeMap) {
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+		srvDesc.TextureCube.MostDetailedMip = 0;
+		srvDesc.TextureCube.MipLevels = m_tex2D->GetDesc().MipLevels;
+		srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
+	}
+	else {
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = m_tex2D->GetDesc().MipLevels;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	}
 	DEVICE->CreateShaderResourceView(m_tex2D.Get(), &srvDesc, m_srvHeapBegin);
 }
 

@@ -1,9 +1,8 @@
 #pragma once
-#pragma once
 
 #include "ConstantBuffers.h"
-#include "D3D12Utils.h"
-#include "GraphicsCommonD3D12.h"
+#include "D3D11Utils.h"
+#include "GraphicsCommon.h"
 #include "Mesh.h"
 #include "MeshData.h"
 #include "StructuredBuffer.h"
@@ -20,17 +19,21 @@ namespace hlab {
     using std::string;
     using std::vector;
 
-    class DModel2 {
+    class DModel {
     public:
-        DModel2() {}
-        DModel2(ComPtr<ID3D12Device>& device, const string& basePath, const string& filename);
-        DModel2(ComPtr<ID3D12Device>& device, const string& meshKey);
-        virtual void Initialize(ComPtr<ID3D12Device>& device,
+        DModel() {}
+        DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+            const string& basePath, const string& filename);
+        DModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
+            const string& meshKey);
+        virtual void Initialize(ComPtr<ID3D11Device>& device,
+            ComPtr<ID3D11DeviceContext>& context,
             const string& basePath,
             const string& filename);
-        void Initialize(ComPtr<ID3D12Device>& device,
+        void Initialize(ComPtr<ID3D11Device>& device,
+            ComPtr<ID3D11DeviceContext>& context,
             const string& meshKey);
-        virtual void InitMeshBuffers(ComPtr<ID3D12Device>& device,
+        virtual void InitMeshBuffers(ComPtr<ID3D11Device>& device,
             const MeshData& meshData,
             shared_ptr<Mesh>& newMesh);
         void Tick(float dt);
@@ -55,11 +58,12 @@ namespace hlab {
         virtual void RenderWireBoundingBox(ComPtr<ID3D11DeviceContext>& context);
         virtual void RenderWireBoundingSphere(ComPtr<ID3D11DeviceContext>& context);
         void UpdateWorldRow(const Matrix& worldRow);
-
+       
 
         void SetScale(float InScale) { m_scale = InScale; }
 
         bool IsMeshInitialized() { return m_initializeMesh; }
+
     private:
         bool LoadMesh();
     public:
@@ -73,8 +77,8 @@ namespace hlab {
 
         vector<Mesh>* m_meshes;
 
-        DConstantBuffer<MeshConstants> m_meshConsts;
-        DConstantBuffer<MaterialConstants> m_materialConsts;
+        ConstantBuffer<MeshConstants> m_meshConsts;
+        ConstantBuffer<MaterialConstants> m_materialConsts;
 
         DirectX::BoundingBox m_boundingBox;
         DirectX::BoundingSphere m_boundingSphere;
