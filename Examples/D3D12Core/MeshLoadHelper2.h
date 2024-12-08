@@ -35,7 +35,7 @@ struct MeshBlock
 	ELoadType MeshLoadType = ELoadType::NotLoaded;
 
 };
-class MeshLoadHelper
+class MeshLoadHelper2
 {
 public:
 	static void LoadAllUnloadedModel();

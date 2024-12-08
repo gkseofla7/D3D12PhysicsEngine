@@ -2,13 +2,8 @@
 #include "EnginePch.h"
 #include "Mesh.h"
 #include "../MeshData.h"
-
 #include "ConstantBuffer.h"
-
 #include <directxtk/SimpleMath.h>
-
-// Âü°í: DirectX-Graphics-Sampels
-// https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Model/Model.h
 
 namespace hlab {
 
@@ -29,10 +24,8 @@ public:
     virtual void InitMeshBuffers(const MeshData& meshData,
         shared_ptr<DMesh>& newMesh);
     void Tick(float dt);
-    void UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context);
-    virtual void UpdateAnimation(ComPtr<ID3D11Device>& device,
-        ComPtr<ID3D11DeviceContext>& context,
-        string clipId, int frame, int type = 0) {}
+    void UpdateConstantBuffers();
+    virtual void UpdateAnimation(string clipId, int frame, int type = 0) {}
     virtual void UpdatePosition(const Vector3& inDelta);
     void SetWorldPosition(const Vector3& InPos);
     virtual void UpdateRotation(const Matrix& inDelta);
@@ -45,8 +38,7 @@ public:
     //virtual GraphicsPSO2& GetReflectPSO(const bool wired);
 
     virtual void Render();
-    virtual void UpdateAnimation(ComPtr<ID3D11DeviceContext>& context,
-        string clipId, int frame, int type);
+    virtual void UpdateAnimation(string clipId, int frame, int type);
     void UpdateWorldRow(const Matrix& worldRow);
 
 
@@ -90,8 +82,6 @@ private:
     shared_ptr<DMesh> m_boundingSphereMesh;
 
     float m_scale = 1.0f;
-    bool m_initializeBoundingVolume = false;
-
     Vector3 m_direction;
 };
 

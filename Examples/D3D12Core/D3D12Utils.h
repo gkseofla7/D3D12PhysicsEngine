@@ -74,52 +74,6 @@ class D3D12Utils {
         vertexBufferView.SizeInBytes = bufferSize; // 버퍼의 크기	
     }
 
-    // Instance
-    template <typename T_INSTANCE>
-    static void CreateInstanceBuffer(ComPtr<ID3D12Device>& device,
-        const vector<T_INSTANCE>& instances,
-        ComPtr<ID3D11Buffer>& instanceBuffer) {
-
-        ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, instances, &instanceBuffer]() {
-            return CreateInstanceBufferImpl(device, instances, instanceBuffer); };
-        tPool.EnqueueRenderJob(func);
-    }
-    template <typename T_INSTANCE>
-    static void CreateInstanceBuffer(ComPtr<ID3D12Device>& device,
-        const vector<T_INSTANCE>&& instances,
-        ComPtr<ID3D11Buffer>& instanceBuffer) {
-
-        ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, instances = std::move(instances), &instanceBuffer]() {
-            return CreateInstanceBufferImpl(device, instances, instanceBuffer); };
-        tPool.EnqueueRenderJob(func);
-    }
-
-    template <typename T_INSTANCE>
-    static void CreateInstanceBufferImpl(ComPtr<ID3D12Device> &device,
-                                     const vector<T_INSTANCE> &instances,
-                                     ComPtr<ID3D11Buffer> &instanceBuffer) {
-
-        // 기본적으로 VertexBuffer와 비슷합니다.
-        D3D11_BUFFER_DESC bufferDesc;
-        ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-        bufferDesc.Usage = D3D11_USAGE_DYNAMIC; // <- 애니메이션에 사용
-        bufferDesc.ByteWidth = UINT(sizeof(T_INSTANCE) * instances.size());
-        bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; // <- CPU에서 복사
-        bufferDesc.StructureByteStride = sizeof(T_INSTANCE);
-
-        D3D11_SUBRESOURCE_DATA vertexBufferData = {
-            0}; // MS 예제에서 초기화하는 방식
-        vertexBufferData.pSysMem = instances.data();
-        vertexBufferData.SysMemPitch = 0;
-        vertexBufferData.SysMemSlicePitch = 0;
-
-        ThrowIfFailed(device->CreateBuffer(&bufferDesc, &vertexBufferData,
-                                           instanceBuffer.GetAddressOf()));
-    }
-
     template <typename T_CONSTANT>
     static void CreateConstBuffer(ComPtr<ID3D12Device>& device,
         const T_CONSTANT& constantBufferData,
@@ -208,15 +162,15 @@ class D3D12Utils {
     }
 
     // Texture
-    static void CreateTexture(ComPtr<ID3D12Device> &device,
+    static void CreateTexture(ComPtr<ID3D12Device> device,
                   const std::string filename, const bool usSRGB,
                     ComPtr<ID3D12Resource>&texture);
 
-    static void CreateTexture(ComPtr<ID3D12Device>& device, const std::string albedoFilename,
+    static void CreateTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
         const std::string opacityFilename,const bool usSRGB, ComPtr<ID3D12Resource>& texture);
   
     static void CreateMetallicRoughnessTexture(
-        ComPtr<ID3D12Device>& device, const std::string metallicFiilename,
+        ComPtr<ID3D12Device> device, const std::string metallicFiilename,
         const std::string roughnessFilename, ComPtr<ID3D12Resource>& texture);
 
 
@@ -226,17 +180,8 @@ class D3D12Utils {
 
 
     static void CreateDDSTexture(ComPtr<ID3D12Device> &device, ComPtr<ID3D12CommandQueue> m_commandQueue,
-                                 const wstring&&filename, const bool isCubeMap,
-        CD3DX12_GPU_DESCRIPTOR_HANDLE& texResView);
-    static void CreateDDSTextureImpl(ComPtr<ID3D12Device>& device, ComPtr<ID3D12CommandQueue> m_commandQueue,
-        const wstring&& filename, const bool isCubeMap,
-        CD3DX12_GPU_DESCRIPTOR_HANDLE& texResView);
+                                 const wstring&&filename, const bool isCubeMap);
 
-
-    static void WriteToPngFile(ComPtr<ID3D12Device> &device,
-                               ComPtr<ID3D11DeviceContext> &context,
-                               ComPtr<ID3D11Texture2D> &textureToWrite,
-                               const std::string filename);
 
     static size_t GetPixelSize(DXGI_FORMAT pixelFormat);
 private:

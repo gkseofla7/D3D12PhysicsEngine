@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include "EnginePch.h"
+#include "Texture.h"
 namespace hlab {
 
 class Texture;
@@ -8,14 +9,14 @@ struct DMesh {
     ComPtr<ID3D12Resource> indexBuffer;
     
     D3D12_VERTEX_BUFFER_VIEW	vertexBufferView;
-    D3D12_INDEX_BUFFER_VIEW	instanceBufferView;
+    D3D12_INDEX_BUFFER_VIEW	indexBufferView;
 
-    shared_ptr<Texture> albedoTexture;
-    shared_ptr<Texture> emissiveTexture;
-    shared_ptr<Texture> normalTexture;
-    shared_ptr<Texture> heightTexture;
-    shared_ptr<Texture> aoTexture;
-    shared_ptr<Texture> metallicRoughnessTexture;
+    Texture albedoTexture;
+    Texture emissiveTexture;
+    Texture normalTexture;
+    Texture heightTexture;
+    Texture aoTexture;
+    Texture metallicRoughnessTexture;
 
 
     UINT indexCount = 0;

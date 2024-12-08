@@ -1,10 +1,11 @@
 #include "DModel2.h"
 #include "D3D12Utils.h"
 //#include "GeometryGenerator.h"
-#include "../MeshLoadHelper.h"
+#include "MeshLoadHelper2.h"
 #include "Engine.h"
 #include "Device.h"
 #include "CommandQueue.h"
+#include "MeshLoadHelper2.h"
 #include <filesystem>
 
 namespace hlab {
@@ -29,7 +30,7 @@ void DModel2::InitMeshBuffers(const MeshData& meshData,
     newMesh->vertexCount = UINT(meshData.vertices.size());
     newMesh->stride = UINT(sizeof(Vertex));
     D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
-        newMesh->indexBuffer, newMesh->instanceBufferView);
+        newMesh->indexBuffer, newMesh->indexBufferView);
 }
 
 void DModel2::Initialize(const std::string& basePath,
@@ -43,19 +44,21 @@ void DModel2::Initialize(const std::string& basePath,
     m_meshConsts.Init(CBV_REGISTER::b1, FRAMEBUFFER_COUNT);
     m_materialConsts.Init(CBV_REGISTER::b2, FRAMEBUFFER_COUNT);
 
-    if (MeshLoadHelper::LoadModelData(basePath, filename))
+    if (MeshLoadHelper2::LoadModelData(basePath, filename))
     {
-        MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
+        MeshLoadHelper2::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
     }
 }
-void DModel2::Initialize(const string& meshKey) {
+void DModel2::Initialize(const string& meshKey) 
+{
     m_meshKey = meshKey;
 
     m_meshConsts.GetCpu().world = Matrix();
     m_meshConsts.Init(CBV_REGISTER::b1, FRAMEBUFFER_COUNT);
     m_materialConsts.Init(CBV_REGISTER::b2, FRAMEBUFFER_COUNT);
 }
-void DModel2::UpdateConstantBuffers(ComPtr<ID3D11DeviceContext>& context) {
+void DModel2::UpdateConstantBuffers() 
+{
     if (m_initializeMesh == false)
     {
         return;
@@ -130,15 +133,15 @@ void DModel2::Render() {
             m_meshConsts.PushGraphicsData();
             m_materialConsts.PushGraphicsData();
 
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture->GetSRVHandle(), SRV_REGISTER::t1);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture->GetSRVHandle(), SRV_REGISTER::t2);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture->GetSRVHandle(), SRV_REGISTER::t3);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture->GetSRVHandle(), SRV_REGISTER::t4);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture->GetSRVHandle(), SRV_REGISTER::t5);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture.GetSRVHandle(), SRV_REGISTER::t0);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture.GetSRVHandle(), SRV_REGISTER::t1);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture.GetSRVHandle(), SRV_REGISTER::t2);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture.GetSRVHandle(), SRV_REGISTER::t3);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture.GetSRVHandle(), SRV_REGISTER::t4);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture.GetSRVHandle(), SRV_REGISTER::t5);
 
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
-            GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.instanceBufferView);
+            GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
             GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);
 
             GEngine->GetGraphicsDescHeap()->CommitTable();
@@ -147,8 +150,7 @@ void DModel2::Render() {
     }
 }
 
-void DModel2::UpdateAnimation(ComPtr<ID3D11DeviceContext>& context, string clipId,
-    int frame, int type = 0) {
+void DModel2::UpdateAnimation(string clipId, int frame, int type = 0) {
     // class skinnedMeshModel¿¡¼­ override
     cout << "Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, "
         "int clipId, int frame) was not implemented."
@@ -185,10 +187,10 @@ bool DModel2::LoadMesh()
         m_meshKey = m_basePath + m_filename;
     }
 
-    if (m_initializeMesh = MeshLoadHelper::GetMesh(m_meshKey, m_meshes))
+    if (m_initializeMesh = MeshLoadHelper2::GetMesh(m_meshKey, m_meshes))
     {
-        MeshLoadHelper::GetBoundingMesh(m_meshKey, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
-        MeshLoadHelper::GetMaterial(m_meshKey, m_materialConsts.GetCpu());
+        MeshLoadHelper2::GetBoundingMesh(m_meshKey, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
+        MeshLoadHelper2::GetMaterial(m_meshKey, m_materialConsts.GetCpu());
 
         //m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
         //m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();

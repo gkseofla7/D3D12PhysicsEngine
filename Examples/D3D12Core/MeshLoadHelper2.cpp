@@ -1,18 +1,15 @@
 #include "MeshLoadHelper2.h"
-#include "Actor.h"
-
 #include "Engine.h"
 #include "Device.h"
 #include "D3D12Utils.h"
 #include "../GeometryGenerator.h"
-#include "ConstantBuffers.h"
 #include "../ThreadPool.h"
 #include <filesystem>
 
 namespace hlab {
     using namespace DirectX;
-    map<string, MeshBlock> MeshLoadHelper::MeshMap;
-    std::mutex MeshLoadHelper::m_mtx;
+    map<string, MeshBlock> MeshLoadHelper2::MeshMap;
+    std::mutex MeshLoadHelper2::m_mtx;
     BoundingBox GetBoundingBoxFromVertices(const vector<hlab::Vertex>& vertices) {
 
         if (vertices.size() == 0)
@@ -59,7 +56,7 @@ AnimationData ReadAnimationFromFile(string path, string name)
 	return ani;
 }
 
-void MeshLoadHelper::LoadAllUnloadedModel()
+void MeshLoadHelper2::LoadAllUnloadedModel()
 {
     for (auto& Pair : MeshMap)
     {
@@ -74,7 +71,7 @@ void MeshLoadHelper::LoadAllUnloadedModel()
         } 
     }
 }
-bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
+bool MeshLoadHelper2::LoadModelData( const string& inPath, const string& inName)
 {
 	string key = inPath + inName;
 	if (MeshMap.find(key) == MeshMap.end())
@@ -96,12 +93,12 @@ bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
 	
     return MeshMap[key].MeshDataLoadType == ELoadType::Loaded;
 }
-bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
+bool MeshLoadHelper2::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
 {
     string key = inPath + inName;
     return GetMaterial(key, inName, InConstants);
 }
-bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
+bool MeshLoadHelper2::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
 {
     if (MeshMap.find(InMeshKey) == MeshMap.end())
     {
@@ -119,10 +116,10 @@ bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InC
     InConstants.useRoughnessMap = MeshMap[InMeshKey].useRoughnessMap;
     return true;
 }
-void MeshLoadHelper::LoadModel(const string& key)
+void MeshLoadHelper2::LoadModel(const string& key)
 {
     {
-        std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
+        std::lock_guard<std::mutex> lock(MeshLoadHelper2::m_mtx);
 
         if (MeshMap.find(key) == MeshMap.end())
         {
@@ -173,7 +170,7 @@ void MeshLoadHelper::LoadModel(const string& key)
             newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
             newMesh.stride = UINT(sizeof(SkinnedVertex));
             D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
-                newMesh.indexBuffer, newMesh.instanceBufferView);
+                newMesh.indexBuffer, newMesh.indexBufferView);
         }
         else
         {
@@ -183,39 +180,50 @@ void MeshLoadHelper::LoadModel(const string& key)
             newMesh.vertexCount = UINT(meshData.vertices.size());
             newMesh.stride = UINT(sizeof(Vertex));
             D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
-                newMesh.indexBuffer, instanceBufferView);
+                newMesh.indexBuffer, newMesh.indexBufferView);
         }
 
-        if (!meshData.albedoTextureFilename.empty()) {
-            if (filesystem::exists(meshData.albedoTextureFilename)) {
-                if (!meshData.opacityTextureFilename.empty()) {
-
-                    D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename,
+        if (!meshData.albedoTextureFilename.empty()) 
+        {
+            if (filesystem::exists(meshData.albedoTextureFilename)) 
+            {
+                if (!meshData.opacityTextureFilename.empty()) 
+                {
+                    ComPtr<ID3D12Resource> tex2D;
+                    D3D12Utils::CreateTexture(
+                        DEVICE, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, false,
-                        newMesh.albedoTexture, newMesh.albedoSRV);
+                        tex2D);
+                    newMesh.albedoTexture.CreateFromResource(tex2D);
                 }
-                else {
-                    D3D11Utils::CreateTexture(
-                        device, context, meshData.albedoTextureFilename, true,
-                        newMesh.albedoTexture, newMesh.albedoSRV);
+                else 
+                {
+                    ComPtr<ID3D12Resource> tex2D;
+                    D3D12Utils::CreateTexture(
+                        DEVICE, meshData.albedoTextureFilename, true,
+                        tex2D);
+                    newMesh.albedoTexture.CreateFromResource(tex2D);
                 }
                 meshBlock.useAlbedoMap = true;
             }
-            else {
+            else 
+            {
                 cout << meshData.albedoTextureFilename
                     << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.emissiveTextureFilename.empty()) {
-            if (filesystem::exists(meshData.emissiveTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.emissiveTextureFilename, true,
-                    newMesh.emissiveTexture, newMesh.emissiveSRV);
+        if (!meshData.emissiveTextureFilename.empty()) 
+        {
+            if (filesystem::exists(meshData.emissiveTextureFilename)) 
+            {
+                ComPtr<ID3D12Resource> tex2D;
+                D3D12Utils::CreateTexture(DEVICE, meshData.emissiveTextureFilename, true, tex2D);
+                newMesh.emissiveTexture.CreateFromResource(tex2D);
                 meshBlock.useEmissiveMap = true;
             }
-            else {
+            else 
+            {
                 cout << meshData.emissiveTextureFilename
                     << " does not exists. Skip texture reading." << endl;
             }
@@ -223,9 +231,9 @@ void MeshLoadHelper::LoadModel(const string& key)
 
         if (!meshData.normalTextureFilename.empty()) {
             if (filesystem::exists(meshData.normalTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.normalTextureFilename, false,
-                    newMesh.normalTexture, newMesh.normalSRV);
+                ComPtr<ID3D12Resource> tex2D;
+                D3D12Utils::CreateTexture(DEVICE, meshData.normalTextureFilename, false,tex2D);
+                newMesh.normalTexture.CreateFromResource(tex2D);
                 meshBlock.useNormalMap = true;
             }
             else {
@@ -236,9 +244,9 @@ void MeshLoadHelper::LoadModel(const string& key)
 
         if (!meshData.heightTextureFilename.empty()) {
             if (filesystem::exists(meshData.heightTextureFilename)) {
-                D3D11Utils::CreateTexture(
-                    device, context, meshData.heightTextureFilename, false,
-                    newMesh.heightTexture, newMesh.heightSRV);
+                ComPtr<ID3D12Resource> tex2D;
+                D3D12Utils::CreateTexture(DEVICE, meshData.heightTextureFilename, false, tex2D);
+                newMesh.heightTexture.CreateFromResource(tex2D);
                 meshBlock.useHeightMap = true;
             }
             else {
@@ -248,10 +256,11 @@ void MeshLoadHelper::LoadModel(const string& key)
         }
          
         if (!meshData.aoTextureFilename.empty()) {
-            if (filesystem::exists(meshData.aoTextureFilename)) {
-                D3D11Utils::CreateTexture(device, context,
-                    meshData.aoTextureFilename, false,
-                    newMesh.aoTexture, newMesh.aoSRV);
+            if (filesystem::exists(meshData.aoTextureFilename)) 
+            {
+                ComPtr<ID3D12Resource> tex2D;
+                D3D12Utils::CreateTexture(DEVICE, meshData.aoTextureFilename, false, tex2D);
+                newMesh.aoTexture.CreateFromResource(tex2D);
                 meshBlock.useAOMap = true;
             }
             else {
@@ -266,13 +275,13 @@ void MeshLoadHelper::LoadModel(const string& key)
             !meshData.roughnessTextureFilename.empty()) {
 
             if (filesystem::exists(meshData.metallicTextureFilename) &&
-                filesystem::exists(meshData.roughnessTextureFilename)) {
-
-                D3D11Utils::CreateMetallicRoughnessTexture(
-                    device, context, meshData.metallicTextureFilename,
-                    meshData.roughnessTextureFilename,
-                    newMesh.metallicRoughnessTexture,
-                    newMesh.metallicRoughnessSRV);
+                filesystem::exists(meshData.roughnessTextureFilename)) 
+            {
+                ComPtr<ID3D12Resource> tex2D;
+                D3D12Utils::CreateMetallicRoughnessTexture(
+                    DEVICE, meshData.metallicTextureFilename,
+                    meshData.roughnessTextureFilename, tex2D);
+                newMesh.metallicRoughnessTexture.CreateFromResource(tex2D);
             }
             else {
                 cout << meshData.metallicTextureFilename << " or "
@@ -289,7 +298,8 @@ void MeshLoadHelper::LoadModel(const string& key)
             meshBlock.useRoughnessMap = true;
         }
         index++;
-    } 
+    }
+
     // Initialize Bounding Box
     {
         meshBlock.boundingBox = GetBoundingBoxFromVertices(meshDatas[0].vertices);
@@ -301,16 +311,16 @@ void MeshLoadHelper::LoadModel(const string& key)
         auto meshData = GeometryGenerator::MakeWireBox(
             meshBlock.boundingBox.Center,
             Vector3(meshBlock.boundingBox.Extents) + Vector3(1e-3f));
-        meshBlock.boundingBoxMesh = std::make_shared<Mesh>();
+        meshBlock.boundingBoxMesh = std::make_shared<DMesh>();
 
         meshBlock.boundingBoxMesh->indexCount = UINT(meshData.indices.size());
         meshBlock.boundingBoxMesh->vertexCount = UINT(meshData.vertices.size());
         meshBlock.boundingBoxMesh->stride = UINT(sizeof(Vertex));
 
-        D3D11Utils::CreateVertexBuffer(device, std::move(meshData.vertices),
-            meshBlock.boundingBoxMesh->vertexBuffer);
-        D3D11Utils::CreateIndexBuffer(device, std::move(meshData.indices),
-            meshBlock.boundingBoxMesh->indexBuffer);
+        D3D12Utils::CreateVertexBuffer(DEVICE, meshData.vertices,
+            meshBlock.boundingBoxMesh->vertexBuffer, meshBlock.boundingBoxMesh->vertexBufferView);
+        D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
+            meshBlock.boundingBoxMesh->indexBuffer, meshBlock.boundingBoxMesh->indexBufferView);
     }
 
     // Initialize Bounding Sphere
@@ -327,27 +337,27 @@ void MeshLoadHelper::LoadModel(const string& key)
         meshBlock.boundingSphere = BoundingSphere(meshBlock.boundingBox.Center, maxRadius);
         auto meshData = GeometryGenerator::MakeWireSphere(
             meshBlock.boundingSphere.Center, meshBlock.boundingSphere.Radius);
-        meshBlock.boundingSphereMesh = std::make_shared<Mesh>();
+        meshBlock.boundingSphereMesh = std::make_shared<DMesh>();
 
         meshBlock.boundingSphereMesh->indexCount = UINT(meshData.indices.size());
         meshBlock.boundingSphereMesh->vertexCount = UINT(meshData.vertices.size());
         meshBlock.boundingSphereMesh->stride = UINT(sizeof(Vertex));
-        D3D11Utils::CreateVertexBuffer(device, std::move(meshData.vertices),
-            meshBlock.boundingSphereMesh->vertexBuffer);
-        D3D11Utils::CreateIndexBuffer(device, std::move(meshData.indices),
-            meshBlock.boundingSphereMesh->indexBuffer);
+        D3D12Utils::CreateVertexBuffer(DEVICE, meshData.vertices,
+            meshBlock.boundingSphereMesh->vertexBuffer, meshBlock.boundingSphereMesh->vertexBufferView);
+        D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
+            meshBlock.boundingSphereMesh->indexBuffer, meshBlock.boundingSphereMesh->indexBufferView);
     }
     MeshMap[key].MeshLoadType = ELoadType::Loaded;
 }
 
 
-bool MeshLoadHelper::GetMesh(const string& inPath, const string& inName, vector<Mesh>*& OutMesh)
+bool MeshLoadHelper2::GetMesh(const string& inPath, const string& inName, vector<DMesh>*& OutMesh)
 {
     string key = inPath + inName;
     return GetMesh(key, OutMesh);
 }
 
-bool MeshLoadHelper::GetMesh(const string& InKey, vector<Mesh>*& OutMesh)
+bool MeshLoadHelper2::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
 {
     if (MeshMap.find(InKey) == MeshMap.end())
     {
@@ -361,16 +371,16 @@ bool MeshLoadHelper::GetMesh(const string& InKey, vector<Mesh>*& OutMesh)
     return true;
 }
 
-bool MeshLoadHelper::GetBoundingMesh(const string& inPath, const string& inName, 
+bool MeshLoadHelper2::GetBoundingMesh(const string& inPath, const string& inName, 
     DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
-    shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh)
+    shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
 {
     string key = inPath + inName;
     return GetBoundingMesh(key, outSphere, outBox, outSphereMesh, outBoxMesh);
 }
-bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
+bool MeshLoadHelper2::GetBoundingMesh(const string& InMeshKey,
     DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
-    shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh)
+    shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
 {
     if (MeshMap.find(InMeshKey) == MeshMap.end())
     {
@@ -388,7 +398,7 @@ bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
 
     return true;
 }
-string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, float InHalfExtent)
+string MeshLoadHelper2::LoadBoxMesh(float InHalfExtent)
 {
     string Key = "Box"  + std::to_string(InHalfExtent);
     if (MeshMap.find(Key) == MeshMap.end())
@@ -397,8 +407,8 @@ string MeshLoadHelper::LoadBoxMesh(ComPtr<ID3D11Device>& device, ComPtr<ID3D11De
         meshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
         MeshMap[Key].MeshDataLoadType = ELoadType::Loaded;
 
-        auto func = [&device, &context, Key]() {
-            return LoadModel(device, context, Key); };
+        auto func = [Key]() {
+            return LoadModel(Key); };
         ThreadPool& tPool = ThreadPool::getInstance();
        tPool.EnqueueJob(func);
     }
