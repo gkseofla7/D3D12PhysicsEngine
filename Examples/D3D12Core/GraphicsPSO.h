@@ -4,7 +4,7 @@
 
 namespace hlab {
 
-class GraphicsPSO {
+class GraphicsPSO2 {
 public:
     void Init(ComPtr<ID3D12RootSignature>	rootSignature, ComPtr<ID3D12PipelineState> pipelineState);
 

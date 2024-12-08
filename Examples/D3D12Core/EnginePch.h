@@ -109,6 +109,9 @@ struct WindowInfo
 #define SHADER				GEngine->GetShader()
 #define GRAPHICS_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetGraphicsCmdList()
 #define RESOURCE_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetResourceCmdList()
+#define BACKBUFFER_INDEX	GEngine->GetSwapChain()->GetBackBufferIndex()
+
+#define FRAMEBUFFER_COUNT 3
 
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;

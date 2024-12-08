@@ -70,12 +70,11 @@ private:
 	shared_ptr<GraphicsPipelineState> m_graphicsPipelineState;
 	shared_ptr<Samplers> m_samplers;
 
-	shared_ptr<GraphicsPSO> m_defaultGraphicsPSO;
+	shared_ptr<GraphicsPSO2> m_defaultGraphicsPSO;
 
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 
-	GlobalConstants m_globalConstsCPU;
-	shared_ptr<ConstantBuffer> m_globalConstsBuffer;
+	ConstantBuffer<GlobalConstants> m_globalConstsBuffer;
 
 	shared_ptr<Texture> m_envTex;
 	shared_ptr<Texture> m_irradianceTex;

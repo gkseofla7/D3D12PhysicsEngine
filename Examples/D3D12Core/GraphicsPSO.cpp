@@ -3,13 +3,13 @@
 #include "CommandQueue.h"
 
 namespace hlab {
-void GraphicsPSO::Init(ComPtr<ID3D12RootSignature>	rootSignature, ComPtr<ID3D12PipelineState> pipelineState)
+void GraphicsPSO2::Init(ComPtr<ID3D12RootSignature>	rootSignature, ComPtr<ID3D12PipelineState> pipelineState)
 {
 	m_rootSignature = rootSignature;
 	m_pipelineState = pipelineState;
 }
 
-void GraphicsPSO::UploadGraphicsPSO()
+void GraphicsPSO2::UploadGraphicsPSO()
 {
 	// TODO. 이것만 하면될지 확인 필요
 	GRAPHICS_CMD_LIST->SetGraphicsRootSignature(m_rootSignature.Get());

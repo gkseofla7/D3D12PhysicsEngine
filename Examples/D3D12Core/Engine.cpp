@@ -57,7 +57,7 @@ void Engine::InitGraphics()
 	m_graphicsPipelineState = std::make_shared< GraphicsPipelineState>();
 	m_graphicsPipelineState->Init();
 
-	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO>();
+	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO2>();
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
 
 	m_samplers = std::make_shared<Samplers>();
@@ -67,8 +67,7 @@ void Engine::InitGraphics()
 }
 void Engine::InitGlobalBuffer()
 {
-	m_globalConstsBuffer = std::make_shared< ConstantBuffer>();
-	m_globalConstsBuffer->Init(CBV_REGISTER::b0, sizeof(m_globalConstsCPU), 3);
+	m_globalConstsBuffer.Init(CBV_REGISTER::b0, 3);
 
 	m_envTex = std::make_shared<Texture>();
 	m_irradianceTex = std::make_shared<Texture>();
@@ -77,25 +76,26 @@ void Engine::InitGlobalBuffer()
 
 	// 조명 설정
 	{
+		GlobalConstants& globalConstsCPU =  m_globalConstsBuffer.GetCPU();
 		// 조명 0은 고정
-		m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
-		m_globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.1f);
-		m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.0f);
-		m_globalConstsCPU.lights[0].spotPower = 3.0f;
-		m_globalConstsCPU.lights[0].radius = 0.04f;
-		m_globalConstsCPU.lights[0].type =
+		globalConstsCPU.lights[0].radiance = Vector3(5.0f);
+		globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.1f);
+		globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.0f);
+		globalConstsCPU.lights[0].spotPower = 3.0f;
+		globalConstsCPU.lights[0].radius = 0.04f;
+		globalConstsCPU.lights[0].type =
 			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 1의 위치와 방향은 Update()에서 설정
-		m_globalConstsCPU.lights[1].radiance = Vector3(5.0f);
-		m_globalConstsCPU.lights[1].spotPower = 3.0f;
-		m_globalConstsCPU.lights[1].fallOffEnd = 20.0f;
-		m_globalConstsCPU.lights[1].radius = 0.02f;
-		m_globalConstsCPU.lights[1].type =
+		globalConstsCPU.lights[1].radiance = Vector3(5.0f);
+		globalConstsCPU.lights[1].spotPower = 3.0f;
+		globalConstsCPU.lights[1].fallOffEnd = 20.0f;
+		globalConstsCPU.lights[1].radius = 0.02f;
+		globalConstsCPU.lights[1].type =
 			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 2는 꺼놓음
-		m_globalConstsCPU.lights[2].type = LIGHT_OFF;
+		globalConstsCPU.lights[2].type = LIGHT_OFF;
 	}
 }
 
@@ -104,16 +104,16 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	wstring brdfFilename) {
 	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
 	m_envTex->Load((basePath + envFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetComputeRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
 
 	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetComputeRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
 
 	m_specularTex->Load((basePath + specularFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetComputeRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
 
 	m_brdfTex->Load((basePath + brdfFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetComputeRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
 }
 
 void Engine::Update()

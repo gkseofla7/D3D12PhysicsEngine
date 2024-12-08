@@ -1,9 +1,12 @@
-#include "MeshLoadHelper.h"
+#include "MeshLoadHelper2.h"
 #include "Actor.h"
 
-#include "GeometryGenerator.h"
+#include "Engine.h"
+#include "Device.h"
+#include "D3D12Utils.h"
+#include "../GeometryGenerator.h"
 #include "ConstantBuffers.h"
-#include "ThreadPool.h"
+#include "../ThreadPool.h"
 #include <filesystem>
 
 namespace hlab {
@@ -56,7 +59,7 @@ AnimationData ReadAnimationFromFile(string path, string name)
 	return ani;
 }
 
-void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
+void MeshLoadHelper::LoadAllUnloadedModel()
 {
     for (auto& Pair : MeshMap)
     {
@@ -65,8 +68,8 @@ void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<I
         {
             ThreadPool& tPool = ThreadPool::getInstance();
             //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
-            auto func = [&device,&context, &Pair]() {
-                return LoadModel(device, context, Pair.first); };
+            auto func = [&Pair]() {
+                return LoadModel(Pair.first); };
             tPool.EnqueueJob(func);
         } 
     }
@@ -116,7 +119,7 @@ bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InC
     InConstants.useRoughnessMap = MeshMap[InMeshKey].useRoughnessMap;
     return true;
 }
-void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context, const string& key)
+void MeshLoadHelper::LoadModel(const string& key)
 {
     {
         std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
@@ -152,40 +155,41 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
     }
 
     MeshBlock& meshBlock = MeshMap[key];
-    vector<Mesh>& meshes = meshBlock.Meshes;
+    vector<DMesh>& meshes = meshBlock.Meshes;
     int index = 0;
     for (const auto& meshData : meshDatas) { 
         if (meshes.size()<= index)
         {
-            meshes.push_back(Mesh());
+            meshes.push_back(DMesh());
             
         }
-        Mesh& newMesh = meshes[index];
+        DMesh& newMesh = meshes[index];
          
         if (meshData.skinnedVertices.size() > 0)
         {
-            D3D11Utils::CreateVertexBuffer(device, meshData.skinnedVertices,
-                newMesh.vertexBuffer);
+            D3D12Utils::CreateVertexBuffer(DEVICE, meshData.skinnedVertices,
+                newMesh.vertexBuffer, newMesh.vertexBufferView);
             newMesh.indexCount = UINT(meshData.indices.size());
             newMesh.vertexCount = UINT(meshData.skinnedVertices.size());
             newMesh.stride = UINT(sizeof(SkinnedVertex));
-            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                newMesh.indexBuffer);
+            D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
+                newMesh.indexBuffer, newMesh.instanceBufferView);
         }
         else
         {
-            D3D11Utils::CreateVertexBuffer(device, meshData.vertices,
-                newMesh.vertexBuffer);
+            D3D12Utils::CreateVertexBuffer(DEVICE, meshData.vertices,
+                newMesh.vertexBuffer, newMesh.vertexBufferView);
             newMesh.indexCount = UINT(meshData.indices.size());
             newMesh.vertexCount = UINT(meshData.vertices.size());
             newMesh.stride = UINT(sizeof(Vertex));
-            D3D11Utils::CreateIndexBuffer(device, meshData.indices,
-                newMesh.indexBuffer);
+            D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
+                newMesh.indexBuffer, instanceBufferView);
         }
 
         if (!meshData.albedoTextureFilename.empty()) {
             if (filesystem::exists(meshData.albedoTextureFilename)) {
                 if (!meshData.opacityTextureFilename.empty()) {
+
                     D3D11Utils::CreateTexture(
                         device, context, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, false,

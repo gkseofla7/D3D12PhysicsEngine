@@ -810,7 +810,7 @@ void AppBase::UpdateGlobalConstants(const float &dt, const Vector3 &eyeWorld,
 }
 
 void AppBase::SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU) {
-    // 쉐이더와 일관성 유지 cbuffer GlobalConstants : register(b0)
+    // 쉐이더와 일관성 유지 cbuffer GlobalConstants : register(b0m_envSRV
     m_context->VSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
     m_context->PSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());
     m_context->GSSetConstantBuffers(0, 1, globalConstsGPU.GetAddressOf());

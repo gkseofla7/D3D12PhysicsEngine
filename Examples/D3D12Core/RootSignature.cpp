@@ -33,12 +33,12 @@ void RootSignature::CreateGraphicsRootSignature()
 void RootSignature::CreateDefaultRootSignature()
 {
 
-	CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
+
 	//ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);//Texture
 	// 공용 텍스처
 	//ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 10, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);//Texture
 	// MeshConstants, MaterialConstants
-	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+
 
 	size_t sampleSize = GEngine->GetSamples()->GetSampleDesc().size();
 	vector<CD3DX12_DESCRIPTOR_RANGE1> sampleRanges(sampleSize);
@@ -57,10 +57,16 @@ void RootSignature::CreateDefaultRootSignature()
 	rootParameters[3].InitAsShaderResourceView(12);
 	rootParameters[4].InitAsShaderResourceView(13);
 	// 로컬 데이터
+	
+	CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
 	// b1 : MeshConstants, b2 : MaterialConstants
-	rootParameters[5].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-
-	rootParameters[6].InitAsDescriptorTable(static_cast<UINT>(sampleRanges.size()), sampleRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
+	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+	rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	// t0 : height,	 t1 : albedo,	t2 : normal,	t3: ao
+	// t4 : metallicRoughness,	 t5 : emissive
+	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
+	rootParameters[6].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[7].InitAsDescriptorTable(static_cast<UINT>(sampleRanges.size()), sampleRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
 
 	CreateRootSignature(defaultRootSignature, rootParameters);
 }
