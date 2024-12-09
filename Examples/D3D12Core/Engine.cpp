@@ -10,6 +10,17 @@
 #include "Samplers.h"
 
 namespace hlab {
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    return GEngine->MsgProc(hWnd, msg, wParam, lParam);
+}
+Engine::~Engine()
+{
+	ImGui_ImplDX12_Shutdown();
+	ImGui_ImplWin32_Shutdown();
+	ImGui::DestroyContext();
+
+	DestroyWindow(m_window.hwnd);
+}
 void Engine::Init(const WindowInfo& info)
 {
 	m_window = info;	
@@ -23,11 +34,90 @@ void Engine::Init(const WindowInfo& info)
 
 	ResizeWindow(info.width, info.height);
 
+	m_camera.SetAspectRatio(this->GetAspectRatio());
 	//GET_SINGLE(Input)->Init(info.hwnd);
 	//GET_SINGLE(Timer)->Init();
 	//GET_SINGLE(Resources)->Init();
 	
 	// TODO. CommandList Close 및 실행 필요
+}
+int Engine::Run()
+{
+
+	// Main message loop
+	MSG msg = { 0 };
+	while (WM_QUIT != msg.message) {
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
+		else {
+			ImGui_ImplDX12_NewFrame();
+			ImGui_ImplWin32_NewFrame();
+
+			ImGui::NewFrame();
+			ImGui::Begin("Scene Control");
+
+			// ImGui가 측정해주는 Framerate 출력
+			ImGui::Text("Average %.3f ms/frame (%.1f FPS)",
+				1000.0f / ImGui::GetIO().Framerate,
+				ImGui::GetIO().Framerate);
+
+			//UpdateGUI(); // 추가적으로 사용할 GUI
+
+			ImGui::End();
+			ImGui::Render();
+			Update(ImGui::GetIO().DeltaTime);
+
+			Render();
+
+		}
+	}
+
+	return 0;
+}
+
+bool Engine::InitMainWindow()
+{
+
+	WNDCLASSEX wc = { sizeof(WNDCLASSEX),
+					 CS_CLASSDC,
+					 WndProc,
+					 0L,
+					 0L,
+					 GetModuleHandle(NULL),
+					 NULL,
+					 NULL,
+					 NULL,
+					 NULL,
+					 L"Daerim'sGTA", // lpszClassName, L-string
+					 NULL };
+
+	if (!RegisterClassEx(&wc)) {
+		std::cout << "RegisterClassEx() failed." << std::endl;
+		return false;
+	}
+
+	RECT wr = { 0, 0, m_window.width, m_window.height };
+	AdjustWindowRect(&wr, WS_OVERLAPPEDWINDOW, false);
+	m_window.hwnd = CreateWindow(wc.lpszClassName, L"Daerim'sGTA",
+		WS_OVERLAPPEDWINDOW,
+		100, // 윈도우 좌측 상단의 x 좌표
+		100, // 윈도우 좌측 상단의 y 좌표
+		wr.right - wr.left, // 윈도우 가로 방향 해상도
+		wr.bottom - wr.top, // 윈도우 세로 방향 해상도
+		NULL, NULL, wc.hInstance, NULL);
+
+	if (!m_window.hwnd) {
+		std::cout << "CreateWindow() failed." << std::endl;
+		return false;
+	}
+
+	ShowWindow(m_window.hwnd, SW_SHOWDEFAULT);
+	UpdateWindow(m_window.hwnd);
+
+	SetForegroundWindow(m_window.hwnd);
+	return true;
 }
 
 void Engine::InitGraphics()
@@ -116,8 +206,16 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
 }
 
-void Engine::Update()
+void Engine::Update(float dt)
 {
+	m_camera.UpdateKeyboard(dt, m_keyPressed);
+
+	// 반사 행렬 추가
+	const Vector3 eyeWorld = m_camera.GetEyePos();
+	const Matrix reflectRow; //Matrix::CreateReflection(m_mirrorPlane);
+	const Matrix viewRow = m_camera.GetViewRow();
+	const Matrix projRow = m_camera.GetProjRow();
+	UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
 	//GET_SINGLE(Input)->Update();
 	//GET_SINGLE(Timer)->Update();
 	//GET_SINGLE(SceneManager)->Update();
@@ -147,7 +245,21 @@ void Engine::RenderBegin()
 
 void Engine::RenderEnd()
 {
+	SetMainViewport();
 	m_graphicsCmdQueue->RenderEnd();
+}
+
+void Engine::SetMainViewport()
+{
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	viewport.Width = m_window.width;
+	viewport.Height = m_window.height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	GRAPHICS_CMD_LIST->RSSetViewports(1, &viewport);
 }
 
 void Engine::ResizeWindow(int32 width, int32 height)
@@ -159,17 +271,6 @@ void Engine::ResizeWindow(int32 width, int32 height)
 	::AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false);
 	::SetWindowPos(m_window.hwnd, 0, 100, 100, width, height, 0);
 }
-
-
-//void Engine::CreateConstantBuffer(CBV_REGISTER reg, uint32 bufferSize, uint32 count)
-//{
-//	uint8 typeInt = static_cast<uint8>(reg);
-//	assert(m_constantBuffers.size() == typeInt);
-//
-//	shared_ptr<ConstantBuffer> buffer = std::make_shared<ConstantBuffer>();
-//	buffer->Init(reg, bufferSize, count);
-//	m_constantBuffers.push_back(buffer);
-//}
 
 
 void Engine::CreateRenderTargetGroups()
@@ -195,64 +296,150 @@ void Engine::CreateRenderTargetGroups()
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)] = std::make_shared<RenderTargetGroup>();
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
 	}
+}
 
-	//// Shadow Group
-	//{
-	//	vector<RenderTarget> rtVec(RENDER_TARGET_SHADOW_GROUP_MEMBER_COUNT);
+void Engine::OnMouseMove(int mouseX, int mouseY) {
 
-	//	rtVec[0].target = GET_SINGLE(Resources)->CreateTexture(L"ShadowTarget",
-	//		DXGI_FORMAT_R32_FLOAT, 4096, 4096,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+	m_mouseX = mouseX;
+	m_mouseY = mouseY;
 
-	//	shared_ptr<Texture> shadowDepthTexture = GET_SINGLE(Resources)->CreateTexture(L"ShadowDepthStencil",
-	//		DXGI_FORMAT_D32_FLOAT, 4096, 4096,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+	// 마우스 커서의 위치를 NDC로 변환
+	// 마우스 커서는 좌측 상단 (0, 0), 우측 하단(width-1, height-1)
+	// NDC는 좌측 하단이 (-1, -1), 우측 상단(1, 1)
+	m_mouseNdcX = mouseX * 2.0f / m_window.windowed - 1.0f;
+	m_mouseNdcY = -mouseY * 2.0f / m_window.height + 1.0f;
 
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = make_shared<RenderTargetGroup>();
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, shadowDepthTexture);
-	//}
+	// 커서가 화면 밖으로 나갔을 경우 범위 조절
+	// 게임에서는 클램프를 안할 수도 있습니다.
+	m_mouseNdcX = std::clamp(m_mouseNdcX, -1.0f, 1.0f);
+	m_mouseNdcY = std::clamp(m_mouseNdcY, -1.0f, 1.0f);
 
-	//// Deferred Group
-	//{
-	//	vector<RenderTarget> rtVec(RENDER_TARGET_G_BUFFER_GROUP_MEMBER_COUNT);
+	// 카메라 시점 회전
+	m_camera.UpdateMouse(m_mouseNdcX, m_mouseNdcY);
+}
 
-	//	rtVec[0].target = GET_SINGLE(Resources)->CreateTexture(L"PositionTarget",
-	//		DXGI_FORMAT_R32G32B32A32_FLOAT, m_window.width, m_window.height,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+void Engine::OnMouseClick(int mouseX, int mouseY) {
 
-	//	rtVec[1].target = GET_SINGLE(Resources)->CreateTexture(L"NormalTarget",
-	//		DXGI_FORMAT_R32G32B32A32_FLOAT, m_window.width, m_window.height,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+	m_mouseX = mouseX;
+	m_mouseY = mouseY;
 
-	//	rtVec[2].target = GET_SINGLE(Resources)->CreateTexture(L"DiffuseTarget",
-	//		DXGI_FORMAT_R8G8B8A8_UNORM, m_window.width, m_window.height,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+	m_mouseNdcX = mouseX * 2.0f / m_window.windowed - 1.0f;
+	m_mouseNdcY = -mouseY * 2.0f / m_window.height + 1.0f;
+}
 
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::G_BUFFER)] = make_shared<RenderTargetGroup>();
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::G_BUFFER)]->Create(RENDER_TARGET_GROUP_TYPE::G_BUFFER, rtVec, dsTexture);
-	//}
+LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
+{
 
-	//// Lighting Group
-	//{
-	//	vector<RenderTarget> rtVec(RENDER_TARGET_LIGHTING_GROUP_MEMBER_COUNT);
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
+		return true;
 
-	//	rtVec[0].target = GET_SINGLE(Resources)->CreateTexture(L"DiffuseLightTarget",
-	//		DXGI_FORMAT_R8G8B8A8_UNORM, m_window.width, m_window.height,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+	switch (msg) {
+	case WM_SIZE:
+		// 화면 해상도가 바뀌면 SwapChain을 다시 생성
+		if (m_swapChain) {
 
-	//	rtVec[1].target = GET_SINGLE(Resources)->CreateTexture(L"SpecularLightTarget",
-	//		DXGI_FORMAT_R8G8B8A8_UNORM, m_window.width, m_window.height,
-	//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			m_window.width = int(LOWORD(lParam));
+			m_window.height = int(HIWORD(lParam));
 
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::LIGHTING)] = make_shared<RenderTargetGroup>();
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::LIGHTING)]->Create(RENDER_TARGET_GROUP_TYPE::LIGHTING, rtVec, dsTexture);
-	//}
+			// 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
+			if (m_window.width && m_window.height) {
+
+				std::cout << "Resize SwapChain to " << m_window.width << " "
+					<< m_window.height << std::endl;
+
+				// ViewPort 관련 Reset
+				// TODO. 제대로 날리고 있는지 확인 필요
+				m_swapChain->Init(m_window, DEVICE, m_device->GetDXGI(), m_graphicsCmdQueue->GetCmdQueue());
+				vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
+				for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
+				{
+					ComPtr<ID3D12Resource> resource;
+					m_swapChain->GetSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource));
+					rtVec[i].target = std::make_shared<Texture>();
+					rtVec[i].target->CreateFromResource(resource);
+				}
+				// DepthStencil
+				shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
+				dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
+					CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+					D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+				m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
+				//SetMainViewport();
+
+
+				m_camera.SetAspectRatio(this->GetAspectRatio());
+			}
+		}
+		break;
+	case WM_SYSCOMMAND:
+		if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+			return 0;
+		break;
+	case WM_MOUSEMOVE:
+		OnMouseMove(LOWORD(lParam), HIWORD(lParam));
+		break;
+	case WM_LBUTTONDOWN:
+		if (!m_leftButton) {
+			m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
+		}
+		m_leftButton = true;
+		OnMouseClick(LOWORD(lParam), HIWORD(lParam));
+		break;
+	case WM_LBUTTONUP:
+		m_leftButton = false;
+		break;
+	case WM_RBUTTONDOWN:
+		if (!m_rightButton) {
+			m_dragStartFlag = true; // 드래그를 새로 시작하는지 확인
+		}
+		m_rightButton = true;
+		break;
+	case WM_RBUTTONUP:
+		m_rightButton = false;
+		break;
+	case WM_KEYDOWN:
+		//if (m_activateActor != nullptr)
+		//{
+		//	if (m_activateActor->MsgProc(wParam, true))
+		//	{
+		//		return true;
+		//	}
+		//}
+		m_keyPressed[wParam] = true;
+		//if (wParam == VK_ESCAPE) { // ESC키 종료
+		//	DestroyWindow(hwnd);
+		//}
+		//if (wParam == VK_SPACE) {
+		//	m_lightRotate = !m_lightRotate;
+		//}
+		break;
+	case WM_KEYUP:
+		//if (m_activateActor != nullptr)
+		//{
+		//	if (m_activateActor->MsgProc(wParam, false))
+		//	{
+		//		return true;
+		//	}
+		//}
+		if (wParam == 'F') { // f키 일인칭 시점
+			m_camera.m_useFirstPersonView = !m_camera.m_useFirstPersonView;
+		}
+
+		m_keyPressed[wParam] = false;
+		break;
+	case WM_MOUSEWHEEL:
+		m_wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
+		break;
+	case WM_DESTROY:
+		::PostQuitMessage(0);
+		return 0;
+	}
+
+	return ::DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+float Engine::GetAspectRatio() const
+{
+	return float(m_window.width) / m_window.height;
 }
 }

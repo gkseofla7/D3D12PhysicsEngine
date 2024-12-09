@@ -3,12 +3,14 @@
 #include "EnginePch.h"
 //#include "Mesh.h"
 //#include "Shader.h"
-
+#include <imgui.h>
+#include <imgui_impl_dx12.h>
+#include <imgui_impl_win32.h>
 #include "TableDescriptorHeap.h"
 #include "RenderTargetGroup.h"
+#include "../Camera.h"
 namespace hlab {
 class Device;
-class ConstantBuffer;
 class CommandQueue;
 class RootSignature;
 class GraphicsCommandQueue;
@@ -22,14 +24,21 @@ class Samplers;
 class Engine
 {
 public:
+	int Run();
+	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+	~Engine();
 	void Init(const WindowInfo& info);
 
+	bool InitMainWindow();
 	void InitGraphics();
 	void InitGlobalBuffer();
 	void InitCubemaps(wstring basePath, wstring envFilename,
 		wstring specularFilename, wstring irradianceFilename,
 		wstring brdfFilename);
-	void Update();
+	void Update(float dt);
+
+	float GetAspectRatio() const;
 
 public:
 	const WindowInfo& GetWindow() { return m_window; }
@@ -41,7 +50,6 @@ public:
 	shared_ptr<Shader> GetShader() { return m_shader; }
 	shared_ptr<Samplers> GetSamples() { return m_samplers; }
 
-	shared_ptr<ConstantBuffer> GetConstantBuffer(CONSTANT_BUFFER_TYPE type) { return m_constantBuffers[static_cast<uint8>(type)]; }
 	shared_ptr<RenderTargetGroup> GetRTGroup(RENDER_TARGET_GROUP_TYPE type) { return m_rtGroups[static_cast<uint8>(type)]; }
 
 public:
@@ -49,15 +57,20 @@ public:
 	void RenderBegin();
 	void RenderEnd();
 
+	void SetMainViewport();
 	void ResizeWindow(int32 width, int32 height);
 
 private:
+	void UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
+		const Matrix& viewRow,
+		const Matrix& projRow, const Matrix& refl);
+
 	//void CreateConstantBuffer(CBV_REGISTER reg, uint32 bufferSize, uint32 count);
 	void CreateRenderTargetGroups();
-
+	virtual void OnMouseMove(int mouseX, int mouseY);
+	virtual void OnMouseClick(int mouseX, int mouseY);
 private:
-	// 그려질 화면 크기 관련
-	WindowInfo		m_window;
+	// 그래픽스 관련
 	D3D12_VIEWPORT	m_viewport = {};
 	D3D12_RECT		m_scissorRect = {};
 
@@ -81,6 +94,23 @@ private:
 	shared_ptr<Texture> m_specularTex;
 	shared_ptr<Texture> m_brdfTex;
 
+	// 윈도우 관련
+	WindowInfo		m_window;
+
+	float m_mouseNdcX = 0.0f;
+	float m_mouseNdcY = 0.0f;
+	float m_wheelDelta = 0.0f;
+	int m_mouseX = -1;
+	int m_mouseY = -1;
+
+	bool m_leftButton = false;
+	bool m_rightButton = false;
+	bool m_dragStartFlag = false;
+
+	bool m_keyPressed[256] = {false,};
+
+	// 컨텐츠 관련
+	Camera m_camera;
 };
 }
 

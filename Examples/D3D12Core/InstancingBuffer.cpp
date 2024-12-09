@@ -23,7 +23,7 @@ void InstancingBuffer::Init(uint32 maxCount)
 		&desc,
 		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
-		IID_PPV_ARGS(&_buffer));
+		IID_PPV_ARGS(&m_buffer));
 }
 
 void InstancingBuffer::Clear()
@@ -46,11 +46,11 @@ void InstancingBuffer::PushData()
 
 	void* dataBuffer = nullptr;
 	D3D12_RANGE readRange{ 0, 0 };
-	_buffer->Map(0, &readRange, &dataBuffer);
+	m_buffer->Map(0, &readRange, &dataBuffer);
 	memcpy(dataBuffer, &_data[0], bufferSize);
-	_buffer->Unmap(0, nullptr);
+	m_buffer->Unmap(0, nullptr);
 
-	_bufferView.BufferLocation = _buffer->GetGPUVirtualAddress();
+	_bufferView.BufferLocation = m_buffer->GetGPUVirtualAddress();
 	_bufferView.StrideInBytes = sizeof(InstancingParams);
 	_bufferView.SizeInBytes = bufferSize;
 }

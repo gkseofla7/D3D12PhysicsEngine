@@ -22,7 +22,7 @@ public:
 
 public:
 	uint32						GetCount() { return static_cast<uint32>(_data.size()); }
-	ComPtr<ID3D12Resource>		GetBuffer() { return _buffer; }
+	ComPtr<ID3D12Resource>		GetBuffer() { return m_buffer; }
 	D3D12_VERTEX_BUFFER_VIEW	GetBufferView() { return _bufferView; }
 
 	void	SetID(uint64 instanceId) { _instanceId = instanceId; }
@@ -30,7 +30,7 @@ public:
 
 private:
 	uint64						_instanceId = 0;
-	ComPtr<ID3D12Resource>		_buffer;
+	ComPtr<ID3D12Resource>		m_buffer;
 	D3D12_VERTEX_BUFFER_VIEW	_bufferView;
 
 	uint32						_maxCount = 0;
