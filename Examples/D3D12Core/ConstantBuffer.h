@@ -1,6 +1,7 @@
 #pragma once
 #include "EnginePch.h"
-
+#include "Engine.h"
+#include "Device.h"
 // "Common.hlsli"와 동일해야 함
 #define MAX_LIGHTS 3
 #define LIGHT_OFF 0x00
@@ -18,7 +19,8 @@ using DirectX::SimpleMath::Vector3;
 // __declspec(align(256)) : DX12에서는 256 align (예습)
 
 // 주로 Vertex/Geometry 쉐이더에서 사용
-__declspec(align(256)) struct MeshConstants {
+__declspec(align(256)) struct MeshConstants2
+{
     Matrix world;
     Matrix worldIT;
     Matrix worldInv;
@@ -29,7 +31,8 @@ __declspec(align(256)) struct MeshConstants {
 };
 
 // 주로 Pixel 쉐이더에서 사용
-__declspec(align(256)) struct MaterialConstants {
+__declspec(align(256)) struct MaterialConstants2
+{
 
     Vector3 albedoFactor = Vector3(1.0f);
     float roughnessFactor = 1.0f;
@@ -69,7 +72,8 @@ __declspec(align(256)) struct MaterialConstants {
     };*/
 };
 
-struct Light {
+struct Light2
+{
     Vector3 radiance = Vector3(5.0f); // strength
     float fallOffStart = 0.0f;
     Vector3 direction = Vector3(0.0f, 0.0f, 1.0f);
@@ -90,7 +94,7 @@ struct Light {
 };
 
 // register(b1) 사용
-__declspec(align(256)) struct GlobalConstants {
+__declspec(align(256)) struct GlobalConstants2 {
     Matrix view;
     Matrix proj;
     Matrix invProj; // 역프로젝션행렬
@@ -106,23 +110,7 @@ __declspec(align(256)) struct GlobalConstants {
     float lodBias = 2.0f;    // 다른 물체들 LodBias
     float globalTime = 0.0f;
 
-    Light lights[MAX_LIGHTS];
-};
-
-// register(b5) 사용, PostEffectsPS.hlsl
-__declspec(align(256)) struct PostEffectsConstants {
-    int mode = 1; // 1: Rendered image, 2: DepthOnly
-    float depthScale = 1.0f;
-    float fogStrength = 0.0f;
-};
-
-__declspec(align(256)) struct VolumeConsts {
-    Vector3 uvwOffset = Vector3(0.0f);
-    float lightAbsorption = 5.0f;
-    Vector3 lightDir = Vector3(0.0f, 1.0f, 0.0f);
-    float densityAbsorption = 10.0f;
-    Vector3 lightColor = Vector3(1, 1, 1) * 40.0f;
-    float aniso = 0.3f;
+    Light2 lights[MAX_LIGHTS];
 };
 
 // bone 개수 제약을 없애기 위해 StructuredBuffer로 교체
@@ -144,10 +132,10 @@ enum
 };
 
 template <typename T_CONSTS>
-class ConstantBuffer
+class ConstantBuffer2
 {
 public:
-    ~ConstantBuffer()
+    ~ConstantBuffer2()
     {
         if (m_cbvBuffer)
         {
@@ -170,7 +158,6 @@ public:
         CreateBuffer();
         CreateView();
     }
-	void Init(CBV_REGISTER reg, uint32 size, uint32 count);
 
     void Clear()
     {
@@ -179,10 +166,9 @@ public:
 
     void Upload()
     {
-        *buffer = m_cpu;
         assert(m_currentIndex < m_elementCount);
 
-        ::memcpy(&m_mappedBuffer[m_currentIndex * m_elementSize], buffer, size);
+        ::memcpy(&m_mappedBuffer[m_currentIndex * m_elementSize], &m_cpu, m_elementSize);
     }
 
     void PushGraphicsData()
@@ -226,7 +212,7 @@ private:
         // We do not need to unmap until we are done with the resource.  However, we must not write to
         // the resource while it is in use by the GPU (so we must use synchronization techniques).
     }
-    void ConstantBuffer::CreateView()
+    void CreateView()
     {
         D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
         cbvDesc.NumDescriptors = m_elementCount;

@@ -15,27 +15,31 @@ class CommandQueue;
 class RootSignature;
 class GraphicsCommandQueue;
 class SwapChain;
-class RenderTargetGroup;
 class Shader;
 class GraphicsPipelineState;
-class GraphicsPSO;
+class GraphicsPSO2;
 class Texture;
 class Samplers;
+class DSkinnedMeshModel2;
+template <typename T_CONSTS> class ConstantBuffer2;
+struct GlobalConstants2;
 class Engine
 {
 public:
 	int Run();
 	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
+	Engine(){}
 	~Engine();
 	void Init(const WindowInfo& info);
 
 	bool InitMainWindow();
+	bool InitGUI();
 	void InitGraphics();
 	void InitGlobalBuffer();
 	void InitCubemaps(wstring basePath, wstring envFilename,
 		wstring specularFilename, wstring irradianceFilename,
 		wstring brdfFilename);
+	virtual bool InitScene();
 	void Update(float dt);
 
 	float GetAspectRatio() const;
@@ -87,7 +91,7 @@ private:
 
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 
-	ConstantBuffer<GlobalConstants> m_globalConstsBuffer;
+	shared_ptr<ConstantBuffer2<GlobalConstants2>> m_globalConstsBuffer;
 
 	shared_ptr<Texture> m_envTex;
 	shared_ptr<Texture> m_irradianceTex;
@@ -110,7 +114,10 @@ private:
 	bool m_keyPressed[256] = {false,};
 
 	// ÄÁÅÙÃ÷ °ü·Ã
-	Camera m_camera;
+	hlab::Camera m_camera;
+	// DaerimGTA
+	shared_ptr<DSkinnedMeshModel2> m_activeModel;
+	// EDaerimGTA
 };
 }
 

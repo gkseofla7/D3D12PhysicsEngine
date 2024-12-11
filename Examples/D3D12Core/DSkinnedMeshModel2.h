@@ -2,7 +2,7 @@
 #include "EnginePch.h"
 #include "../GeometryGenerator.h"
 #include "DModel2.h"
-#include "StructuredBuffer.h"
+#include "StructuredBuffer2.h"
 namespace hlab {
 // DModel에서는 Mesh Loading
 // DSkinnedMeshModel에서는 Animation Loading
@@ -23,7 +23,7 @@ public:
     void IntegrateRootTransformToWorldTransform();
 public:
     // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
-    shared_ptr<StructuredBuffer2> m_boneTransforms;
+    shared_ptr<StructuredBuffer2<Matrix>> m_boneTransforms;
 private:
     Matrix m_accumulatedRootTransform;
     Matrix m_accumulatedRootTransformToLocal;

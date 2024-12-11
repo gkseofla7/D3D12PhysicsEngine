@@ -11,12 +11,12 @@ struct DMesh {
     D3D12_VERTEX_BUFFER_VIEW	vertexBufferView;
     D3D12_INDEX_BUFFER_VIEW	indexBufferView;
 
-    Texture albedoTexture;
-    Texture emissiveTexture;
-    Texture normalTexture;
-    Texture heightTexture;
-    Texture aoTexture;
-    Texture metallicRoughnessTexture;
+    shared_ptr<Texture> albedoTexture;
+    shared_ptr<Texture> emissiveTexture;
+    shared_ptr<Texture> normalTexture;
+    shared_ptr<Texture> heightTexture;
+    shared_ptr<Texture> aoTexture;
+    shared_ptr<Texture> metallicRoughnessTexture;
 
 
     UINT indexCount = 0;

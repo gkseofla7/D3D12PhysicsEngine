@@ -6,11 +6,18 @@
 #include "RootSignature.h"
 #include "Shader.h"
 #include "GraphicsPipelineState.h"
-#include "GraphicsPSO.h"
-#include "Samplers.h"
-
+#include "GraphicsPSO2.h"
+#include "Samplers2.h"
+#include "ConstantBuffer.h"
+#include "DSkinnedMeshModel2.h"
+extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
+	UINT msg,
+	WPARAM wParam,
+	LPARAM lParam);
 namespace hlab {
-LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+
+LRESULT WINAPI WndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return GEngine->MsgProc(hWnd, msg, wParam, lParam);
 }
 Engine::~Engine()
@@ -29,15 +36,13 @@ void Engine::Init(const WindowInfo& info)
 	//CreateConstantBuffer(CBV_REGISTER::b0, sizeof(LightParams), 1);
 	//CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
 	//CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
-
 	CreateRenderTargetGroups();
 
 	ResizeWindow(info.width, info.height);
 
 	m_camera.SetAspectRatio(this->GetAspectRatio());
-	//GET_SINGLE(Input)->Init(info.hwnd);
-	//GET_SINGLE(Timer)->Init();
-	//GET_SINGLE(Resources)->Init();
+
+	InitGUI();
 	
 	// TODO. CommandList Close 및 실행 필요
 }
@@ -82,7 +87,7 @@ bool Engine::InitMainWindow()
 
 	WNDCLASSEX wc = { sizeof(WNDCLASSEX),
 					 CS_CLASSDC,
-					 WndProc,
+					 WndProc2,
 					 0L,
 					 0L,
 					 GetModuleHandle(NULL),
@@ -117,6 +122,33 @@ bool Engine::InitMainWindow()
 	UpdateWindow(m_window.hwnd);
 
 	SetForegroundWindow(m_window.hwnd);
+	return true;
+}
+
+bool Engine::InitGUI() {
+
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO();
+	(void)io;
+	io.DisplaySize = ImVec2(float(m_window.width), float(m_window.height));
+	ImGui::StyleColorsLight();
+
+	// Setup Platform/Renderer backends
+	if (!ImGui_ImplDX12_Init(DEVICE.Get(), SWAP_CHAIN_BUFFER_COUNT, DXGI_FORMAT_R8G8B8A8_UNORM,
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetRenderTargetHeap().Get(),
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetRenderTargetHeap()->GetCPUDescriptorHandleForHeapStart(),
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetRenderTargetHeap()->GetGPUDescriptorHandleForHeapStart()
+		)) 
+	{
+		return false;
+	}
+
+	if (!ImGui_ImplWin32_Init(m_window.hwnd))
+	{
+		return false;
+	}
+
 	return true;
 }
 
@@ -157,16 +189,39 @@ void Engine::InitGraphics()
 }
 void Engine::InitGlobalBuffer()
 {
-	m_globalConstsBuffer.Init(CBV_REGISTER::b0, 3);
+	m_globalConstsBuffer = std::make_shared<ConstantBuffer2<GlobalConstants2>>();
+	m_globalConstsBuffer->Init(CBV_REGISTER::b0, 3);
 
 	m_envTex = std::make_shared<Texture>();
 	m_irradianceTex = std::make_shared<Texture>();
 	m_specularTex = std::make_shared<Texture>();
 	m_brdfTex = std::make_shared<Texture>();
 
+	
+}
+
+void Engine::InitCubemaps(wstring basePath, wstring envFilename,
+	wstring specularFilename, wstring irradianceFilename,
+	wstring brdfFilename) {
+	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
+	m_envTex->Load((basePath + envFilename).c_str(), true);
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
+
+	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
+
+	m_specularTex->Load((basePath + specularFilename).c_str(), true);
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
+
+	m_brdfTex->Load((basePath + brdfFilename).c_str(), true);
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
+}
+
+bool Engine::InitScene()
+{
 	// 조명 설정
 	{
-		GlobalConstants& globalConstsCPU =  m_globalConstsBuffer.GetCPU();
+		GlobalConstants2& globalConstsCPU = m_globalConstsBuffer->GetCpu();
 		// 조명 0은 고정
 		globalConstsCPU.lights[0].radiance = Vector3(5.0f);
 		globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.1f);
@@ -186,24 +241,33 @@ void Engine::InitGlobalBuffer()
 
 		// 조명 2는 꺼놓음
 		globalConstsCPU.lights[2].type = LIGHT_OFF;
+		// DaerimGTA
+		globalConstsCPU.strengthIBL = 0.1f;
+		globalConstsCPU.lodBias = 0.0f;
+
+		m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
+			0.0654498f);
+
+		InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
+			L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
+			L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+
+		{
+			std::string path = "../Assets/Characters/Mixamo/";
+			std::string characterName = "character.fbx";
+			Vector3 center(0.5f, 0.1f, 1.0f);
+			m_activeModel = std::make_shared<DSkinnedMeshModel2>(path, characterName);
+			m_activeModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+			m_activeModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+			m_activeModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+			m_activeModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+				Matrix::CreateTranslation(center));
+			m_activeModel->SetScale(0.2f);
+		}
+		// EDaerimGTA
 	}
-}
 
-void Engine::InitCubemaps(wstring basePath, wstring envFilename,
-	wstring specularFilename, wstring irradianceFilename,
-	wstring brdfFilename) {
-	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
-	m_envTex->Load((basePath + envFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
-
-	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
-
-	m_specularTex->Load((basePath + specularFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
-
-	m_brdfTex->Load((basePath + brdfFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
+	return true;
 }
 
 void Engine::Update(float dt)
@@ -229,6 +293,7 @@ void Engine::Render()
 	RenderBegin();
 
 	//GET_SINGLE(SceneManager)->Render();
+	m_activeModel->Render();
 
 	RenderEnd();
 }
@@ -272,6 +337,25 @@ void Engine::ResizeWindow(int32 width, int32 height)
 	::SetWindowPos(m_window.hwnd, 0, 100, 100, width, height, 0);
 }
 
+// 여러 물체들이 공통적으료 사용하는 Const 업데이트
+void Engine::UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
+	const Matrix& viewRow,
+	const Matrix& projRow, const Matrix& refl) 
+{
+	GlobalConstants2& globalCpuData = m_globalConstsBuffer->GetCpu();
+	globalCpuData.globalTime += dt;
+	globalCpuData.eyeWorld = eyeWorld;
+	globalCpuData.view = viewRow.Transpose();
+	globalCpuData.proj = projRow.Transpose();
+	globalCpuData.invProj = projRow.Invert().Transpose();
+	globalCpuData.viewProj = (viewRow * projRow).Transpose();
+	globalCpuData.invView = viewRow.Invert().Transpose();
+
+	// 그림자 렌더링에 사용
+	globalCpuData.invViewProj = globalCpuData.viewProj.Invert();
+
+	m_globalConstsBuffer->Upload();
+}
 
 void Engine::CreateRenderTargetGroups()
 {

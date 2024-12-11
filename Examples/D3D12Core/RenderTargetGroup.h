@@ -1,23 +1,8 @@
 #pragma once
+#include "EnginePch.h"
 #include "Texture.h"
 
 namespace hlab {
-enum class RENDER_TARGET_GROUP_TYPE : uint8
-{
-	SWAP_CHAIN, // BACK_BUFFER, FRONT_BUFFER
-	SHADOW, // SHADOW
-	G_BUFFER, // POSITION, NORMAL, COLOR
-	LIGHTING, // DIFFUSE LIGHT, SPECULAR LIGHT	
-	END,
-};
-
-enum
-{
-	RENDER_TARGET_SHADOW_GROUP_MEMBER_COUNT = 1,
-	RENDER_TARGET_G_BUFFER_GROUP_MEMBER_COUNT = 3,
-	RENDER_TARGET_LIGHTING_GROUP_MEMBER_COUNT = 2,
-	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END)
-};
 
 struct RenderTarget
 {
@@ -35,6 +20,8 @@ public:
 
 	void ClearRenderTargetView(uint32 index);
 	void ClearRenderTargetView();
+
+	ComPtr<ID3D12DescriptorHeap> GetRenderTargetHeap() { return m_rtvHeap; }
 
 	shared_ptr<Texture> GetRTTexture(uint32 index) { return m_rtVec[index].target; }
 	shared_ptr<Texture> GetDSTexture() { return m_dsTexture; }

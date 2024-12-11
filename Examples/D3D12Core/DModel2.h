@@ -1,6 +1,6 @@
 #pragma once
 #include "EnginePch.h"
-#include "Mesh.h"
+#include "Mesh2.h"
 #include "../MeshData.h"
 #include "ConstantBuffer.h"
 #include <directxtk/SimpleMath.h>
@@ -25,7 +25,6 @@ public:
         shared_ptr<DMesh>& newMesh);
     void Tick(float dt);
     void UpdateConstantBuffers();
-    virtual void UpdateAnimation(string clipId, int frame, int type = 0) {}
     virtual void UpdatePosition(const Vector3& inDelta);
     void SetWorldPosition(const Vector3& InPos);
     virtual void UpdateRotation(const Matrix& inDelta);
@@ -38,7 +37,7 @@ public:
     //virtual GraphicsPSO2& GetReflectPSO(const bool wired);
 
     virtual void Render();
-    virtual void UpdateAnimation(string clipId, int frame, int type);
+    virtual void UpdateAnimation(string clipId, int frame, int type = 0);
     void UpdateWorldRow(const Matrix& worldRow);
 
 
@@ -59,8 +58,8 @@ public:
 
     vector<DMesh>* m_meshes;
 
-    ConstantBuffer<MeshConstants> m_meshConsts;
-    ConstantBuffer<MaterialConstants> m_materialConsts;
+    ConstantBuffer2<MeshConstants2> m_meshConsts;
+    ConstantBuffer2<MaterialConstants2> m_materialConsts;
 
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;

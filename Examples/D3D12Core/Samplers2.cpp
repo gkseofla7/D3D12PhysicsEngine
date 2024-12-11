@@ -1,4 +1,4 @@
-#include "Samplers.h"
+#include "Samplers2.h"
 #include "Engine.h"
 #include "Device.h"
 namespace hlab {
@@ -57,7 +57,7 @@ void Samplers::Init()
     samplerHeapDesc.NumDescriptors = m_sampDescs.size();
     samplerHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     samplerHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;  // 셰이더에서 참조할 수 있도록 설정
-    ThrowIfFailed(DEVICE->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&m_descHeap)));
+    ThrowIfFailed2(DEVICE->CreateDescriptorHeap(&samplerHeapDesc, IID_PPV_ARGS(&m_descHeap)));
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle(m_descHeap->GetCPUDescriptorHandleForHeapStart());
     UINT descriptorSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);

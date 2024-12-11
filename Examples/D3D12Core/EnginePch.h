@@ -2,7 +2,6 @@
 #include <d3d12.h>
 #include "d3dx12.h"
 #include <d3dcompiler.h>
-#include <d3d12.h>
 #include <dxgi1_6.h>
 #include "DirectXTex.h"
 #include "DirectXTex.inl"
@@ -16,6 +15,7 @@
 #include <string>
 //#include "ThreadPool.h"
 #include <memory>
+#include <array>
 
 #include <filesystem>
 namespace fs = std::filesystem;
@@ -76,17 +76,6 @@ enum class SAMPLE_REGISTER : UINT8
 	END
 };
 
-enum
-{
-	SWAP_CHAIN_BUFFER_COUNT = 2,
-	CBV_REGISTER_COUNT = CBV_REGISTER::END,
-	SRV_REGISTER_COUNT = static_cast<uint8>(SRV_REGISTER::END) - CBV_REGISTER_COUNT,
-	CBV_SRV_REGISTER_COUNT = CBV_REGISTER_COUNT + SRV_REGISTER_COUNT,
-	//UAV_REGISTER_COUNT = static_cast<uint8>(UAV_REGISTER::END) - CBV_SRV_REGISTER_COUNT,
-	//TOTAL_REGISTER_COUNT = CBV_SRV_REGISTER_COUNT + UAV_REGISTER_COUNT
-	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END)
-};
-
 enum class RENDER_TARGET_GROUP_TYPE : uint8
 {
 	SWAP_CHAIN, // BACK_BUFFER, FRONT_BUFFER
@@ -95,6 +84,19 @@ enum class RENDER_TARGET_GROUP_TYPE : uint8
 	LIGHTING, // DIFFUSE LIGHT, SPECULAR LIGHT	
 	END,
 };
+
+enum
+{
+	SWAP_CHAIN_BUFFER_COUNT = 3,
+	CBV_REGISTER_COUNT = CBV_REGISTER::END,
+	SRV_REGISTER_COUNT = static_cast<uint8>(SRV_REGISTER::END) - CBV_REGISTER_COUNT,
+	CBV_SRV_REGISTER_COUNT = CBV_REGISTER_COUNT + SRV_REGISTER_COUNT,
+	//UAV_REGISTER_COUNT = static_cast<uint8>(UAV_REGISTER::END) - CBV_SRV_REGISTER_COUNT,
+	//TOTAL_REGISTER_COUNT = CBV_SRV_REGISTER_COUNT + UAV_REGISTER_COUNT
+	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END)
+};
+
+
 
 struct WindowInfo
 {
@@ -124,7 +126,7 @@ using DirectX::SimpleMath::Vector4;
 extern std::unique_ptr<class Engine> GEngine;
 
 
-inline void ThrowIfFailed(HRESULT hr) {
+inline void ThrowIfFailed2(HRESULT hr) {
 	if (FAILED(hr)) {
 		throw std::exception();
 	}

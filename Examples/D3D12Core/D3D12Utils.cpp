@@ -1,6 +1,6 @@
 // #define _CRT_SECURE_NO_WARNINGS // stb_image_write compile error fix
 #include "D3D12Utils.h"
-#include "Engine.h"
+//#include "Engine.h"
 #include "CommandQueue.h"
 
 #include <DirectXTexEXR.h> // EXR 형식 HDRI 읽기
@@ -16,8 +16,8 @@
 #include <directxtk12/DDSTextureLoader.h>
 #include <directxtk12/ResourceUploadBatch.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#define STB_IMAGE_WRITE_IMPLEMENTATION
+//#define STB_IMAGE_IMPLEMENTATION
+//#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
 #include "stb_image_write.h"
 
@@ -26,7 +26,7 @@ namespace hlab {
     using namespace std;
     using namespace DirectX;
     unordered_map<string, ImageInfo> D3D12Utils::imageMap;
-    void CheckResult(HRESULT hr, ID3DBlob* errorBlob) {
+    void CheckResult2(HRESULT hr, ID3DBlob* errorBlob) {
         if (FAILED(hr)) {
             // 파일이 없을 경우
             if ((hr & D3D11_ERROR_FILE_NOT_FOUND) != 0) {
@@ -57,7 +57,7 @@ namespace hlab {
             filename.c_str(), shaderMacros.empty() ? NULL : shaderMacros.data(),
             D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", "vs_5_0", compileFlags, 0,
             &vertexShader, &errorBlob);
-        CheckResult(hr, errorBlob.Get());
+        CheckResult2(hr, errorBlob.Get());
     }
 
     void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device> device,
@@ -76,12 +76,12 @@ namespace hlab {
             filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main",
             "ps_5_0", compileFlags, 0, &pixelShader, &errorBlob);
 
-        CheckResult(hr, errorBlob.Get());
+        CheckResult2(hr, errorBlob.Get());
     }
 
     void D3D12Utils::CreatePipelineState(ComPtr<ID3D12Device>& device, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc, ComPtr<ID3D12PipelineState>& OutPipelineState)
     {
-        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&OutPipelineState)));
+        ThrowIfFailed2(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&OutPipelineState)));
     }
 
 
@@ -109,7 +109,6 @@ namespace hlab {
         ::memcpy(indexDataBuffer, &indices[0], bufferSize);
         indexBuffer->Unmap(0, nullptr);
 
-        D3D12_INDEX_BUFFER_VIEW	indexBufferView;
         indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
         indexBufferView.Format = DXGI_FORMAT_R32_UINT;
         indexBufferView.SizeInBytes = bufferSize;
@@ -117,16 +116,16 @@ namespace hlab {
     }
 
 
-    void ReadEXRImage(const std::string filename, std::vector<uint8_t>& image,
+    void ReadEXRImage2(const std::string filename, std::vector<uint8_t>& image,
         int& width, int& height, DXGI_FORMAT& pixelFormat) {
 
         const std::wstring wFilename(filename.begin(), filename.end());
 
         TexMetadata metadata;
-        ThrowIfFailed(GetMetadataFromEXRFile(wFilename.c_str(), metadata));
+        ThrowIfFailed2(GetMetadataFromEXRFile(wFilename.c_str(), metadata));
 
         ScratchImage scratchImage;
-        ThrowIfFailed(LoadFromEXRFile(wFilename.c_str(), NULL, scratchImage));
+        ThrowIfFailed2(LoadFromEXRFile(wFilename.c_str(), NULL, scratchImage));
 
         width = static_cast<int>(metadata.width);
         height = static_cast<int>(metadata.height);
@@ -156,7 +155,7 @@ namespace hlab {
         // }
     }
 
-    void ReadImage(const std::string filename, std::vector<uint8_t>& image,
+    void ReadImage2(const std::string filename, std::vector<uint8_t>& image,
         int& width, int& height) {
         int channels;
 
@@ -210,16 +209,16 @@ namespace hlab {
         delete[] img;
     }
 
-    void ReadImage(const std::string albedoFilename,
+    void ReadImage2(const std::string albedoFilename,
         const std::string opacityFilename, std::vector<uint8_t>& image,
         int& width, int& height) {
 
-        ReadImage(albedoFilename, image, width, height);
+        ReadImage2(albedoFilename, image, width, height);
 
         std::vector<uint8_t> opacityImage;
         int opaWidth, opaHeight;
 
-        ReadImage(opacityFilename, opacityImage, opaWidth, opaHeight);
+        ReadImage2(opacityFilename, opacityImage, opaWidth, opaHeight);
 
         assert(width == opaWidth && height == opaHeight);
 
@@ -287,8 +286,9 @@ namespace hlab {
         textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
         textureDesc.SampleDesc.Quality = 1;
         textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        CD3DX12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+        ThrowIfFailed2(device->CreateCommittedResource(
+            &heapProp,
             D3D12_HEAP_FLAG_NONE,
             &textureDesc,
             D3D12_RESOURCE_STATE_COPY_DEST,
@@ -303,11 +303,13 @@ namespace hlab {
         // the command list that references it has finished executing on the GPU.
         // We will flush the GPU at the end of this method to ensure the resource is not
         // prematurely destroyed.
+        CD3DX12_HEAP_PROPERTIES uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+        CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
         ComPtr<ID3D12Resource> textureUploadHeap;
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        ThrowIfFailed2(device->CreateCommittedResource(
+            &uploadHeapProp,
             D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize),
+            &resourceDesc,
             D3D12_RESOURCE_STATE_GENERIC_READ,
             nullptr,
             IID_PPV_ARGS(&textureUploadHeap)));
@@ -318,7 +320,8 @@ namespace hlab {
         textureData.SlicePitch = textureData.RowPitch * height;
 
         UpdateSubresources(RESOURCE_CMD_LIST.Get(), texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
-        RESOURCE_CMD_LIST->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+        CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        RESOURCE_CMD_LIST->ResourceBarrier(1, &resourceBarrier);
         
         GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue();
         // 해상도를 낮춰가며 밉맵 생성
@@ -354,11 +357,11 @@ namespace hlab {
                 // (거의 없겠지만) 둘 중 하나만 있을 경우도 고려하기 위해 각각 파일명
                 // 확인
                 if (!metallicFilename.empty()) {
-                    ReadImage(metallicFilename, mImage, mWidth, mHeight);
+                    ReadImage2(metallicFilename, mImage, mWidth, mHeight);
                 }
 
                 if (!roughnessFilename.empty()) {
-                    ReadImage(roughnessFilename, rImage, rWidth, rHeight);
+                    ReadImage2(roughnessFilename, rImage, rWidth, rHeight);
                 }
 
                 // 두 이미지의 해상도가 같다고 가정
@@ -398,10 +401,10 @@ namespace hlab {
             std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 
             if (ext == "exr") {
-                ReadEXRImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height, imageMap[filename].pixelFormat);
+                ReadEXRImage2(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height, imageMap[filename].pixelFormat);
             }
             else {
-                ReadImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
+                ReadImage2(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
             }
         }
         CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat, texture);
@@ -421,7 +424,7 @@ namespace hlab {
             imageMap[filename].pixelFormat =
                 usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 
-            ReadImage(albedoFilename, opacityFilename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
+            ReadImage2(albedoFilename, opacityFilename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
         }
         CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat,
             texture);
@@ -439,7 +442,7 @@ namespace hlab {
         ComPtr<ID3D12Resource> texture;
 
         // Load the texture using DirectXTK's CreateDDSTextureFromFile
-        ThrowIfFailed(CreateDDSTextureFromFile(
+        ThrowIfFailed2(CreateDDSTextureFromFile(
             device.Get(), uploadBatch, filename.c_str(), texture.ReleaseAndGetAddressOf()));
 
         // End the upload batch and wait for completion

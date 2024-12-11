@@ -1,8 +1,6 @@
 #pragma once
 
 #include "D3D11Utils.h"
-#include "D3D12Utils.h"
-#include "GraphicsCommonD3D12.h"
 #include <directxtk/SimpleMath.h>
 
 // "Common.hlsli"와 동일해야 함
@@ -142,10 +140,7 @@ template <typename T_CONSTS> class ConstantBuffer {
     }
 
     void Upload(ComPtr<ID3D11DeviceContext> &context) {
-        if (m_gpu != nullptr)
-        {
-            D3D11Utils::UpdateBuffer(context, m_cpu, m_gpu);
-        }
+        D3D11Utils::UpdateBuffer(context, m_cpu, m_gpu);
     }
 
   public:
@@ -157,36 +152,4 @@ template <typename T_CONSTS> class ConstantBuffer {
     ComPtr<ID3D11Buffer> m_gpu;
 };
 
-
-template <typename T_CONSTS> class DConstantBuffer {
-public:
-    void Initialize(ComPtr<ID3D12Device>& device) {
-        D3D12Utils::CreateConstBuffer(device, m_cpu, m_gpu);
-        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc;
-        D3D12_CONSTANT_BUFFER_VIEW_DESC CBVDesc;
-        CBVDesc.BufferLocation = m_globalConstsGPU->GetGPUVirtualAddress();
-        const UINT constantBufferSize = sizeof(m_globalConstsCPU);
-        CBVDesc.SizeInBytes = constantBufferSize;
-        Graphics::RegisterCBVHeap(m_gpu, CBVDesc, m_cpuHandle, m_gpuHandle);
-
-    }
-
-    void Upload() {
-        if (m_gpu != nullptr)
-        {
-            D3D12Utils::UpdateBuffer(m_cpu, m_gpu);
-            D
-        }
-    }
-public:
-    T_CONSTS& GetCpu() { return m_cpu; }
-    const auto Get() { return m_gpu.Get(); }
-    const auto GetAddressOf() { return m_gpu.GetAddressOf(); }
-
-    T_CONSTS m_cpu;
-    ComPtr<ID3D12Resource> m_gpu;
-    CD3DX12_CPU_DESCRIPTOR_HANDLE m_cpuHandle;
-    CD3DX12_GPU_DESCRIPTOR_HANDLE m_gpuHandle;
-
-};
 } // namespace hlab

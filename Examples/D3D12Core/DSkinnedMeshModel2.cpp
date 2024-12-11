@@ -8,7 +8,7 @@ namespace hlab {
     using std::make_shared;
     DSkinnedMeshModel2::DSkinnedMeshModel2(const string& basePath, const string& filename)
     {
-        m_boneTransforms = make_shared<StructuredBuffer2>();
+        m_boneTransforms = std::make_shared<StructuredBuffer2<Matrix>>();
         Initialize(basePath, filename);
     }
 

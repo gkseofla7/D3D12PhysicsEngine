@@ -1,9 +1,10 @@
 #pragma once
 #include "EnginePch.h"
-class SwapChain;
-class DescriptorHeap;
+
 
 namespace hlab {
+class SwapChain;
+class DescriptorHeap;
 class GraphicsCommandQueue
 {
 public:

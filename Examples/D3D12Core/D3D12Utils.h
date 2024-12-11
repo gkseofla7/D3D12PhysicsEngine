@@ -1,6 +1,7 @@
 #pragma once
 #include "EnginePch.h"
-
+#include "Engine.h"
+#include "../ThreadPool.h"
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
 // Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만
@@ -65,7 +66,7 @@ class D3D12Utils {
         void* vertexDataBuffer = nullptr;
         CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
         vertexBuffer->Map(0, &readRange, &vertexDataBuffer);
-        ::memcpy(vertexDataBuffer, &buffer[0], bufferSize);
+        ::memcpy(vertexDataBuffer, &vertices[0], bufferSize);
         vertexBuffer->Unmap(0, nullptr);
 
         // Initialize the vertex buffer view.
@@ -74,92 +75,7 @@ class D3D12Utils {
         vertexBufferView.SizeInBytes = bufferSize; // 버퍼의 크기	
     }
 
-    template <typename T_CONSTANT>
-    static void CreateConstBuffer(ComPtr<ID3D12Device>& device,
-        const T_CONSTANT& constantBufferData,
-        ComPtr<ID3D12Resource>& constantBuffer) {
 
-        ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, constantBufferData, &constantBuffer]() {
-            return CreateConstBufferImpl(device, constantBufferData, constantBuffer); };
-        tPool.EnqueueRenderJob(func);
-    }
-
-    template <typename T_CONSTANT>
-    static void CreateConstBuffer(ComPtr<ID3D12Device>& device,
-        const T_CONSTANT&& constantBufferData,
-        ComPtr<ID3D12Resource>& constantBuffer) {
-
-        ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&device, constantBufferData = std::move(constantBufferData), &constantBuffer]() {
-            return CreateConstBufferImpl(device, constantBufferData, constantBuffer); };
-        tPool.EnqueueRenderJob(func);
-    }
-
-    template <typename T_CONSTANT>
-    static void CreateConstBufferImpl(ComPtr<ID3D12Device> &device,
-                                  const T_CONSTANT& constantBufferData,
-                                  ComPtr<ID3D12Resource> &constantBuffer) {
-        static_assert((sizeof(T_CONSTANT) % 16) == 0,
-                      "Constant Buffer size must be 16-byte aligned");
-
-        D3D12_RESOURCE_DESC desc;
-        ZeroMemory(&desc, sizeof(desc));
-        const UINT constantBufferSize = (sizeof(constantBufferData) + (D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1)) & ~(D3D12_CONSTANT_BUFFER_DATA_PLACEMENT_ALIGNMENT - 1); // must be a multiple 256 bytes
-        desc.ByteWidth = constantBufferSize;
-        desc.Usage = D3D11_USAGE_DYNAMIC;
-        desc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-        desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-        desc.MiscFlags = 0;
-        desc.StructureByteStride = 0;
-
-        D3D11_SUBRESOURCE_DATA initData;
-        ZeroMemory(&initData, sizeof(initData));
-        initData.pSysMem = &constantBufferData;
-        initData.SysMemPitch = 0;
-        initData.SysMemSlicePitch = 0;
-
-        ThrowIfFailed(device->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &desc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(&constantBuffer)));
-    }
-    // Buffer
-    template <typename T_DATA>
-    static void UpdateBuffer(const T_DATA &bufferData,
-                             ComPtr<ID3D12Resource> &buffer) {
-        ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [&bufferData, &buffer]() {
-            return UpdateBufferImpl(context, bufferData, buffer); };
-        tPool.EnqueueRenderJob(func);
-    }
-
-    template <typename T_DATA>
-    static void UpdateBuffer(const T_DATA&& bufferData,
-        ComPtr<ID3D12Resource>& buffer) {
-        ThreadPool& tPool = ThreadPool::getInstance();
-        auto func = [bufferData = std::move(bufferData), &buffer]() {
-            return UpdateBufferImpl(context, bufferData, buffer); };
-        tPool.EnqueueRenderJob(func);
-    }
-
-    template <typename T_DATA>
-    static void UpdateBufferImpl(const T_DATA& bufferData,
-        ComPtr<ID3D12Resource>& buffer) {
-        if (!buffer) {
-            std::cout << "UpdateBuffer() buffer was not initialized."
-                << std::endl;
-        }
-        T_DATA* ConstantBufferWO;
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        ThrowIfFailed(buffer->Map(0, &readRange, reinterpret_cast<void**>(&ConstantBufferWO)));
-        memcpy(ConstantBufferWO, &bufferData, sizeof(T_DATA));
-        CD3DX12_RANGE writtenRange(0, sizeof(T_DATA));
-        ThrowIfFailed(buffer->Unmap(0, &writtenRange));
-    }
 
     // Texture
     static void CreateTexture(ComPtr<ID3D12Device> device,

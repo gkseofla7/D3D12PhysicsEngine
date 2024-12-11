@@ -1,7 +1,7 @@
 #include "RootSignature.h"
 #include "Engine.h"
 #include "Device.h"
-#include "Samplers.h"
+#include "Samplers2.h"
 namespace hlab {
 void RootSignature::Init()
 {
@@ -92,7 +92,7 @@ void RootSignature::CreateRootSignature(ComPtr<ID3D12RootSignature>& rootSignatu
 
 	ComPtr<ID3DBlob> signature;
 	ComPtr<ID3DBlob> error;
-	ThrowIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
-	ThrowIfFailed(DEVICE->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
+	ThrowIfFailed2(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
+	ThrowIfFailed2(DEVICE->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
 }
 }

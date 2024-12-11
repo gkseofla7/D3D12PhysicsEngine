@@ -8,6 +8,7 @@ namespace hlab {
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector4;
+using DirectX::SimpleMath::Matrix;
 
 struct Vertex {
     Vector3 position;

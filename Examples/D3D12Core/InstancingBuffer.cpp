@@ -1,5 +1,6 @@
 #include "InstancingBuffer.h"
 #include "Engine.h"
+#include "Device.h"
 namespace hlab {
 InstancingBuffer::InstancingBuffer()
 {

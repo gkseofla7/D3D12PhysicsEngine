@@ -14,7 +14,7 @@ struct MeshBlock
 	string PathName;
 	string FileName;
 	vector<DMesh> Meshes;
-	vector<MeshData> MeshDatas;
+	vector<hlab::MeshData> MeshDatas;
 	// Actor에 전달할 값들
 	bool useAlbedoMap = false;
 	bool useEmissiveMap = false;
@@ -29,10 +29,10 @@ struct MeshBlock
 	shared_ptr<DMesh> boundingBoxMesh;
 	shared_ptr<DMesh> boundingSphereMesh;
 
-	std::future<vector<MeshData>> Loader;
+	std::future<vector<hlab::MeshData>> Loader;
 	
-	ELoadType MeshDataLoadType = ELoadType::NotLoaded;
-	ELoadType MeshLoadType = ELoadType::NotLoaded;
+	hlab::ELoadType MeshDataLoadType = hlab::ELoadType::NotLoaded;
+	hlab::ELoadType MeshLoadType = hlab::ELoadType::NotLoaded;
 
 };
 class MeshLoadHelper2
@@ -50,8 +50,8 @@ public:
 
 	static bool LoadModelData(const string& inPath, const string& inName);
 	static void LoadModel(const string& key);
-	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants);
-	static bool GetMaterial(const string& InMeshKey, MaterialConstants& InConstants);
+	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants);
+	static bool GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants);
 	static string LoadBoxMesh(float InHalfExtent);
 public:
 	static map<string, MeshBlock> MeshMap;

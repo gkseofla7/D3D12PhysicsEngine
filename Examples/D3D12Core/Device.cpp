@@ -1,4 +1,7 @@
 #include "Device.h"
+#include <d3d12.h>
+#include <dxgi1_4.h>
+#include <wrl.h>
 namespace hlab {
 void Device::Init()
 {
@@ -7,7 +10,7 @@ void Device::Init()
 	// - riid : 디바이스의 COM ID
 	// - ppDevice : 생성된 장치가 매개변수에 설정
 #ifdef _DEBUG
-	::D3D12GetDebugInterface(IID_PPV_ARGS(&_debugController));
+	D3D12GetDebugInterface(IID_PPV_ARGS(&_debugController));
 	_debugController->EnableDebugLayer();
 #endif
 
@@ -18,7 +21,7 @@ void Device::Init()
 	// CreateDXGIFactory
 	// - riid : 디바이스의 COM ID
 	// - ppDevice : 생성된 장치가 매개변수에 설정
-	::CreateDXGIFactory(IID_PPV_ARGS(&_dxgi));
+	CreateDXGIFactory(IID_PPV_ARGS(&_dxgi));
 
 	// CreateDevice
 	// - 디스플레이 어댑터(그래픽 카드)를 나타내는 객체
@@ -26,7 +29,7 @@ void Device::Init()
 	// - MinimumFeatureLevel : 응용 프로그램이 요구하는 최소 기능 수준 (구닥다리 걸러낸다)
 	// - riid : 디바이스의 COM ID
 	// - ppDevice : 생성된 장치가 매개변수에 설정
-	::D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
+	D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&m_device));
 }
 
 }

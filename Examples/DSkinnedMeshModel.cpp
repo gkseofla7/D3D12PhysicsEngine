@@ -1,6 +1,5 @@
 #include "DSkinnedMeshModel.h"
 #include "GeometryGenerator.h"
-#include "DModel.h"
 #include "AnimHelper.h"
 
 namespace hlab {
