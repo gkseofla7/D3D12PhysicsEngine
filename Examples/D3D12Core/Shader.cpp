@@ -19,11 +19,13 @@ void Shader::Init()
 	D3D12Utils::CreateVertexShader(DEVICE, L"BasicVS.hlsl", m_basicVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"BasicVS.hlsl", m_skinnedVS,
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
+	D3D12Utils::CreateVertexShader(DEVICE, L"SkyboxVS.hlsl", m_skyboxVS);
 
 
 
 	// Pixel Shader
 	D3D12Utils::CreatePixelShader(DEVICE, L"BasicPS.hlsl", m_basicPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"SkyboxPS.hlsl", m_skyboxPS);
 }
 
 

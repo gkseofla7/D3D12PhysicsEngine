@@ -24,8 +24,8 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetRenderTargetHeap() { return m_rtvHeap; }
 	ComPtr<ID3D12DescriptorHeap> GetShaderResourceHeap() { return m_srvHeap; }
 
-	shared_ptr<Texture> GetRTTexture(uint32 index) { return m_rtVec[index].target; }
-	shared_ptr<Texture> GetDSTexture() { return m_dsTexture; }
+	shared_ptr<Texture> GetRTTexture(uint32 index);
+	shared_ptr<Texture> GetDSTexture();
 
 	void WaitTargetToResource();
 	void WaitResourceToTarget();

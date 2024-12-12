@@ -95,6 +95,14 @@ void RenderTargetGroup::ClearRenderTargetView()
 	GRAPHICS_CMD_LIST->ClearDepthStencilView(m_dsvHeapBegin, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 }
 
+shared_ptr<Texture> RenderTargetGroup::GetRTTexture(uint32 index)
+{
+	return m_rtVec[index].target; 
+}
+shared_ptr<Texture> RenderTargetGroup::GetDSTexture()
+{
+	return m_dsTexture; 
+}
 void RenderTargetGroup::WaitTargetToResource()
 {
 	GRAPHICS_CMD_LIST->ResourceBarrier(m_rtCount, m_targetToResource);

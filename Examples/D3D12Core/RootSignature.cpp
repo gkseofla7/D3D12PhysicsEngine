@@ -36,45 +36,50 @@ void RootSignature::CreateDefaultRootSignature()
 	// MeshConstants, MaterialConstants
 
 	vector<CD3DX12_ROOT_PARAMETER1> rootParameters;
-	rootParameters.resize(9);
-	// 공용 데이터
-	// b0, GlobalConstants
-	rootParameters[0].InitAsConstantBufferView(0); 
+	rootParameters.resize(5);
 	// t10, t11, t12, t13
 	{
-		CD3DX12_DESCRIPTOR_RANGE1 range[4];
-		range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
-		range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11);
-		range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12);
-		range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 13);
-		rootParameters[1].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[2].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[3].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
-		rootParameters[4].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11);
+		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12);
+		ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 13);
+		rootParameters[0].InitAsDescriptorTable(4, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 	// 로컬 데이터
-	{
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-		// b1 : MeshConstants, b2 : MaterialConstants
-		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-		rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	{//b0~b3
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
+		//b0, GlobalConstants,  b1 : MeshConstants, b2 : MaterialConstants
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+		ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 3);
+		rootParameters[1].InitAsDescriptorTable(4, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	{//t0~t4
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[6];
 		// t0 : height,	 t1 : albedo,	t2 : normal,	t3: ao
 		// t4 : metallicRoughness,	 t5 : emissive
-		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
-		rootParameters[6].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 1);
+		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 2);
+		ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 3);
+		ranges[4].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 4);
+		ranges[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
+		rootParameters[2].InitAsDescriptorTable(6, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 		
 		size_t sampleSize = GEngine->GetSamples()->GetSampleDesc().size();
 		CD3DX12_DESCRIPTOR_RANGE1 sampleRanges[7];
 		for (size_t i = 0; i < sampleSize; ++i) {
 			sampleRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, static_cast<UINT>(i));  // 각 샘플러를 하나씩 할당
 		}
-		rootParameters[7].InitAsDescriptorTable(static_cast<UINT>(sampleSize), &sampleRanges[0], D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[3].InitAsDescriptorTable(static_cast<UINT>(sampleSize), &sampleRanges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 	// TODO 임시로, 제거 필요
 	const int MAX_LIGHTS = 3;
 	CD3DX12_DESCRIPTOR_RANGE1 shadowMapRange;
 	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS, 15); // Start from t15
-	rootParameters[8].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[4].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
 
 	CreateRootSignature(defaultRootSignature, rootParameters);
 }

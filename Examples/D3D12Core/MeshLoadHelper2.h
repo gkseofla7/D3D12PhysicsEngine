@@ -52,7 +52,7 @@ public:
 	static void LoadModel(const string& key);
 	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants);
 	static bool GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants);
-	static string LoadBoxMesh(float InHalfExtent);
+	static string LoadBoxMesh(float InHalfExtent, bool bIndicesReverse = false);
 public:
 	static map<string, MeshBlock> MeshMap;
 	static std::mutex m_mtx;

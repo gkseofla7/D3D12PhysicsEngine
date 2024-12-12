@@ -8,7 +8,7 @@ class StructuredBuffer2
 {
 public:
 	void Init()
-	{
+	{ 
 		m_elementSize = sizeof(T_ELEMENT);
 		m_elementCount = m_cpu.size();
 		m_resourceState = D3D12_RESOURCE_STATE_COMMON;

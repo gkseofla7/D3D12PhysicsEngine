@@ -10,9 +10,13 @@ public:
 
 	void Init();
 	
-	ComPtr<ID3DBlob> GetBasicVS() { return m_basicVS;; }
-	ComPtr<ID3DBlob> GetSkinnedVS() { return m_skinnedVS;; }
-	ComPtr<ID3DBlob> GetBasicPS() { return m_basicPS;; }
+	ComPtr<ID3DBlob> GetBasicVS() { return m_basicVS; }
+	ComPtr<ID3DBlob> GetSkinnedVS() { return m_skinnedVS; }
+	ComPtr<ID3DBlob> GetSkyboxVS() { return m_skyboxVS; }
+
+
+	ComPtr<ID3DBlob> GetBasicPS() { return m_basicPS; }
+	ComPtr<ID3DBlob> GetSkyboxPS() { return m_skyboxPS; }
 	//void Update();
 
 
@@ -22,7 +26,10 @@ private:
 	// GraphicsShader
 	ComPtr<ID3DBlob> m_basicVS;
 	ComPtr<ID3DBlob> m_skinnedVS;
+	ComPtr<ID3DBlob> m_skyboxVS;
+
 	ComPtr<ID3DBlob> m_basicPS;
+	ComPtr<ID3DBlob> m_skyboxPS;
 
 };
 

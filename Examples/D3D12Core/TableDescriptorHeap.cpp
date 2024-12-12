@@ -44,8 +44,9 @@ void GraphicsDescriptorHeap::SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_R
 
 void GraphicsDescriptorHeap::CommitTable()
 {
-	// CBV ¼ÂÆÃ
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(5, GetGPUHandle(CBV_REGISTER::b1));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, GetGPUHandle(SRV_REGISTER::t10));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(CBV_REGISTER::b0));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, GetGPUHandle(SRV_REGISTER::t0));
 	m_currentGroupIndex++;
 }
 

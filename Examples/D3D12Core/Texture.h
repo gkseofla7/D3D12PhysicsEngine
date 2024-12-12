@@ -16,7 +16,6 @@ public:
 		D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());
 
 	void CreateFromResource(ComPtr<ID3D12Resource> tex2D);
-
 public:
 	ComPtr<ID3D12Resource> GetTex2D() { return m_tex2D; }
 	ComPtr<ID3D12DescriptorHeap> GetSRV() { return m_srvHeap; }

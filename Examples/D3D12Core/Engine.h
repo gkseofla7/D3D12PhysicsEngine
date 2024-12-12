@@ -20,6 +20,7 @@ class GraphicsPipelineState;
 class GraphicsPSO2;
 class Texture;
 class Samplers;
+class DModel2;
 class DSkinnedMeshModel2;
 template <typename T_CONSTS> class ConstantBuffer2;
 struct GlobalConstants2;
@@ -35,6 +36,7 @@ public:
 	bool InitMainWindow();
 	bool InitGUI();
 	void InitGraphics();
+	void InitPSO();
 	void InitGlobalBuffer();
 	void InitCubemaps(wstring basePath, wstring envFilename,
 		wstring specularFilename, wstring irradianceFilename,
@@ -88,7 +90,8 @@ private:
 	shared_ptr<Samplers> m_samplers;
 
 	shared_ptr<GraphicsPSO2> m_defaultGraphicsPSO;
-
+	shared_ptr<GraphicsPSO2> m_skyboxGraphicsPSO;
+public:
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 
 	shared_ptr<ConstantBuffer2<GlobalConstants2>> m_globalConstsBuffer;
@@ -117,6 +120,7 @@ private:
 	hlab::Camera m_camera;
 	// DaerimGTA
 	shared_ptr<DSkinnedMeshModel2> m_activeModel;
+	shared_ptr<DModel2> m_skybox;
 	// EDaerimGTA
 };
 }

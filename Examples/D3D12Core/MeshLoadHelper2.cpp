@@ -99,6 +99,7 @@ bool MeshLoadHelper2::GetMaterial(const string& inPath, const string& inName, Ma
     string key = inPath + inName;
     return GetMaterial(key, inName, InConstants);
 }
+
 bool MeshLoadHelper2::GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants)
 {
     if (MeshMap.find(InMeshKey) == MeshMap.end())
@@ -406,13 +407,17 @@ bool MeshLoadHelper2::GetBoundingMesh(const string& InMeshKey,
 
     return true;
 }
-string MeshLoadHelper2::LoadBoxMesh(float InHalfExtent)
+string MeshLoadHelper2::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
 {
     string Key = "Box"  + std::to_string(InHalfExtent);
     if (MeshMap.find(Key) == MeshMap.end())
     {
         std::vector<MeshData>& meshDatas = MeshMap[Key].MeshDatas;
         meshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
+        if (bIndicesReverse)
+        {
+            std::reverse(meshDatas[0].indices.begin(), meshDatas[0].indices.end());
+        }
         MeshMap[Key].MeshDataLoadType = ELoadType::Loaded;
 
         auto func = [Key]() {

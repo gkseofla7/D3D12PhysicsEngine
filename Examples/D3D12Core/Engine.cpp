@@ -10,6 +10,7 @@
 #include "Samplers2.h"
 #include "ConstantBuffer.h"
 #include "DSkinnedMeshModel2.h"
+#include "MeshLoadHelper2.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	UINT msg,
 	WPARAM wParam,
@@ -37,8 +38,8 @@ void Engine::Init(const WindowInfo& info)
 	CreateRenderTargetGroups();
 
 	ResizeWindow(info.width, info.height);
-	m_camera.SetAspectRatio(this->GetAspectRatio());
-
+	m_camera.SetAspectRatio(this->GetAspectRatio()); 
+	 
 	InitGUI();
 	
 	InitScene();
@@ -181,9 +182,20 @@ void Engine::InitGraphics()
 	m_graphicsPipelineState = std::make_shared< GraphicsPipelineState>();
 	m_graphicsPipelineState->Init();
 
+
+	InitPSO();
+}
+
+void Engine::InitPSO()
+{
 	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO2>();
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
+
+	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO2>();
+	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
+
 }
+
 void Engine::InitGlobalBuffer()
 {
 	m_globalConstsBuffer = std::make_shared<ConstantBuffer2<GlobalConstants2>>();
@@ -234,7 +246,7 @@ bool Engine::InitScene()
 		// DaerimGTA
 		globalConstsCPU.strengthIBL = 0.1f;
 		globalConstsCPU.lodBias = 0.0f;
-
+	 
 		m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
 			0.0654498f);
 
@@ -253,6 +265,9 @@ bool Engine::InitScene()
 			m_activeModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
 				Matrix::CreateTranslation(center));
 			m_activeModel->SetScale(0.2f);
+
+			string meshKey = MeshLoadHelper2::LoadBoxMesh(40.0f, false);
+			m_skybox = std::make_shared<DModel2>(meshKey);
 		}
 		// EDaerimGTA
 	}
@@ -264,16 +279,14 @@ void Engine::Update(float dt)
 {
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 
+	m_activeModel->Tick(dt);
+	m_skybox->Tick(dt);
 	// 반사 행렬 추가
 	const Vector3 eyeWorld = m_camera.GetEyePos();
 	const Matrix reflectRow; //Matrix::CreateReflection(m_mirrorPlane);
 	const Matrix viewRow = m_camera.GetViewRow();
 	const Matrix projRow = m_camera.GetProjRow();
 	UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
-	//GET_SINGLE(Input)->Update();
-	//GET_SINGLE(Timer)->Update();
-	//GET_SINGLE(SceneManager)->Update();
-	//GET_SINGLE(InstancingManager)->ClearBuffer();
 
 	Render();
 }
@@ -285,6 +298,9 @@ void Engine::Render()
 	//GET_SINGLE(SceneManager)->Render();
 	m_activeModel->Render();
 
+	m_skyboxGraphicsPSO->UploadGraphicsPSO();
+	m_skybox->Render();
+
 	RenderEnd();
 }
 
@@ -293,14 +309,18 @@ void Engine::RenderBegin()
 	m_graphicsCmdQueue->RenderBegin();
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	// 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
-	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(
-		1, m_globalConstsBuffer->GetGpuVirtualAddress(m_swapChain->GetBackBufferIndex()));
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(5, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
 
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	ID3D12DescriptorHeap* descHeap[2];
+	descHeap[0] = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
+	descHeap[1] = m_samplers->GetDescHeap().Get();
+	GRAPHICS_CMD_LIST->SetDescriptorHeaps(2, &descHeap[0]);
+
+	
 }
 
 void Engine::RenderEnd()

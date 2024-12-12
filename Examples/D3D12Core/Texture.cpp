@@ -214,4 +214,6 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 		DEVICE->CreateShaderResourceView(m_tex2D.Get(), &srvDesc, m_srvHeapBegin);
 	}
 }
+
+
 }

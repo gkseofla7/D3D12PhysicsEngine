@@ -7,7 +7,11 @@ namespace hlab {
 using namespace std;
 using namespace DirectX;
 
-Camera::Camera() { UpdateViewDir(); }
+Camera::Camera() 
+{
+    UpdateViewDir();
+    m_farZ = 100.f;
+}
 
 Matrix Camera::GetViewRow() {
     return Matrix::CreateTranslation(-m_position) *
@@ -76,8 +80,9 @@ void Camera::PrintView() {
          << m_position.y << "f, " << m_position.z << "f), " << m_yaw << "f, "
          << m_pitch << "f);" << endl;
 }
-
+ 
 Matrix Camera::GetProjRow() {
+    m_farZ = 100.f;
     return m_usePerspectiveProjection
                ? XMMatrixPerspectiveFovLH(XMConvertToRadians(m_projFovAngleY),
                                           m_aspect, m_nearZ, m_farZ)
