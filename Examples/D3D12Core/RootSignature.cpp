@@ -5,7 +5,8 @@
 namespace hlab {
 void RootSignature::Init()
 {
-	CreateGraphicsRootSignature();
+	//CreateGraphicsRootSignature();
+	CreateDefaultRootSignature();
 }
 
 void RootSignature::CreateGraphicsRootSignature()
@@ -32,41 +33,48 @@ void RootSignature::CreateGraphicsRootSignature()
 }
 void RootSignature::CreateDefaultRootSignature()
 {
-
-
-	//ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);//Texture
-	// 공용 텍스처
-	//ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 10, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);//Texture
 	// MeshConstants, MaterialConstants
 
-
-	size_t sampleSize = GEngine->GetSamples()->GetSampleDesc().size();
-	vector<CD3DX12_DESCRIPTOR_RANGE1> sampleRanges(sampleSize);
-	for (size_t i = 0; i < sampleSize; ++i) {
-		sampleRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, i);  // 각 샘플러를 하나씩 할당
-	}
-
 	vector<CD3DX12_ROOT_PARAMETER1> rootParameters;
-	rootParameters.resize(7);
+	rootParameters.resize(9);
 	// 공용 데이터
 	// b0, GlobalConstants
 	rootParameters[0].InitAsConstantBufferView(0); 
 	// t10, t11, t12, t13
-	rootParameters[1].InitAsShaderResourceView(10);// (1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-	rootParameters[2].InitAsShaderResourceView(11);
-	rootParameters[3].InitAsShaderResourceView(12);
-	rootParameters[4].InitAsShaderResourceView(13);
+	{
+		CD3DX12_DESCRIPTOR_RANGE1 range[4];
+		range[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
+		range[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11);
+		range[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12);
+		range[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 13);
+		rootParameters[1].InitAsDescriptorTable(1, &range[0], D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[2].InitAsDescriptorTable(1, &range[1], D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[3].InitAsDescriptorTable(1, &range[2], D3D12_SHADER_VISIBILITY_ALL);
+		rootParameters[4].InitAsDescriptorTable(1, &range[3], D3D12_SHADER_VISIBILITY_ALL);
+	}
 	// 로컬 데이터
-	
-	CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
-	// b1 : MeshConstants, b2 : MaterialConstants
-	ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
-	// t0 : height,	 t1 : albedo,	t2 : normal,	t3: ao
-	// t4 : metallicRoughness,	 t5 : emissive
-	ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC);
-	rootParameters[6].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
-	rootParameters[7].InitAsDescriptorTable(static_cast<UINT>(sampleRanges.size()), sampleRanges.data(), D3D12_SHADER_VISIBILITY_ALL);
+	{
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[2];
+		// b1 : MeshConstants, b2 : MaterialConstants
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 2, 1, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
+		rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+		// t0 : height,	 t1 : albedo,	t2 : normal,	t3: ao
+		// t4 : metallicRoughness,	 t5 : emissive
+		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 6, 0, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE);
+		rootParameters[6].InitAsDescriptorTable(1, &ranges[1], D3D12_SHADER_VISIBILITY_ALL);
+		
+		size_t sampleSize = GEngine->GetSamples()->GetSampleDesc().size();
+		CD3DX12_DESCRIPTOR_RANGE1 sampleRanges[7];
+		for (size_t i = 0; i < sampleSize; ++i) {
+			sampleRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, static_cast<UINT>(i));  // 각 샘플러를 하나씩 할당
+		}
+		rootParameters[7].InitAsDescriptorTable(static_cast<UINT>(sampleSize), &sampleRanges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	// TODO 임시로, 제거 필요
+	const int MAX_LIGHTS = 3;
+	CD3DX12_DESCRIPTOR_RANGE1 shadowMapRange;
+	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS, 15); // Start from t15
+	rootParameters[8].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
 
 	CreateRootSignature(defaultRootSignature, rootParameters);
 }
@@ -89,10 +97,12 @@ void RootSignature::CreateRootSignature(ComPtr<ID3D12RootSignature>& rootSignatu
 	CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
 	rootSignatureDesc.Init_1_1(static_cast<UINT>(rootParams.size()), rootParams.data(), 0, nullptr, rootSignatureFlags);
 
-
 	ComPtr<ID3DBlob> signature;
 	ComPtr<ID3DBlob> error;
+	//ThrowIfFailed2(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
 	ThrowIfFailed2(D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, featureData.HighestVersion, &signature, &error));
 	ThrowIfFailed2(DEVICE->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
 }
 }
+
+

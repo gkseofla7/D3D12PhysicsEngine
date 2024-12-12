@@ -10,13 +10,15 @@ class GraphicsCommandQueue
 public:
 	~GraphicsCommandQueue();
 
-	void Init(ComPtr<ID3D12Device> device, shared_ptr<SwapChain> swapChain);
+	void Init(ComPtr<ID3D12Device> device);
 	void WaitSync();
 
 	void RenderBegin();
 	void RenderEnd();
 
 	void FlushResourceCommandQueue();
+
+	void SetSwapChain(shared_ptr<SwapChain>	swapChain) { m_swapChain = swapChain; }
 
 	ComPtr<ID3D12CommandQueue> GetCmdQueue() { return m_cmdQueue; }
 	ComPtr<ID3D12GraphicsCommandList> GetGraphicsCmdList() { return	m_cmdList; }

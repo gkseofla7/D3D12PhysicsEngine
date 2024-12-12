@@ -22,6 +22,7 @@ public:
 	void ClearRenderTargetView();
 
 	ComPtr<ID3D12DescriptorHeap> GetRenderTargetHeap() { return m_rtvHeap; }
+	ComPtr<ID3D12DescriptorHeap> GetShaderResourceHeap() { return m_srvHeap; }
 
 	shared_ptr<Texture> GetRTTexture(uint32 index) { return m_rtVec[index].target; }
 	shared_ptr<Texture> GetDSTexture() { return m_dsTexture; }
@@ -35,6 +36,7 @@ private:
 	uint32							m_rtCount;
 	shared_ptr<Texture>				m_dsTexture;
 	ComPtr<ID3D12DescriptorHeap>	m_rtvHeap;
+	ComPtr<ID3D12DescriptorHeap>	m_srvHeap;
 
 private:
 	uint32							m_rtvHeapSize;

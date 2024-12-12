@@ -132,3 +132,15 @@ inline void ThrowIfFailed2(HRESULT hr) {
 	}
 }
 }
+/*
+		{
+		if (error) {
+			// 에러 블롭에서 메시지 추출
+			const char* errorMsg = static_cast<const char*>(error->GetBufferPointer());
+			// 디버그 출력
+			OutputDebugStringA("Root Signature Serialization Error:\n");
+			OutputDebugStringA(errorMsg);
+			// 콘솔 출력
+			std::cerr << "Root Signature Serialization Error: " << errorMsg << std::endl;
+		}
+	}*/

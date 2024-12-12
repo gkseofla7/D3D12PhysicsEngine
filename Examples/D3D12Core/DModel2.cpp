@@ -133,12 +133,12 @@ void DModel2::Render() {
             m_meshConsts.PushGraphicsData();
             m_materialConsts.PushGraphicsData();
 
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture.GetSRVHandle(), SRV_REGISTER::t0);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture.GetSRVHandle(), SRV_REGISTER::t1);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture.GetSRVHandle(), SRV_REGISTER::t2);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture.GetSRVHandle(), SRV_REGISTER::t3);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture.GetSRVHandle(), SRV_REGISTER::t4);
-            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture.GetSRVHandle(), SRV_REGISTER::t5);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture->GetSRVHandle(), SRV_REGISTER::t1);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture->GetSRVHandle(), SRV_REGISTER::t2);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture->GetSRVHandle(), SRV_REGISTER::t3);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture->GetSRVHandle(), SRV_REGISTER::t4);
+            GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture->GetSRVHandle(), SRV_REGISTER::t5);
 
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
@@ -150,7 +150,7 @@ void DModel2::Render() {
     }
 }
 
-void DModel2::UpdateAnimation(string clipId, int frame, int type = 0) {
+void DModel2::UpdateAnimation(string clipId, int frame, int type) {
     // class skinnedMeshModel¿¡¼­ override
     cout << "Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, "
         "int clipId, int frame) was not implemented."

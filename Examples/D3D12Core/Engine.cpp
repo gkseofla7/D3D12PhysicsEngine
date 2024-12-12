@@ -30,36 +30,34 @@ Engine::~Engine()
 }
 void Engine::Init(const WindowInfo& info)
 {
-	m_window = info;	
+	m_window = info;
+	InitMainWindow();
 	InitGraphics();
 	InitGlobalBuffer();
-	//CreateConstantBuffer(CBV_REGISTER::b0, sizeof(LightParams), 1);
-	//CreateConstantBuffer(CBV_REGISTER::b1, sizeof(TransformParams), 256);
-	//CreateConstantBuffer(CBV_REGISTER::b2, sizeof(MaterialParams), 256);
 	CreateRenderTargetGroups();
 
 	ResizeWindow(info.width, info.height);
-
 	m_camera.SetAspectRatio(this->GetAspectRatio());
 
 	InitGUI();
 	
+	InitScene();
 	// TODO. CommandList Close 및 실행 필요
 }
 int Engine::Run()
 {
-
-	// Main message loop
 	MSG msg = { 0 };
-	while (WM_QUIT != msg.message) {
-		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+	while (WM_QUIT != msg.message)
+	{ 
+		if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+		{
 			TranslateMessage(&msg);
 			DispatchMessage(&msg);
 		}
-		else {
+		else 
+		{
+			ImGui_ImplWin32_NewFrame(); 
 			ImGui_ImplDX12_NewFrame();
-			ImGui_ImplWin32_NewFrame();
-
 			ImGui::NewFrame();
 			ImGui::Begin("Scene Control");
 
@@ -84,7 +82,6 @@ int Engine::Run()
 
 bool Engine::InitMainWindow()
 {
-
 	WNDCLASSEX wc = { sizeof(WNDCLASSEX),
 					 CS_CLASSDC,
 					 WndProc2,
@@ -126,7 +123,6 @@ bool Engine::InitMainWindow()
 }
 
 bool Engine::InitGUI() {
-
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO();
@@ -134,20 +130,21 @@ bool Engine::InitGUI() {
 	io.DisplaySize = ImVec2(float(m_window.width), float(m_window.height));
 	ImGui::StyleColorsLight();
 
+	if (!ImGui_ImplWin32_Init(m_window.hwnd))
+	{
+		return false;
+	}
+
 	// Setup Platform/Renderer backends
 	if (!ImGui_ImplDX12_Init(DEVICE.Get(), SWAP_CHAIN_BUFFER_COUNT, DXGI_FORMAT_R8G8B8A8_UNORM,
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetRenderTargetHeap().Get(),
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetRenderTargetHeap()->GetCPUDescriptorHandleForHeapStart(),
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetRenderTargetHeap()->GetGPUDescriptorHandleForHeapStart()
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap().Get(),
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(),
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetGPUDescriptorHandleForHeapStart()
 		)) 
 	{
 		return false;
 	}
 
-	if (!ImGui_ImplWin32_Init(m_window.hwnd))
-	{
-		return false;
-	}
 
 	return true;
 }
@@ -161,17 +158,22 @@ void Engine::InitGraphics()
 	m_device = std::make_shared<Device>();
 	m_device->Init();
 
+	m_graphicsCmdQueue = std::make_shared<GraphicsCommandQueue>();
+	m_graphicsCmdQueue->Init(m_device->GetDevice());
+
 	m_swapChain = std::make_shared< SwapChain>();
 	m_swapChain->Init(m_window, m_device->GetDevice(), m_device->GetDXGI(), m_graphicsCmdQueue->GetCmdQueue());
 
-	m_graphicsCmdQueue = std::make_shared<GraphicsCommandQueue>();
-	m_graphicsCmdQueue->Init(m_device->GetDevice(), m_swapChain);
+	m_graphicsCmdQueue->SetSwapChain(m_swapChain);
 
 	m_graphicsDescHeap = std::make_shared< GraphicsDescriptorHeap>();
 	m_graphicsDescHeap->Init(256);// 흠.. Frame 개수만큼만 넣어도 되지않을까 싶긴한데
 
 	m_shader = std::make_shared<Shader>();
 	m_shader->Init();
+
+	m_samplers = std::make_shared<Samplers>();
+	m_samplers->Init();
 
 	m_rootSignature = std::make_shared<RootSignature>();
 	m_rootSignature->Init();
@@ -181,11 +183,6 @@ void Engine::InitGraphics()
 
 	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO2>();
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
-
-	m_samplers = std::make_shared<Samplers>();
-	m_samplers->Init();
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
-
 }
 void Engine::InitGlobalBuffer()
 {
@@ -205,16 +202,9 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	wstring brdfFilename) {
 	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
 	m_envTex->Load((basePath + envFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
-
 	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
-
 	m_specularTex->Load((basePath + specularFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
-
 	m_brdfTex->Load((basePath + brdfFilename).c_str(), true);
-	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
 }
 
 bool Engine::InitScene()
@@ -300,12 +290,17 @@ void Engine::Render()
 
 void Engine::RenderBegin()
 {
-
+	m_graphicsCmdQueue->RenderBegin();
+	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	// 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
 	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(
 		1, m_globalConstsBuffer->GetGpuVirtualAddress(m_swapChain->GetBackBufferIndex()));
 
-	m_graphicsCmdQueue->RenderBegin();
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(1, m_envTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(2, m_irradianceTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(3, m_specularTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootShaderResourceView(4, m_brdfTex->GetTex2D()->GetGPUVirtualAddress());
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void Engine::RenderEnd()
@@ -368,7 +363,6 @@ void Engine::CreateRenderTargetGroups()
 	// SwapChain Group
 	{
 		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
-
 		for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
 		{
 			ComPtr<ID3D12Resource> resource;
@@ -422,37 +416,37 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		// 화면 해상도가 바뀌면 SwapChain을 다시 생성
 		if (m_swapChain) {
 
-			m_window.width = int(LOWORD(lParam));
-			m_window.height = int(HIWORD(lParam));
+			//m_window.width = int(LOWORD(lParam));
+			//m_window.height = int(HIWORD(lParam));
 
-			// 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
-			if (m_window.width && m_window.height) {
+			//// 윈도우가 Minimize 모드에서는 screenWidth/Height가 0
+			//if (m_window.width && m_window.height) {
 
-				std::cout << "Resize SwapChain to " << m_window.width << " "
-					<< m_window.height << std::endl;
+			//	std::cout << "Resize SwapChain to " << m_window.width << " "
+			//		<< m_window.height << std::endl;
 
-				// ViewPort 관련 Reset
-				// TODO. 제대로 날리고 있는지 확인 필요
-				m_swapChain->Init(m_window, DEVICE, m_device->GetDXGI(), m_graphicsCmdQueue->GetCmdQueue());
-				vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
-				for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
-				{
-					ComPtr<ID3D12Resource> resource;
-					m_swapChain->GetSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource));
-					rtVec[i].target = std::make_shared<Texture>();
-					rtVec[i].target->CreateFromResource(resource);
-				}
-				// DepthStencil
-				shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
-				dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
-					CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-					D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-				m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
-				//SetMainViewport();
+			//	// ViewPort 관련 Reset
+			//	// TODO. 제대로 날리고 있는지 확인 필요
+			//	m_swapChain->Init(m_window, DEVICE, m_device->GetDXGI(), m_graphicsCmdQueue->GetCmdQueue());
+			//	vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
+			//	for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
+			//	{
+			//		ComPtr<ID3D12Resource> resource;
+			//		m_swapChain->GetSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource));
+			//		rtVec[i].target = std::make_shared<Texture>();
+			//		rtVec[i].target->CreateFromResource(resource);
+			//	}
+			//	// DepthStencil
+			//	shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
+			//	dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
+			//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
+			//	//SetMainViewport();
 
 
-				m_camera.SetAspectRatio(this->GetAspectRatio());
-			}
+			//	m_camera.SetAspectRatio(this->GetAspectRatio());
+			//}
 		}
 		break;
 	case WM_SYSCOMMAND:
