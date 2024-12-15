@@ -33,7 +33,7 @@ public:
 			D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 			srvHeapDesc.NumDescriptors = 1;
 			srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+			srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 			DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
 
 			m_srvHeapBegin = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
@@ -48,6 +48,23 @@ public:
 			srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
 
 			DEVICE->CreateShaderResourceView(m_buffer.Get(), &srvDesc, m_srvHeapBegin);
+		}
+
+		// CBV
+		// TODO. 작업 필요
+		{
+			D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
+			cbvDesc.NumDescriptors = 1;
+			cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO.
+			cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+			DEVICE->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&m_cbvHeap));
+
+
+			//D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+			//cbvDesc.BufferLocation = m_cbvBuffer->GetGPUVirtualAddress() + static_cast<uint64>(m_elementSize) * i;
+			//cbvDesc.SizeInBytes = m_elementSize;   // CB size is required to be 256-byte aligned.
+
+			//DEVICE->CreateConstantBufferView(&cbvDesc, cbvHandle);
 		}
 	}
 
@@ -117,6 +134,7 @@ private:
 	vector<T_ELEMENT> m_cpu;
 	ComPtr<ID3D12Resource>			m_buffer;
 	ComPtr<ID3D12DescriptorHeap>	m_srvHeap;
+	ComPtr<ID3D12DescriptorHeap>	m_cbvHeap;
 
 	uint32						m_elementSize = 0;
 	uint32						m_elementCount = 0;

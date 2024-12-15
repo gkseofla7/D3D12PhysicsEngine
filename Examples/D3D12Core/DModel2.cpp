@@ -63,7 +63,7 @@ void DModel2::UpdateConstantBuffers()
     {
         return;
     }
-    if (m_isVisible) {
+    if (m_isVisible) { 
         m_meshConsts.Upload();
         m_materialConsts.Upload();
     }
@@ -78,8 +78,9 @@ void DModel2::Tick(float dt)
             return;
         }
     }
+    UpdateConstantBuffers();
 }
-void DModel2::UpdatePosition(const Vector3& inDelta)
+void DModel2::UpdatePosition(const Vector3& inDelta) 
 {
     Matrix newMatrix = Matrix::CreateTranslation(inDelta) * m_worldRow;
     UpdateWorldRow(newMatrix);
@@ -121,7 +122,8 @@ void DModel2::SetDirection(const Vector3& inDirection)
 //    return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
 //}
 
-void DModel2::Render() {
+void DModel2::Render()
+{ 
     if (m_initializeMesh == false)
     {
         return;
@@ -156,14 +158,11 @@ void DModel2::Render() {
             {
                 GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture->GetSRVHandle(), SRV_REGISTER::t5);
             }
-
+            GEngine->GetGraphicsDescHeap()->CommitTable();
 
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
             GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);
-
-            GEngine->GetGraphicsDescHeap()->CommitTable();
-            // TODO. release ÇÊ¿ä?
         }
     }
 }

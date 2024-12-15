@@ -2,6 +2,7 @@
 #include "SwapChain.h"
 #include "RenderTargetGroup.h"
 #include "Engine.h"
+#include "Samplers2.h"
 
 // ************************
 // GraphicsCommandQueue
@@ -60,22 +61,23 @@ void GraphicsCommandQueue::RenderBegin()
 	m_cmdList->Reset(m_cmdAlloc.Get(), nullptr);
 
 	int8 backIndex = m_swapChain->GetBackBufferIndex();
-
-	GEngine->m_rtGroups;
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(backIndex)->GetTex2D().Get(),
 		D3D12_RESOURCE_STATE_PRESENT, // 화면 출력
 		D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
+	m_cmdList->ResourceBarrier(1, &barrier);
 
-	//GEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::TRANSFORM)->Clear();
-	//GEngine->GetConstantBuffer(CONSTANT_BUFFER_TYPE::MATERIAL)->Clear();
-
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
 	GEngine->GetGraphicsDescHeap()->Clear();
 
-	ID3D12DescriptorHeap* descHeap = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
-	m_cmdList->SetDescriptorHeaps(1, &descHeap);
+	//ID3D12DescriptorHeap* descHeap = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
+	//m_cmdList->SetDescriptorHeaps(1, &descHeap);
 
-	m_cmdList->ResourceBarrier(1, &barrier);
+	ID3D12DescriptorHeap* descHeap[2];
+	descHeap[0] = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
+	descHeap[1] = GEngine->GetSamples()->GetDescHeap().Get();
+	GRAPHICS_CMD_LIST->SetDescriptorHeaps(2, descHeap);
 }
 
 void GraphicsCommandQueue::RenderEnd()

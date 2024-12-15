@@ -48,15 +48,15 @@ void RootSignature::CreateDefaultRootSignature()
 	}
 	// 로컬 데이터
 	{//b0~b3
-		CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[3];
 		//b0, GlobalConstants,  b1 : MeshConstants, b2 : MaterialConstants
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 0);
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
 		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
-		ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 3);
-		rootParameters[1].InitAsDescriptorTable(4, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+		//ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 3);
+		rootParameters[1].InitAsDescriptorTable(3, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
-	{//t0~t4
+	{//t0~t5
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[6];
 		// t0 : height,	 t1 : albedo,	t2 : normal,	t3: ao
 		// t4 : metallicRoughness,	 t5 : emissive

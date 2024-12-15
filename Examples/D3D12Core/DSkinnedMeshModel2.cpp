@@ -27,7 +27,7 @@ namespace hlab {
 
     void DSkinnedMeshModel2::Render() 
     {
-        m_boneTransforms->PushGraphicsData(SRV_REGISTER::t9);
+        //m_boneTransforms->PushGraphicsData(CBV_REGISTER::b3);
         DModel2::Render();
     };
 

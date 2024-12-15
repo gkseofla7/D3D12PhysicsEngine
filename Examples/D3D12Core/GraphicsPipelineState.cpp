@@ -44,9 +44,11 @@ void GraphicsPipelineState::Init()
 	psoDesc.SampleDesc.Count = 1;
 	ThrowIfFailed2(DEVICE->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_defaultPipelineState)));
 
+
+
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC skyboxRSDesc = psoDesc;
 	skyboxRSDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkyboxVS().Get());
 	skyboxRSDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkyboxPS().Get());
-	ThrowIfFailed2(DEVICE->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));
+	ThrowIfFailed2(DEVICE->CreateGraphicsPipelineState(&skyboxRSDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));
 }
 }

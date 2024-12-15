@@ -192,7 +192,7 @@ void Engine::InitPSO()
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
 
 	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO2>();
-	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
+	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState());
 
 }
 
@@ -266,7 +266,7 @@ bool Engine::InitScene()
 				Matrix::CreateTranslation(center));
 			m_activeModel->SetScale(0.2f);
 
-			string meshKey = MeshLoadHelper2::LoadBoxMesh(40.0f, false);
+			string meshKey = MeshLoadHelper2::LoadBoxMesh(40.0f, true);
 			m_skybox = std::make_shared<DModel2>(meshKey);
 		}
 		// EDaerimGTA
@@ -277,6 +277,8 @@ bool Engine::InitScene()
 
 void Engine::Update(float dt)
 {
+	MeshLoadHelper2::LoadAllUnloadedModel();
+
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 
 	m_activeModel->Tick(dt);
@@ -293,34 +295,30 @@ void Engine::Update(float dt)
 
 void Engine::Render()
 {
-	RenderBegin();
+	m_graphicsCmdQueue->RenderBegin();
 
-	//GET_SINGLE(SceneManager)->Render();
+	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	RenderBegin();
 	m_activeModel->Render();
 
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
+	RenderBegin();
 	m_skybox->Render();
 
-	RenderEnd();
+	RenderEnd(); 
 }
 
 void Engine::RenderBegin()
-{
-	m_graphicsCmdQueue->RenderBegin();
-	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	// 공통으로 사용할 텍스춰들: "Common.hlsli"에서 register(t10)부터 시작
+{	
+	// b0
+	m_globalConstsBuffer->PushGraphicsData();
+
+	// 공통으로 사용할 텍스춰들: t10 ~ t13
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(5, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
-
-	ID3D12DescriptorHeap* descHeap[2];
-	descHeap[0] = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
-	descHeap[1] = m_samplers->GetDescHeap().Get();
-	GRAPHICS_CMD_LIST->SetDescriptorHeaps(2, &descHeap[0]);
-
-	
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void Engine::RenderEnd()

@@ -43,8 +43,8 @@ void GraphicsDescriptorHeap::SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_R
 }
 
 void GraphicsDescriptorHeap::CommitTable()
-{
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, GetGPUHandle(SRV_REGISTER::t10));
+{ 
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, GetGPUHandle(SRV_REGISTER::t10)); 
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(CBV_REGISTER::b0));
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, GetGPUHandle(SRV_REGISTER::t0));
 	m_currentGroupIndex++;
@@ -62,10 +62,10 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(SRV_REGISTER re
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(uint8 reg)
 {
-	assert(reg > 0);
+	assert(reg >= 0);
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_descHeap->GetCPUDescriptorHandleForHeapStart();
 	handle.ptr += m_currentGroupIndex * m_groupSize;
-	handle.ptr += (reg - 1) * m_handleSize;
+	handle.ptr += (reg) * m_handleSize;
 	return handle;
 }
 
@@ -79,10 +79,10 @@ D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGPUHandle(SRV_REGISTER re
 }
 D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGPUHandle(uint8 reg)
 {
-	assert(reg > 0);
+	assert(reg >= 0);
 	D3D12_GPU_DESCRIPTOR_HANDLE handle = m_descHeap->GetGPUDescriptorHandleForHeapStart();
 	handle.ptr += m_currentGroupIndex * m_groupSize;
-	handle.ptr += (reg - 1) * m_handleSize;
+	handle.ptr += (reg) * m_handleSize;
 	return handle;
 }
 

@@ -176,7 +176,8 @@ public:
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCpuHandle(m_currentIndex);
         GEngine->GetGraphicsDescHeap()->SetCBV(cpuHandle, m_reg);
 
-        m_currentIndex++;
+        m_currentIndex = (m_currentIndex+ 1)% m_elementCount;
+        
     }
 
     D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress(uint32 index)
@@ -216,7 +217,7 @@ private:
     {
         D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
         cbvDesc.NumDescriptors = m_elementCount;
-        cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO.
         cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         DEVICE->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&m_cbvHeap));
 
