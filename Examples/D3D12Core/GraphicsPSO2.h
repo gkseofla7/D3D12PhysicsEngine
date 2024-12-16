@@ -2,9 +2,9 @@
 
 #include "EnginePch.h"
 
-namespace hlab {
+namespace dengine {
 
-class GraphicsPSO2 {
+class GraphicsPSO {
 public:
     void Init(ComPtr<ID3D12RootSignature>	rootSignature, ComPtr<ID3D12PipelineState> pipelineState);
 
@@ -18,4 +18,4 @@ private:
     //    D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST;
 };
 
-} // namespace hlab
+} // namespace dengine

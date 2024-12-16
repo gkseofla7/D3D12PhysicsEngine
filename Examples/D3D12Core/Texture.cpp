@@ -3,7 +3,7 @@
 #include "CommandQueue.h"
 #include "Device.h"
 //#include "Engine.h"
-namespace hlab {
+namespace dengine {
 Texture::Texture()
 {
 

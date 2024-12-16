@@ -9,7 +9,7 @@
 #include "TableDescriptorHeap.h"
 #include "RenderTargetGroup.h"
 #include "../Camera.h"
-namespace hlab {
+namespace dengine {
 class Device;
 class CommandQueue;
 class RootSignature;
@@ -17,7 +17,7 @@ class GraphicsCommandQueue;
 class SwapChain;
 class Shader;
 class GraphicsPipelineState;
-class GraphicsPSO2;
+class GraphicsPSO;
 class Texture;
 class Samplers;
 class DModel2;
@@ -89,8 +89,8 @@ private:
 	shared_ptr<GraphicsPipelineState> m_graphicsPipelineState;
 	shared_ptr<Samplers> m_samplers;
 
-	shared_ptr<GraphicsPSO2> m_defaultGraphicsPSO;
-	shared_ptr<GraphicsPSO2> m_skyboxGraphicsPSO;
+	shared_ptr<GraphicsPSO> m_defaultGraphicsPSO;
+	shared_ptr<GraphicsPSO> m_skyboxGraphicsPSO;
 public:
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 

@@ -3,7 +3,7 @@
 #include "../GeometryGenerator.h"
 #include "DModel2.h"
 #include "StructuredBuffer2.h"
-namespace hlab {
+namespace dengine {
 // DModel에서는 Mesh Loading
 // DSkinnedMeshModel에서는 Animation Loading
 class DSkinnedMeshModel2 : public DModel2 {
@@ -29,4 +29,4 @@ private:
     Matrix m_accumulatedRootTransformToLocal;
 };
 
-} // namespace hlab
+} // namespace dengine

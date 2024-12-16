@@ -8,7 +8,7 @@
 // device는 문맥상의 중요성 때문에 예외로 맨 앞에 뒀습니다.
 // 강의가 진행되면서 조금씩 기능이 추가됩니다.
 
-namespace hlab {
+namespace dengine {
 
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
@@ -103,4 +103,4 @@ class D3D12Utils {
 private:
     static std::unordered_map<std::string, ImageInfo> imageMap;
 };
-} // namespace hlab
+} // namespace dengine

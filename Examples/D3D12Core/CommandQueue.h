@@ -2,7 +2,7 @@
 #include "EnginePch.h"
 
 
-namespace hlab {
+namespace dengine {
 class SwapChain;
 class DescriptorHeap;
 class GraphicsCommandQueue

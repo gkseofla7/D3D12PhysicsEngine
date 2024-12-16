@@ -4,7 +4,7 @@
 //#include "skinnedMeshModel.h"
 //#include "SkeletalMeshActor.h"
 //#include "DaerimsEngineBase.h"
-//namespace hlab
+//namespace dengine
 //{
 //class Wizard;
 //class DaerimGame : public Engine

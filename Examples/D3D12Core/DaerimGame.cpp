@@ -9,7 +9,7 @@
 //#include "bullet/btBulletDynamicsCommon.h"
 //#include "bullet/btBulletCollisionCommon.h"
 //#include "bullet/BulletCollision/btBulletCollisionCommon.h"
-//namespace hlab {
+//namespace dengine {
 //
 //using namespace std;
 //using namespace DirectX;

@@ -2,7 +2,7 @@
 #include "EnginePch.h"
 
 
-namespace hlab {
+namespace dengine {
 class GraphicsDescriptorHeap
 {
 public:

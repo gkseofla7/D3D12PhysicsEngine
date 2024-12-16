@@ -21,7 +21,7 @@
 namespace fs = std::filesystem;
 
 #include <directxtk/SimpleMath.h>
-namespace hlab {
+namespace dengine {
 using int8 = __int8;
 using int16 = __int16;
 using int32 = __int32;
@@ -106,6 +106,19 @@ struct WindowInfo
 	bool	windowed; // 창모드 or 전체화면
 };
 
+#define DECLARE_SINGLE(type)		\
+private:							\
+	type() {}						\
+	~type() {}						\
+public:								\
+	static type* GetInstance()		\
+	{								\
+		static type instance;		\
+		return &instance;			\
+	}								\
+
+#define GET_SINGLE(type)	type::GetInstance()
+
 #define DEVICE				GEngine->GetDevice()->GetDevice()
 #define ROOTSIGNATURE		GEngine->GetRootSignature()
 #define SHADER				GEngine->GetShader()
@@ -121,7 +134,10 @@ using std::wstring;
 using std::vector;
 using std::array;
 using std::unique_ptr;
+using DirectX::SimpleMath::Vector3;
 using DirectX::SimpleMath::Vector4;
+using DirectX::SimpleMath::Matrix;
+
 
 extern std::unique_ptr<class Engine> GEngine;
 

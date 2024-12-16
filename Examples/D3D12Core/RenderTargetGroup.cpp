@@ -2,7 +2,7 @@
 #include "Engine.h"
 #include "Device.h"
 #include "CommandQueue.h"
-namespace hlab {
+namespace dengine {
 	void RenderTargetGroup::Create(RENDER_TARGET_GROUP_TYPE groupType, vector<RenderTarget>& rtVec, shared_ptr<Texture> dsTexture)
 {
 	m_groupType = groupType;

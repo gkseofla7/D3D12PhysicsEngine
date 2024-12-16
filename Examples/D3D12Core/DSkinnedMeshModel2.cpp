@@ -3,7 +3,7 @@
 #include "EnginePch.h"
 #include "Device.h"
 #include "D3D12Utils.h"
-namespace hlab {
+namespace dengine {
 
     using std::make_shared;
     DSkinnedMeshModel2::DSkinnedMeshModel2(const string& basePath, const string& filename)
@@ -45,4 +45,4 @@ namespace hlab {
     }
 
 
-} // namespace hlab
+} // namespace dengine

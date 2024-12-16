@@ -2,7 +2,7 @@
 #include <d3d12.h>
 #include <dxgi1_4.h>
 #include <wrl.h>
-namespace hlab {
+namespace dengine {
 void Device::Init()
 {
 	// D3D12 디버그층 활성화

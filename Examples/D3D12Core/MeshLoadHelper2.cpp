@@ -2,16 +2,16 @@
 #include "Engine.h"
 #include "Device.h"
 #include "D3D12Utils.h"
-#include "../GeometryGenerator.h"
+#include "GeometryGenerator2.h"
 #include "../ThreadPool.h"
 #include <filesystem>
 #include "Mesh2.h"
 
-namespace hlab {
+namespace dengine {
     using namespace DirectX;
-    map<string, MeshBlock> MeshLoadHelper2::MeshMap;
-    std::mutex MeshLoadHelper2::m_mtx;
-    BoundingBox GetBoundingBoxFromVertices2(const vector<hlab::Vertex>& vertices) {
+    map<string, MeshBlock> MeshLoadHelper::MeshMap;
+    std::mutex MeshLoadHelper::m_mtx;
+    BoundingBox GetBoundingBoxFromVertices2(const vector<dengine::Vertex>& vertices) {
 
         if (vertices.size() == 0)
             return BoundingBox();
@@ -44,27 +44,27 @@ namespace hlab {
         outBox.Extents = maxCorner - outBox.Center;
     }
 
-vector<hlab::MeshData> CreateMeshData2(MeshBlock& OutMeshBlock)
+vector<dengine::MeshData> CreateMeshData(MeshBlock& OutMeshBlock)
 { 
 	auto [mesheDatas, _] =
-		hlab::GeometryGenerator::ReadAnimationFromFile(OutMeshBlock.PathName, OutMeshBlock.FileName);
+		GeometryGenerator::ReadAnimationFromFile(OutMeshBlock.PathName, OutMeshBlock.FileName);
     return mesheDatas;
 }
-hlab::AnimationData ReadAnimationFromFile2(string path, string name)
+AnimationData ReadAnimationFromFile2(string path, string name)
 {
 	auto [_, ani] =
-		hlab::GeometryGenerator::ReadAnimationFromFile(path, name);
+		GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
 
-void MeshLoadHelper2::LoadAllUnloadedModel()
+void MeshLoadHelper::LoadAllUnloadedModel()
 {
     for (auto& Pair : MeshMap)
     {
         MeshBlock& mBloock = Pair.second;
-        if (mBloock.MeshDataLoadType == ELoadType::Loading && mBloock.Loader._Is_ready() == true)
+        if (mBloock.MeshDataLoadType == hlab::ELoadType::Loading && mBloock.Loader._Is_ready() == true)
         {
-            ThreadPool& tPool = ThreadPool::getInstance();
+            hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
             //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
             auto func = [&Pair]() {
                 return LoadModel(Pair.first); };
@@ -72,7 +72,7 @@ void MeshLoadHelper2::LoadAllUnloadedModel()
         } 
     }
 }
-bool MeshLoadHelper2::LoadModelData( const string& inPath, const string& inName)
+bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
 {
 	string key = inPath + inName;
 	if (MeshMap.find(key) == MeshMap.end())
@@ -83,30 +83,30 @@ bool MeshLoadHelper2::LoadModelData( const string& inPath, const string& inName)
         meshBlocks.PathName = inPath;
         meshBlocks.FileName = inName;
 
-		ThreadPool& tPool =  ThreadPool::getInstance();
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
         //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
         auto func = [&meshBlocks]() {
-            return CreateMeshData2(meshBlocks); };
+            return CreateMeshData(meshBlocks); };
 		MeshMap[key].Loader = tPool.EnqueueJob(func);
-		MeshMap[key].MeshDataLoadType = ELoadType::Loading;
+		MeshMap[key].MeshDataLoadType = hlab::ELoadType::Loading;
 		return false;
 	}
 	
-    return MeshMap[key].MeshDataLoadType == ELoadType::Loaded;
+    return MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loaded;
 }
-bool MeshLoadHelper2::GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants)
+bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants)
 {
     string key = inPath + inName;
     return GetMaterial(key, inName, InConstants);
 }
 
-bool MeshLoadHelper2::GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants)
+bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants)
 {
     if (MeshMap.find(InMeshKey) == MeshMap.end())
     {
         return false;
     }
-    if (MeshMap[InMeshKey].MeshDataLoadType != ELoadType::Loaded)
+    if (MeshMap[InMeshKey].MeshDataLoadType != hlab::ELoadType::Loaded)
     {
         return false;
     }
@@ -118,39 +118,39 @@ bool MeshLoadHelper2::GetMaterial(const string& InMeshKey, MaterialConstants2& I
     InConstants.useRoughnessMap = MeshMap[InMeshKey].useRoughnessMap;
     return true;
 }
-void MeshLoadHelper2::LoadModel(const string& key)
+void MeshLoadHelper::LoadModel(const string& key)
 {
     {
-        std::lock_guard<std::mutex> lock(MeshLoadHelper2::m_mtx);
+        std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
 
         if (MeshMap.find(key) == MeshMap.end())
         {
             return;
         }
         // MeshData 로드 안됨
-        if (MeshMap[key].MeshDataLoadType == ELoadType::NotLoaded)
+        if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::NotLoaded)
         {
             return;
         }
         // MeshData 로딩중
-        if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == false)
+        if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && MeshMap[key].Loader._Is_ready() == false)
         {
             return;
         }
         // 이미 모델 로딩중 or Loaded
-        if (MeshMap[key].MeshLoadType == ELoadType::Loading
-            || MeshMap[key].MeshLoadType == ELoadType::Loaded)
+        if (MeshMap[key].MeshLoadType == hlab::ELoadType::Loading
+            || MeshMap[key].MeshLoadType == hlab::ELoadType::Loaded)
         {
             return;
         }
-        MeshMap[key].MeshLoadType = ELoadType::Loading;
+        MeshMap[key].MeshLoadType = hlab::ELoadType::Loading;
     }
 
     std::vector<MeshData>& meshDatas = MeshMap[key].MeshDatas;
-    if (MeshMap[key].MeshDataLoadType == ELoadType::Loading && MeshMap[key].Loader._Is_ready() == true)
+    if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && MeshMap[key].Loader._Is_ready() == true)
     {
         meshDatas = MeshMap[key].Loader.get();
-        MeshMap[key].MeshDataLoadType = ELoadType::Loaded;
+        MeshMap[key].MeshDataLoadType = hlab::ELoadType::Loaded;
     }
 
     MeshBlock& meshBlock = MeshMap[key];
@@ -238,8 +238,8 @@ void MeshLoadHelper2::LoadModel(const string& key)
             if (filesystem::exists(meshData.normalTextureFilename)) {
                 ComPtr<ID3D12Resource> tex2D;
                 D3D12Utils::CreateTexture(DEVICE, meshData.normalTextureFilename, false,tex2D);
-                newMesh.emissiveTexture = std::make_shared<Texture>();
-                newMesh.emissiveTexture->CreateFromResource(tex2D);
+                newMesh.normalTexture = std::make_shared<Texture>();
+                newMesh.normalTexture->CreateFromResource(tex2D);
                 meshBlock.useNormalMap = true;
             }
             else {
@@ -356,23 +356,23 @@ void MeshLoadHelper2::LoadModel(const string& key)
         D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
             meshBlock.boundingSphereMesh->indexBuffer, meshBlock.boundingSphereMesh->indexBufferView);
     }
-    MeshMap[key].MeshLoadType = ELoadType::Loaded;
+    MeshMap[key].MeshLoadType = hlab::ELoadType::Loaded;
 }
 
 
-bool MeshLoadHelper2::GetMesh(const string& inPath, const string& inName, vector<DMesh>*& OutMesh)
+bool MeshLoadHelper::GetMesh(const string& inPath, const string& inName, vector<DMesh>*& OutMesh)
 {
     string key = inPath + inName;
     return GetMesh(key, OutMesh);
 }
 
-bool MeshLoadHelper2::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
+bool MeshLoadHelper::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
 {
     if (MeshMap.find(InKey) == MeshMap.end())
     {
         return false;
     }
-    if (MeshMap[InKey].MeshLoadType != ELoadType::Loaded)
+    if (MeshMap[InKey].MeshLoadType != hlab::ELoadType::Loaded)
     {
         return false;
     }
@@ -380,14 +380,14 @@ bool MeshLoadHelper2::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
     return true;
 }
 
-bool MeshLoadHelper2::GetBoundingMesh(const string& inPath, const string& inName, 
+bool MeshLoadHelper::GetBoundingMesh(const string& inPath, const string& inName, 
     DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
     shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
 {
     string key = inPath + inName;
     return GetBoundingMesh(key, outSphere, outBox, outSphereMesh, outBoxMesh);
 }
-bool MeshLoadHelper2::GetBoundingMesh(const string& InMeshKey,
+bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
     DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
     shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
 {
@@ -395,7 +395,7 @@ bool MeshLoadHelper2::GetBoundingMesh(const string& InMeshKey,
     {
         return false;
     }
-    if (MeshMap[InMeshKey].MeshLoadType != ELoadType::Loaded)
+    if (MeshMap[InMeshKey].MeshLoadType != hlab::ELoadType::Loaded)
     {
         return false;
     }
@@ -407,7 +407,7 @@ bool MeshLoadHelper2::GetBoundingMesh(const string& InMeshKey,
 
     return true;
 }
-string MeshLoadHelper2::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
+string MeshLoadHelper::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
 {
     string Key = "Box"  + std::to_string(InHalfExtent);
     if (MeshMap.find(Key) == MeshMap.end())
@@ -418,11 +418,11 @@ string MeshLoadHelper2::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
         {
             std::reverse(meshDatas[0].indices.begin(), meshDatas[0].indices.end());
         }
-        MeshMap[Key].MeshDataLoadType = ELoadType::Loaded;
+        MeshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
 
         auto func = [Key]() {
             return LoadModel(Key); };
-        ThreadPool& tPool = ThreadPool::getInstance();
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
        tPool.EnqueueJob(func);
     }
     return Key;

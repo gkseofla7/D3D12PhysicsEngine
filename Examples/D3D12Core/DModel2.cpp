@@ -5,10 +5,9 @@
 #include "Engine.h"
 #include "Device.h"
 #include "CommandQueue.h"
-#include "MeshLoadHelper2.h"
 #include <filesystem>
 
-namespace hlab {
+namespace dengine {
 
 using namespace std;
 using namespace DirectX;
@@ -44,9 +43,9 @@ void DModel2::Initialize(const std::string& basePath,
     m_meshConsts.Init(CBV_REGISTER::b1, FRAMEBUFFER_COUNT);
     m_materialConsts.Init(CBV_REGISTER::b2, FRAMEBUFFER_COUNT);
 
-    if (MeshLoadHelper2::LoadModelData(basePath, filename))
+    if (MeshLoadHelper::LoadModelData(basePath, filename))
     {
-        MeshLoadHelper2::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
+        MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
     }
 }
 void DModel2::Initialize(const string& meshKey) 
@@ -121,7 +120,7 @@ void DModel2::SetDirection(const Vector3& inDirection)
 //GraphicsPSO2& DModel2::GetReflectPSO(const bool wired) {
 //    return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
 //}
-
+ 
 void DModel2::Render()
 { 
     if (m_initializeMesh == false)
@@ -204,10 +203,10 @@ bool DModel2::LoadMesh()
         m_meshKey = m_basePath + m_filename;
     }
 
-    if (m_initializeMesh = MeshLoadHelper2::GetMesh(m_meshKey, m_meshes))
+    if (m_initializeMesh = MeshLoadHelper::GetMesh(m_meshKey, m_meshes))
     {
-        MeshLoadHelper2::GetBoundingMesh(m_meshKey, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
-        MeshLoadHelper2::GetMaterial(m_meshKey, m_materialConsts.GetCpu());
+        MeshLoadHelper::GetBoundingMesh(m_meshKey, m_boundingSphere, m_boundingBox, m_boundingSphereMesh, m_boundingBoxMesh);
+        MeshLoadHelper::GetMaterial(m_meshKey, m_materialConsts.GetCpu());
 
         //m_boundingSphereMesh->meshConstsGPU = m_meshConsts.Get();
         //m_boundingSphereMesh->materialConstsGPU = m_materialConsts.Get();
@@ -225,4 +224,4 @@ bool DModel2::LoadMesh()
     }
     return true;
 }
-} // namespace hlab
+} // namespace dengine

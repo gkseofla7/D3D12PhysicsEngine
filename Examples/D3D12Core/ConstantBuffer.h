@@ -10,7 +10,7 @@
 #define LIGHT_SPOT 0x04
 #define LIGHT_SHADOW 0x10
 
-namespace hlab {
+namespace dengine {
 
 using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector2;

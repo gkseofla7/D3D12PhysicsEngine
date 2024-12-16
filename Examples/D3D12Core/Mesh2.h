@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "EnginePch.h"
 #include "Texture.h"
-namespace hlab {
+namespace dengine {
 
 class Texture;
 struct DMesh {
@@ -25,4 +25,4 @@ struct DMesh {
     UINT offset = 0;
 };
 
-} // namespace hlab
+} // namespace dengine

@@ -2,7 +2,7 @@
 #include "Engine.h"
 #include "D3D12Utils.h"
 #include "Device.h"
-namespace hlab {
+namespace dengine {
 Shader::Shader()
 {
 

@@ -7,7 +7,7 @@
 // ************************
 // GraphicsCommandQueue
 // ************************
-namespace hlab {
+namespace dengine {
 GraphicsCommandQueue::~GraphicsCommandQueue()
 {
 	::CloseHandle(m_fenceEvent);

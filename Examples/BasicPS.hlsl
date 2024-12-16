@@ -5,11 +5,11 @@
 // https://github.com/Nadrin/PBR/blob/master/data/shaders/hlsl/pbr.hlsl
 
 // 메쉬 재질 텍스춰들 t0 부터 시작
-Texture2D albedoTex : register(t0);
-Texture2D normalTex : register(t1);
-Texture2D aoTex : register(t2);
-Texture2D metallicRoughnessTex : register(t3);
-Texture2D emissiveTex : register(t4);
+Texture2D albedoTex : register(t1);
+Texture2D normalTex : register(t2);
+Texture2D aoTex : register(t3);
+Texture2D metallicRoughnessTex : register(t4);
+Texture2D emissiveTex : register(t5);
 
 static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
 

@@ -2,7 +2,7 @@
 #include "EnginePch.h"
 #include "Texture.h"
 
-namespace hlab {
+namespace dengine {
 
 struct RenderTarget
 {

@@ -1,7 +1,7 @@
 #include "Samplers2.h"
 #include "Engine.h"
 #include "Device.h"
-namespace hlab {
+namespace dengine {
 void Samplers::Init()
 {
     D3D12_SAMPLER_DESC sampDesc = {};

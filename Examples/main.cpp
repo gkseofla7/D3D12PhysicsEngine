@@ -25,15 +25,15 @@ int main(int argc, char *argv[]) {
     //default:
     //    cout << argv[1] << " is not a valid example number" << endl;
     //}
-    hlab::WindowInfo info;
+    dengine::WindowInfo info;
     info.width = 1280;
     info.height = 720;
     info.windowed = true;
-    hlab::GEngine->Init(info);
+    dengine::GEngine->Init(info);
     //if (!app->Initialize()) {
     //    cout << "Initialization failed." << endl;
     //    return -1;
     //}
 
-    return hlab::GEngine->Run();
+    return dengine::GEngine->Run();
 }

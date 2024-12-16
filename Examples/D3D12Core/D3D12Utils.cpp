@@ -21,7 +21,7 @@
 #include "stb_image.h"
 #include "stb_image_write.h"
 
-namespace hlab {
+namespace dengine {
 
     using namespace std;
     using namespace DirectX;
@@ -492,4 +492,4 @@ namespace hlab {
         return sizeof(uint8_t) * 4;
     }
 
-} // namespace hlab
+} // namespace dengine

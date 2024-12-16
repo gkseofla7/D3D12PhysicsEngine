@@ -1,11 +1,11 @@
 #pragma once
 #include "EnginePch.h"
 #include "Mesh2.h"
-#include "../MeshData.h"
+#include "MeshData.h"
 #include "ConstantBuffer.h"
 #include <directxtk/SimpleMath.h>
 
-namespace hlab {
+namespace dengine {
 
     using std::cout;
     using std::endl;
@@ -84,4 +84,4 @@ private:
     Vector3 m_direction;
 };
 
-} // namespace hlab
+} // namespace dengine

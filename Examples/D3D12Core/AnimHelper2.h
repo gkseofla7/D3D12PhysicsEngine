@@ -3,10 +3,10 @@
 #include <string>
 #include <future>
 #include <unordered_set>
-#include "../GeometryGenerator.h"
+#include "GeometryGenerator2.h"
 #include "EnginePch.h"
 
-namespace hlab {
+namespace dengine {
 using namespace std;
 class DSkinnedMeshModel2;
 class Actor;
@@ -27,12 +27,12 @@ struct AnimationBlock
 	bool IsFirstSetting = true;
 	std::mutex mtx;
 };
-class AnimHelper2
+class AnimHelper
 {
 private:
-	AnimHelper2() {};
+	AnimHelper() {};
 public:
-	static AnimHelper2& GetInstance();
+	static AnimHelper& GetInstance();
 	void Initialize();
 	void AddAnimPath(int InActorId, string InPathName);
 	void AddAnimStateToAnim(int InActorId, string inState, string inAnimName);

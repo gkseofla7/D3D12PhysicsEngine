@@ -2,7 +2,7 @@
 #include "EnginePch.h"
 #include "Engine.h"
 #include "CommandQueue.h"
-namespace hlab {
+namespace dengine {
 template <typename T_ELEMENT>
 class StructuredBuffer2
 {

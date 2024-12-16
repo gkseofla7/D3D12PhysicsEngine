@@ -1,6 +1,6 @@
 #include "EnginePch.h"
 #include "Engine.h"
-namespace hlab {
+namespace dengine {
 	unique_ptr<Engine> GEngine = std::make_unique<Engine>();
 }
 

@@ -6,40 +6,40 @@
 #include "DSkinnedMeshModel2.h"
 #include "StructuredBuffer2.h"
 //#include "Actor.h"
-namespace hlab {
+namespace dengine {
 
-AnimHelper2& AnimHelper2::GetInstance()
+AnimHelper& AnimHelper::GetInstance()
 {
-	static AnimHelper2 helper;
+	static AnimHelper helper;
 	return helper;
 }
-void AnimHelper2::Initialize()
+void AnimHelper::Initialize()
 {
 	m_animStateToAnim.clear();
 	m_pathMap.clear();
 	m_animDatas.clear();
 }
-void AnimHelper2::AddAnimPath(int inModelId, string InPathName)
+void AnimHelper::AddAnimPath(int inModelId, string InPathName)
 {
 	m_pathMap[inModelId] = InPathName;
 }
-void AnimHelper2::AddAnimStateToAnim(int inModelId,string inState, string inAnimName)
+void AnimHelper::AddAnimStateToAnim(int inModelId,string inState, string inAnimName)
 {
 	// 내 생각엔 단 한번 해주는게
 	m_animStateToAnim[inModelId].insert({ inState,inAnimName});
 }
-hlab::AnimationData GetAnimationFromFile2(string path,string name)
+dengine::AnimationData GetAnimationFromFile2(string path,string name)
 {
 	auto [_, ani] =
-		hlab::GeometryGenerator::ReadAnimationFromFile(path, name);
+		dengine::GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
-bool AnimHelper2::LoadAnimation(DSkinnedMeshModel2* inModel, string inState)
+bool AnimHelper::LoadAnimation(DSkinnedMeshModel2* inModel, string inState)
 {
 	bool bInit;
 	return LoadAnimation(inModel, inState, bInit);
 }
-bool AnimHelper2::LoadAnimation(DSkinnedMeshModel2* inModel, string inState, bool& bInit)
+bool AnimHelper::LoadAnimation(DSkinnedMeshModel2* inModel, string inState, bool& bInit)
 {
 	bInit = false;
 	int modelId = inModel->m_modelId;
@@ -70,7 +70,7 @@ bool AnimHelper2::LoadAnimation(DSkinnedMeshModel2* inModel, string inState, boo
 		}
 		else if (animBlock.Loaders.find(inState) == animBlock.Loaders.end())
 		{
-			ThreadPool& tPool = ThreadPool::getInstance();
+			hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
 			std::future<AnimationData> Loader;
 			Loader = tPool.EnqueueJob(GetAnimationFromFile2, path, name);
 			animBlock.Loaders.insert({ inState,std::move(Loader) });
@@ -96,7 +96,7 @@ bool AnimHelper2::LoadAnimation(DSkinnedMeshModel2* inModel, string inState, boo
 
 	return true;
 }
-bool AnimHelper2::UpdateAnimation(Actor* InActor, string inState,
+bool AnimHelper::UpdateAnimation(Actor* InActor, string inState,
 	int frame, int type)
 { 
 	//std::shared_ptr<DSkinnedMeshModel2> skinnedMeshModel = std::dynamic_pointer_cast<DSkinnedMeshModel2>(InActor->GetModel());

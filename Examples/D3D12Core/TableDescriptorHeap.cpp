@@ -3,7 +3,7 @@
 #include "Device.h"
 #include "CommandQueue.h"
 
-namespace hlab {
+namespace dengine {
 void GraphicsDescriptorHeap::Init(uint32 count)
 {
 	m_groupCount = count;

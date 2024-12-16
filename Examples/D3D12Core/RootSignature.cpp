@@ -2,7 +2,7 @@
 #include "Engine.h"
 #include "Device.h"
 #include "Samplers2.h"
-namespace hlab {
+namespace dengine {
 void RootSignature::Init()
 {
 	//CreateGraphicsRootSignature();

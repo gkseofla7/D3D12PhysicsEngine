@@ -3,7 +3,7 @@
 #include "Device.h"
 #include "RootSignature.h"
 #include "Shader.h"
-namespace hlab {
+namespace dengine {
 void GraphicsPipelineState::Init()
 {
 	D3D12_INPUT_ELEMENT_DESC basicIEs[] = {

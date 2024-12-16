@@ -7,14 +7,14 @@
 #include <directxtk/SimpleMath.h>
 #include "../GameDef.h"
 
-namespace hlab {
+namespace dengine {
 using namespace std;
 struct MeshBlock
 {
 	string PathName;
 	string FileName;
 	vector<DMesh> Meshes;
-	vector<hlab::MeshData> MeshDatas;
+	vector<dengine::MeshData> MeshDatas;
 	// Actor에 전달할 값들
 	bool useAlbedoMap = false;
 	bool useEmissiveMap = false;
@@ -29,13 +29,13 @@ struct MeshBlock
 	shared_ptr<DMesh> boundingBoxMesh;
 	shared_ptr<DMesh> boundingSphereMesh;
 
-	std::future<vector<hlab::MeshData>> Loader;
+	std::future<vector<dengine::MeshData>> Loader;
 	
 	hlab::ELoadType MeshDataLoadType = hlab::ELoadType::NotLoaded;
 	hlab::ELoadType MeshLoadType = hlab::ELoadType::NotLoaded;
 
 };
-class MeshLoadHelper2
+class MeshLoadHelper
 {
 public:
 	static void LoadAllUnloadedModel();

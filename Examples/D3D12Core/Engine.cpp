@@ -15,9 +15,7 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	UINT msg,
 	WPARAM wParam,
 	LPARAM lParam);
-namespace hlab {
-
-
+namespace dengine {
 LRESULT WINAPI WndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return GEngine->MsgProc(hWnd, msg, wParam, lParam);
 }
@@ -188,10 +186,10 @@ void Engine::InitGraphics()
 
 void Engine::InitPSO()
 {
-	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO2>();
+	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
 
-	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO2>();
+	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState());
 
 }
@@ -231,7 +229,7 @@ bool Engine::InitScene()
 		globalConstsCPU.lights[0].spotPower = 3.0f;
 		globalConstsCPU.lights[0].radius = 0.04f;
 		globalConstsCPU.lights[0].type =
-			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+			LIGHT_SPOT;// | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 1의 위치와 방향은 Update()에서 설정
 		globalConstsCPU.lights[1].radiance = Vector3(5.0f);
@@ -239,7 +237,7 @@ bool Engine::InitScene()
 		globalConstsCPU.lights[1].fallOffEnd = 20.0f;
 		globalConstsCPU.lights[1].radius = 0.02f;
 		globalConstsCPU.lights[1].type =
-			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+			LIGHT_SPOT;// | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 2는 꺼놓음
 		globalConstsCPU.lights[2].type = LIGHT_OFF;
@@ -266,7 +264,7 @@ bool Engine::InitScene()
 				Matrix::CreateTranslation(center));
 			m_activeModel->SetScale(0.2f);
 
-			string meshKey = MeshLoadHelper2::LoadBoxMesh(40.0f, true);
+			string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
 			m_skybox = std::make_shared<DModel2>(meshKey);
 		}
 		// EDaerimGTA
@@ -277,7 +275,7 @@ bool Engine::InitScene()
 
 void Engine::Update(float dt)
 {
-	MeshLoadHelper2::LoadAllUnloadedModel();
+	MeshLoadHelper::LoadAllUnloadedModel();
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 
@@ -297,13 +295,13 @@ void Engine::Render()
 {
 	m_graphicsCmdQueue->RenderBegin();
 
-	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	RenderBegin();
-	m_activeModel->Render();
-
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
 	RenderBegin();
 	m_skybox->Render();
+
+	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	RenderBegin();
+	m_activeModel->Render();
 
 	RenderEnd(); 
 }

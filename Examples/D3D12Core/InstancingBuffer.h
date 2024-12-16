@@ -1,6 +1,6 @@
 #pragma once
 #include "EnginePch.h"
-namespace hlab {
+namespace dengine {
 struct InstancingParams
 {
 	//Matrix matWorld;
