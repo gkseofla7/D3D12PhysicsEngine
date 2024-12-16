@@ -91,6 +91,8 @@ private:
 
 	shared_ptr<GraphicsPSO> m_defaultGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_skyboxGraphicsPSO;
+
+	UINT m_numQualityLevels = 0;
 public:
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 

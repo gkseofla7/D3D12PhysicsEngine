@@ -14,6 +14,8 @@ public:
 	void Create(DXGI_FORMAT format, uint32 width, uint32 height,
 		const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
 		D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());
+	void Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty, 
+		D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());
 
 	void CreateFromResource(ComPtr<ID3D12Resource> tex2D);
 public:

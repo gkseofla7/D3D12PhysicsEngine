@@ -81,7 +81,7 @@ namespace dengine {
 
     void D3D12Utils::CreatePipelineState(ComPtr<ID3D12Device>& device, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc, ComPtr<ID3D12PipelineState>& OutPipelineState)
     {
-        ThrowIfFailed2(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&OutPipelineState)));
+        ThrowIfFailed(device->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&OutPipelineState)));
     }
 
 
@@ -122,10 +122,10 @@ namespace dengine {
         const std::wstring wFilename(filename.begin(), filename.end());
 
         TexMetadata metadata;
-        ThrowIfFailed2(GetMetadataFromEXRFile(wFilename.c_str(), metadata));
+        ThrowIfFailed(GetMetadataFromEXRFile(wFilename.c_str(), metadata));
 
         ScratchImage scratchImage;
-        ThrowIfFailed2(LoadFromEXRFile(wFilename.c_str(), NULL, scratchImage));
+        ThrowIfFailed(LoadFromEXRFile(wFilename.c_str(), NULL, scratchImage));
 
         width = static_cast<int>(metadata.width);
         height = static_cast<int>(metadata.height);
@@ -287,7 +287,7 @@ namespace dengine {
         textureDesc.SampleDesc.Quality = 1;
         textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
         CD3DX12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
-        ThrowIfFailed2(device->CreateCommittedResource(
+        ThrowIfFailed(device->CreateCommittedResource(
             &heapProp,
             D3D12_HEAP_FLAG_NONE,
             &textureDesc,
@@ -306,7 +306,7 @@ namespace dengine {
         CD3DX12_HEAP_PROPERTIES uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
         CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
         ComPtr<ID3D12Resource> textureUploadHeap;
-        ThrowIfFailed2(device->CreateCommittedResource(
+        ThrowIfFailed(device->CreateCommittedResource(
             &uploadHeapProp,
             D3D12_HEAP_FLAG_NONE,
             &resourceDesc,
@@ -442,7 +442,7 @@ namespace dengine {
         ComPtr<ID3D12Resource> texture;
 
         // Load the texture using DirectXTK's CreateDDSTextureFromFile
-        ThrowIfFailed2(CreateDDSTextureFromFile(
+        ThrowIfFailed(CreateDDSTextureFromFile(
             device.Get(), uploadBatch, filename.c_str(), texture.ReleaseAndGetAddressOf()));
 
         // End the upload batch and wait for completion

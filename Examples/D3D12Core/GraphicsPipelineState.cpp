@@ -42,13 +42,13 @@ void GraphicsPipelineState::Init()
 	//TODO RTV Format 다시 확인 필요
 	psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 	psoDesc.SampleDesc.Count = 1;
-	ThrowIfFailed2(DEVICE->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_defaultPipelineState)));
+	ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_defaultPipelineState)));
 
 
 
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC skyboxRSDesc = psoDesc;
 	skyboxRSDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkyboxVS().Get());
 	skyboxRSDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkyboxPS().Get());
-	ThrowIfFailed2(DEVICE->CreateGraphicsPipelineState(&skyboxRSDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));
+	ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&skyboxRSDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));
 }
 }

@@ -16,7 +16,7 @@ namespace dengine {
 	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 	rtvHeapDesc.NodeMask = 0;
 
-	ThrowIfFailed2(DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
+	ThrowIfFailed(DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
 	// SRV
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};

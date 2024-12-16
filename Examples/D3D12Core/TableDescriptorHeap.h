@@ -14,6 +14,8 @@ public:
 
 	void CommitTable();
 
+	void CommitGlobalTextureTable();
+
 	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return m_descHeap; }
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(CBV_REGISTER reg);

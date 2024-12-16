@@ -16,6 +16,31 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	WPARAM wParam,
 	LPARAM lParam);
 namespace dengine {
+
+bool CheckMultisampleQualityLevels(ComPtr<ID3D12Device> device, DXGI_FORMAT format, UINT sampleCount)
+{
+    D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels = {};
+    msQualityLevels.Format = format;
+    msQualityLevels.SampleCount = sampleCount;
+    msQualityLevels.Flags = D3D12_MULTISAMPLE_QUALITY_LEVELS_FLAG_NONE;
+
+    HRESULT hr = device->CheckFeatureSupport(
+        D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS,
+        &msQualityLevels,
+        sizeof(msQualityLevels)
+    );
+
+    if (SUCCEEDED(hr)) {
+        printf("SampleCount: %u, NumQualityLevels: %u\n",
+               msQualityLevels.SampleCount,
+               msQualityLevels.NumQualityLevels);
+		return true;
+    } else {
+        printf("Failed to check multisample quality levels.\n");
+		return false;
+    }
+}
+
 LRESULT WINAPI WndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return GEngine->MsgProc(hWnd, msg, wParam, lParam);
 }
@@ -203,8 +228,6 @@ void Engine::InitGlobalBuffer()
 	m_irradianceTex = std::make_shared<Texture>();
 	m_specularTex = std::make_shared<Texture>();
 	m_brdfTex = std::make_shared<Texture>();
-
-	
 }
 
 void Engine::InitCubemaps(wstring basePath, wstring envFilename,
@@ -293,14 +316,11 @@ void Engine::Update(float dt)
 
 void Engine::Render()
 {
-	m_graphicsCmdQueue->RenderBegin();
+	RenderBegin();
 
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
-	RenderBegin();
 	m_skybox->Render();
-
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	RenderBegin();
 	m_activeModel->Render();
 
 	RenderEnd(); 
@@ -308,14 +328,20 @@ void Engine::Render()
 
 void Engine::RenderBegin()
 {	
+	m_graphicsCmdQueue->RenderBegin();
+	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	// 공용 데이터 셋팅
 	// b0
-	m_globalConstsBuffer->PushGraphicsData();
+	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(0, m_globalConstsBuffer->GetGpuVirtualAddress(0));
 
-	// 공통으로 사용할 텍스춰들: t10 ~ t13
+	// 공통으로 사용할 텍스춰들: t10 ~ t13, 해당 작업은 단 한번만
+	// 텍스처 로딩이 완료됐을경우에만(비동기 로딩일 경우 콜백 함수로 넘겨야될듯)
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
+
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
@@ -386,9 +412,49 @@ void Engine::CreateRenderTargetGroups()
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->CreateFromResource(resource);
 		}
-
+		//TODO. dsTexture 여기에 셋팅할 필요가..?
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)] = std::make_shared<RenderTargetGroup>();
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
+	}
+
+	D3D12_RESOURCE_DESC desc;
+	// FLOAT MSAA
+	{
+		vector<RenderTarget> rtVec(1);
+		
+
+		ComPtr<ID3D12Resource> backBuffer;
+		m_swapChain->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+		desc = backBuffer->GetDesc();
+
+		desc.MipLevels = desc.DepthOrArraySize = 1;
+		desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+		if (CheckMultisampleQualityLevels(DEVICE, DXGI_FORMAT_R16G16B16A16_FLOAT, 4))
+		{
+			m_numQualityLevels = 4;
+		}
+		if (m_numQualityLevels) {
+			desc.SampleDesc.Count = 4;
+			desc.SampleDesc.Quality = m_numQualityLevels - 1;
+		}
+		else {
+			desc.SampleDesc.Count = 1;
+			desc.SampleDesc.Quality = 0;
+		}
+		rtVec[0].target = std::make_shared<Texture>();
+		rtVec[0].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
+	}
+
+	// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
+	{
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		
 	}
 }
 

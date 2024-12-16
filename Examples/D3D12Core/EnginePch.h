@@ -80,7 +80,7 @@ enum class RENDER_TARGET_GROUP_TYPE : uint8
 {
 	SWAP_CHAIN, // BACK_BUFFER, FRONT_BUFFER
 	SHADOW, // SHADOW
-	G_BUFFER, // POSITION, NORMAL, COLOR
+	FLOAT, // POSITION, NORMAL, COLOR
 	LIGHTING, // DIFFUSE LIGHT, SPECULAR LIGHT	
 	END,
 };
@@ -142,7 +142,7 @@ using DirectX::SimpleMath::Matrix;
 extern std::unique_ptr<class Engine> GEngine;
 
 
-inline void ThrowIfFailed2(HRESULT hr) {
+inline void ThrowIfFailed(HRESULT hr) {
 	if (FAILED(hr)) {
 		throw std::exception();
 	}

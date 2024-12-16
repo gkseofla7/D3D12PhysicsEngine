@@ -139,6 +139,28 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 	CreateFromResource(m_tex2D);
 }
 
+void Texture::Create(const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags, 
+	D3D12_RESOURCE_DESC resourceDesc, Vector4 clearColor)
+{
+	m_desc = resourceDesc;
+	D3D12_RESOURCE_STATES resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
+	float arrFloat[4] = { clearColor.x, clearColor.y, clearColor.z, clearColor.w };
+	D3D12_CLEAR_VALUE optimizedClearValue = CD3DX12_CLEAR_VALUE(m_desc.Format, arrFloat);
+	D3D12_CLEAR_VALUE* pOptimizedClearValue = &optimizedClearValue;
+	// Create Texture2D
+	HRESULT hr = DEVICE->CreateCommittedResource(
+		&heapProperty,
+		heapFlags,
+		&m_desc,
+		resourceStates,
+		pOptimizedClearValue,
+		IID_PPV_ARGS(&m_tex2D));
+
+	assert(SUCCEEDED(hr));
+
+	CreateFromResource(m_tex2D);
+}
+
 void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 {
 	m_tex2D = tex2D;
