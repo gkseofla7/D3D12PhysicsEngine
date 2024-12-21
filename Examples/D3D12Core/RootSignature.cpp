@@ -7,6 +7,7 @@ void RootSignature::Init()
 {
 	//CreateGraphicsRootSignature();
 	CreateDefaultRootSignature();
+	CreateSamplingRootSignature();
 }
 
 void RootSignature::CreateGraphicsRootSignature()
@@ -85,7 +86,30 @@ void RootSignature::CreateDefaultRootSignature()
 	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS, 15); // Start from t15
 	rootParameters[5].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
 
-	CreateRootSignature(defaultRootSignature, rootParameters);
+	CreateRootSignature(m_defaultRootSignature, rootParameters);
+}
+
+void RootSignature::CreateSamplingRootSignature()
+{
+	vector<CD3DX12_ROOT_PARAMETER1> rootParameters;
+	rootParameters.resize(3);
+	// b0, GlobalConstants
+	{
+		rootParameters[0].InitAsConstantBufferView(static_cast<uint32>(CBV_REGISTER::b0)); // b0
+	}
+	// t0
+	{
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0);
+		rootParameters[1].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	// s0
+	{
+		CD3DX12_DESCRIPTOR_RANGE1 samplerRange[1];
+		samplerRange[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0);
+		rootParameters[2].InitAsDescriptorTable(1, &samplerRange[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	CreateRootSignature(m_samplinigRootSignature, rootParameters);
 }
 
 void RootSignature::CreateRootSignature(ComPtr<ID3D12RootSignature>& rootSignature, vector<CD3DX12_ROOT_PARAMETER1>& rootParams)

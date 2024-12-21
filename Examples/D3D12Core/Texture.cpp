@@ -138,9 +138,8 @@ void Texture::Create(DXGI_FORMAT format, uint32 width, uint32 height,
 
 	CreateFromResource(m_tex2D);
 }
-
-void Texture::Create(const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags, 
-	D3D12_RESOURCE_DESC resourceDesc, Vector4 clearColor)
+void Texture::Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
+	D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor)
 {
 	m_desc = resourceDesc;
 	D3D12_RESOURCE_STATES resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;

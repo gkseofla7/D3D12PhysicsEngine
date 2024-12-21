@@ -20,12 +20,14 @@ void Shader::Init()
 	D3D12Utils::CreateVertexShader(DEVICE, L"BasicVS.hlsl", m_skinnedVS,
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
 	D3D12Utils::CreateVertexShader(DEVICE, L"SkyboxVS.hlsl", m_skyboxVS);
-
+	D3D12Utils::CreateVertexShader(DEVICE, L"SamplingVS.hlsl", m_samplingVS);
 
 
 	// Pixel Shader
 	D3D12Utils::CreatePixelShader(DEVICE, L"BasicPS.hlsl", m_basicPS);
 	D3D12Utils::CreatePixelShader(DEVICE, L"SkyboxPS.hlsl", m_skyboxPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"SamplingPS.hlsl", m_samplingPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"PostEffectsPS.hlsl", m_postEffectsPS);
 }
 
 

@@ -53,6 +53,8 @@ public:
 	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants);
 	static bool GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants);
 	static string LoadBoxMesh(float InHalfExtent, bool bIndicesReverse = false);
+	static string LoadSquareMesh(const float scale = 1.0f,
+		const Vector2 texScale = Vector2(1.0f));
 public:
 	static map<string, MeshBlock> MeshMap;
 	static std::mutex m_mtx;

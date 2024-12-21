@@ -67,8 +67,8 @@ void GraphicsCommandQueue::RenderBegin()
 		D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
 	m_cmdList->ResourceBarrier(1, &barrier);
 
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->ClearRenderTargetView(backIndex);
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
 	GEngine->GetGraphicsDescHeap()->Clear();
 
 	//ID3D12DescriptorHeap* descHeap = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();

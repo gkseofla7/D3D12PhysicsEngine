@@ -108,9 +108,19 @@ void RenderTargetGroup::WaitTargetToResource()
 	GRAPHICS_CMD_LIST->ResourceBarrier(m_rtCount, m_targetToResource);
 }
 
+void RenderTargetGroup::WaitTargetToResource(int index)
+{
+	GRAPHICS_CMD_LIST->ResourceBarrier(1, &m_targetToResource[index]);
+}
+
 void RenderTargetGroup::WaitResourceToTarget()
 {
 	GRAPHICS_CMD_LIST->ResourceBarrier(m_rtCount, m_resourceToTarget);
+}
+
+void RenderTargetGroup::WaitResourceToTarget(int index)
+{
+	GRAPHICS_CMD_LIST->ResourceBarrier(1,& m_resourceToTarget[index]);
 }
 }
 

@@ -28,7 +28,9 @@ public:
 	shared_ptr<Texture> GetDSTexture();
 
 	void WaitTargetToResource();
+	void WaitTargetToResource(int index);
 	void WaitResourceToTarget();
+	void WaitResourceToTarget(int index);
 
 private:
 	RENDER_TARGET_GROUP_TYPE		m_groupType;

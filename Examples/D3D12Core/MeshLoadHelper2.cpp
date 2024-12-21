@@ -427,4 +427,22 @@ string MeshLoadHelper::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
     }
     return Key;
 }
+
+string MeshLoadHelper::LoadSquareMesh(const float scale, const Vector2 texScale)
+{
+    // TODO. texScaleµµ Å°·Î
+    string Key = "Square" + std::to_string(scale);
+    if (MeshMap.find(Key) == MeshMap.end())
+    {
+        std::vector<MeshData>& meshDatas = MeshMap[Key].MeshDatas;
+        meshDatas = { GeometryGenerator::MakeSquare(scale, texScale) };
+        MeshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
+
+        auto func = [Key]() {
+            return LoadModel(Key); };
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+        tPool.EnqueueJob(func);
+    }
+    return Key;
+}
 }

@@ -60,6 +60,8 @@ public:
 
 public:
 	void Render();
+	void PostRender();
+
 	void RenderBegin();
 	void RenderEnd();
 
@@ -91,6 +93,7 @@ private:
 
 	shared_ptr<GraphicsPSO> m_defaultGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_skyboxGraphicsPSO;
+	shared_ptr<GraphicsPSO> m_postEffectGraphicsPSO;
 
 	UINT m_numQualityLevels = 0;
 public:
@@ -123,6 +126,7 @@ public:
 	// DaerimGTA
 	shared_ptr<DSkinnedMeshModel2> m_activeModel;
 	shared_ptr<DModel2> m_skybox;
+	shared_ptr<DModel2> m_screenSquare;
 	// EDaerimGTA
 };
 }

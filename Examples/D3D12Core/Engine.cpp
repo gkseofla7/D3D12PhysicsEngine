@@ -17,6 +17,51 @@ extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	LPARAM lParam);
 namespace dengine {
 
+
+void ResolveMSAATexture(
+    ID3D12GraphicsCommandList* commandList,
+    ID3D12Resource* msaaRenderTarget,
+    ID3D12Resource* resolvedTarget,
+    DXGI_FORMAT format)
+{
+    // Ensure the resources are in the correct states
+    D3D12_RESOURCE_BARRIER barriers[2] = {};
+
+    // Transition MSAA render target to RESOLVE_SOURCE state
+    barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barriers[0].Transition.pResource = msaaRenderTarget;
+    barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+    barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+    // Transition resolved target to RESOLVE_DEST state
+    barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barriers[1].Transition.pResource = resolvedTarget;
+    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET; // Or appropriate state
+    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+    barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+    // Apply the barriers
+    commandList->ResourceBarrier(2, barriers);
+
+    // Resolve the MSAA render target into the resolved target
+    commandList->ResolveSubresource(
+        resolvedTarget,  // Destination resource
+        0,               // Destination subresource index
+        msaaRenderTarget,// Source resource
+        0,               // Source subresource index
+        format           // Format (must match the resource format)
+    );
+
+    // Transition resources back to their original states if needed
+    barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+    commandList->ResourceBarrier(2, barriers);
+}
 bool CheckMultisampleQualityLevels(ComPtr<ID3D12Device> device, DXGI_FORMAT format, UINT sampleCount)
 {
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels = {};
@@ -217,6 +262,9 @@ void Engine::InitPSO()
 	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState());
 
+	m_postEffectGraphicsPSO = std::make_shared<GraphicsPSO>();
+	m_postEffectGraphicsPSO->Init(m_rootSignature->GetSamplingRootSignature(), m_graphicsPipelineState->GetPostEffectPipelineState());
+
 }
 
 void Engine::InitGlobalBuffer()
@@ -290,6 +338,11 @@ bool Engine::InitScene()
 			string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
 			m_skybox = std::make_shared<DModel2>(meshKey);
 		}
+
+		{
+			string meshKey = MeshLoadHelper::LoadSquareMesh();
+			m_screenSquare = make_shared<DModel2>(meshKey);
+		}
 		// EDaerimGTA
 	}
 
@@ -323,7 +376,23 @@ void Engine::Render()
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	m_activeModel->Render();
 
+	PostRender();
 	RenderEnd(); 
+}
+
+void Engine::PostRender()
+{
+	m_postEffectGraphicsPSO->UploadGraphicsPSO();
+	int8 backIndex = m_swapChain->GetBackBufferIndex();
+	ResolveMSAATexture(GRAPHICS_CMD_LIST.Get(), GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->GetRTTexture(backIndex)->GetTex2D().Get()
+		, GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetTex2D().Get(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->WaitTargetToResource(backIndex);
+
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+	m_screenSquare->Render();
+
 }
 
 void Engine::RenderBegin()
@@ -420,9 +489,6 @@ void Engine::CreateRenderTargetGroups()
 	D3D12_RESOURCE_DESC desc;
 	// FLOAT MSAA
 	{
-		vector<RenderTarget> rtVec(1);
-		
-
 		ComPtr<ID3D12Resource> backBuffer;
 		m_swapChain->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 		desc = backBuffer->GetDesc();
@@ -434,20 +500,26 @@ void Engine::CreateRenderTargetGroups()
 		{
 			m_numQualityLevels = 4;
 		}
-		if (m_numQualityLevels) {
+		if (m_numQualityLevels)
+		{
 			desc.SampleDesc.Count = 4;
 			desc.SampleDesc.Quality = m_numQualityLevels - 1;
 		}
-		else {
+		else
+		{
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
 		}
-		rtVec[0].target = std::make_shared<Texture>();
-		rtVec[0].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+		vector<RenderTarget> rtVec(FRAMEBUFFER_COUNT);
+		for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
+		{
+			rtVec[i].target = std::make_shared<Texture>();
+			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+		}
 
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsTexture);
 	}
 
 	// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
@@ -455,6 +527,15 @@ void Engine::CreateRenderTargetGroups()
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 		
+		vector<RenderTarget> rtVec(FRAMEBUFFER_COUNT);
+		for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
+		{
+			rtVec[i].target = std::make_shared<Texture>();
+			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+		}
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)] = std::make_shared<RenderTargetGroup>();
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, rtVec, nullptr);
 	}
 }
 
