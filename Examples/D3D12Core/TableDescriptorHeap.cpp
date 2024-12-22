@@ -51,10 +51,21 @@ void GraphicsDescriptorHeap::CommitTable()
 	m_currentGroupIndex++;
 }
 
+void GraphicsDescriptorHeap::CommitTableForSampling()
+{
+	// 항상 RootSignature과 맞춰야된다
+	// t10은 공용데이터지만 
+	//GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(CBV_REGISTER::b0));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(SRV_REGISTER::t0));
+	m_currentGroupIndex++;
+}
+
 void GraphicsDescriptorHeap::CommitGlobalTextureTable()
 {
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(SRV_REGISTER::t10));
 }
+
+
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(CBV_REGISTER reg)
 {

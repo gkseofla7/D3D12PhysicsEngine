@@ -24,6 +24,7 @@ class DModel2;
 class DSkinnedMeshModel2;
 template <typename T_CONSTS> class ConstantBuffer2;
 struct GlobalConstants2;
+
 class Engine
 {
 public:
@@ -67,7 +68,9 @@ public:
 
 	void SetMainViewport();
 	void ResizeWindow(int32 width, int32 height);
-
+	
+	void SetPSOType(const PSOType psoType) { m_psoType = psoType; }
+	PSOType GetPSOType() { return m_psoType; }
 private:
 	void UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 		const Matrix& viewRow,
@@ -96,6 +99,8 @@ private:
 	shared_ptr<GraphicsPSO> m_postEffectGraphicsPSO;
 
 	UINT m_numQualityLevels = 0;
+
+	PSOType m_psoType;
 public:
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 

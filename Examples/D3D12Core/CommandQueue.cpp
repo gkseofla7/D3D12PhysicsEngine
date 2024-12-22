@@ -66,7 +66,7 @@ void GraphicsCommandQueue::RenderBegin()
 		D3D12_RESOURCE_STATE_PRESENT, // 화면 출력
 		D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
 	m_cmdList->ResourceBarrier(1, &barrier);
-
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->WaitResourceToTarget(backIndex);
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->ClearRenderTargetView(backIndex);
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
 	GEngine->GetGraphicsDescHeap()->Clear();

@@ -131,33 +131,37 @@ void DModel2::Render()
     {
         for (auto& mesh : *m_meshes) 
         {
-            m_meshConsts.PushGraphicsData();
-            m_materialConsts.PushGraphicsData();
-            if (mesh.heightTexture != nullptr)
+            if (GEngine->GetPSOType() != PSOType::SAMPLING)
             {
-                GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
+                m_meshConsts.PushGraphicsData();
+                m_materialConsts.PushGraphicsData();
+                if (mesh.heightTexture != nullptr)
+                {
+                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
+                }
+                if (mesh.albedoTexture != nullptr)
+                {
+                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture->GetSRVHandle(), SRV_REGISTER::t1);
+                }
+                if (mesh.normalTexture != nullptr)
+                {
+                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture->GetSRVHandle(), SRV_REGISTER::t2);
+                }
+                if (mesh.aoTexture != nullptr)
+                {
+                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture->GetSRVHandle(), SRV_REGISTER::t3);
+                }
+                if (mesh.metallicRoughnessTexture != nullptr)
+                {
+                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture->GetSRVHandle(), SRV_REGISTER::t4);
+                }
+                if (mesh.emissiveTexture != nullptr)
+                {
+                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture->GetSRVHandle(), SRV_REGISTER::t5);
+                }
+                GEngine->GetGraphicsDescHeap()->CommitTable();
             }
-            if (mesh.albedoTexture != nullptr)
-            {
-                GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture->GetSRVHandle(), SRV_REGISTER::t1);
-            }
-            if (mesh.normalTexture != nullptr)
-            {
-                GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture->GetSRVHandle(), SRV_REGISTER::t2);
-            }
-            if (mesh.aoTexture != nullptr)
-            {
-                GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture->GetSRVHandle(), SRV_REGISTER::t3);
-            }
-            if (mesh.metallicRoughnessTexture != nullptr)
-            {
-                GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture->GetSRVHandle(), SRV_REGISTER::t4);
-            }
-            if (mesh.emissiveTexture != nullptr)
-            {
-                GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture->GetSRVHandle(), SRV_REGISTER::t5);
-            }
-            GEngine->GetGraphicsDescHeap()->CommitTable();
+
 
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);

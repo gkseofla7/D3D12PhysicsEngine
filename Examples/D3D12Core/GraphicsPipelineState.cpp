@@ -39,8 +39,8 @@ void GraphicsPipelineState::Init()
 		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		psoDesc.NumRenderTargets = 1;
 		//TODO RTV Format 다시 확인 필요
-		psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-		psoDesc.SampleDesc.Count = 1;
+		psoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		psoDesc.SampleDesc.Count = 4;
 		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&m_defaultPipelineState)));
 	}
 
@@ -70,11 +70,14 @@ void GraphicsPipelineState::Init()
 		D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 		};
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC postEffectRSDesc = psoDesc;
-		psoDesc.InputLayout = { inputElementDesc, _countof(inputElementDesc) };
-		psoDesc.pRootSignature = ROOTSIGNATURE->GetSamplingRootSignature().Get();
+		postEffectRSDesc.InputLayout = { inputElementDesc, _countof(inputElementDesc) };
+		postEffectRSDesc.pRootSignature = ROOTSIGNATURE->GetSamplingRootSignature().Get();
 		postEffectRSDesc.RasterizerState = rasterDesc;
+		postEffectRSDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
 		postEffectRSDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetSamplinigVS().Get());
 		postEffectRSDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetSamplingPS().Get());
+
+		postEffectRSDesc.SampleDesc.Count = 1;
 		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&postEffectRSDesc, IID_PPV_ARGS(&m_postEffectPipelineState)));
 	}
 }

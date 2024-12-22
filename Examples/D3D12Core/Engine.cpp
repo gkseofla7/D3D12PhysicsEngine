@@ -37,7 +37,7 @@ void ResolveMSAATexture(
     // Transition resolved target to RESOLVE_DEST state
     barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     barriers[1].Transition.pResource = resolvedTarget;
-    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET; // Or appropriate state
+    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON; // Or appropriate state
     barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
     barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
@@ -55,10 +55,10 @@ void ResolveMSAATexture(
 
     // Transition resources back to their original states if needed
     barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
-    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
 
     barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
-    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
 
     commandList->ResourceBarrier(2, barriers);
 }
@@ -257,13 +257,13 @@ void Engine::InitGraphics()
 void Engine::InitPSO()
 {
 	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO>();
-	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState());
+	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState(), PSOType::DEFAULT);
 
 	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO>();
-	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState());
+	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState(), PSOType::SKYBOX);
 
 	m_postEffectGraphicsPSO = std::make_shared<GraphicsPSO>();
-	m_postEffectGraphicsPSO->Init(m_rootSignature->GetSamplingRootSignature(), m_graphicsPipelineState->GetPostEffectPipelineState());
+	m_postEffectGraphicsPSO->Init(m_rootSignature->GetSamplingRootSignature(), m_graphicsPipelineState->GetPostEffectPipelineState(), PSOType::SAMPLING);
 
 }
 
@@ -357,6 +357,8 @@ void Engine::Update(float dt)
 
 	m_activeModel->Tick(dt);
 	m_skybox->Tick(dt);
+	m_screenSquare->Tick(dt);
+
 	// 반사 행렬 추가
 	const Vector3 eyeWorld = m_camera.GetEyePos();
 	const Matrix reflectRow; //Matrix::CreateReflection(m_mirrorPlane);
@@ -380,19 +382,52 @@ void Engine::Render()
 	RenderEnd(); 
 }
 
-void Engine::PostRender()
+void Engine::PostRender() 
 {
 	m_postEffectGraphicsPSO->UploadGraphicsPSO();
 	int8 backIndex = m_swapChain->GetBackBufferIndex();
 	ResolveMSAATexture(GRAPHICS_CMD_LIST.Get(), GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->GetRTTexture(backIndex)->GetTex2D().Get()
 		, GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetTex2D().Get(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-	GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->WaitTargetToResource(backIndex);
+	//TODO. 제거 예정, 임시
+	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->WaitTargetToResource();
+	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->WaitTargetToResource(backIndex);
 
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+
+	
+	GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetSRVHandle()
+		, SRV_REGISTER::t0);
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	GEngine->GetGraphicsDescHeap()->CommitTableForSampling();
+
 	m_screenSquare->Render();
 
+	//ComPtr<ID3D12Resource> backBuffer;
+	//m_swapChain->GetSwapChain()->GetBuffer(backIndex, IID_PPV_ARGS(&backBuffer));
+	//{
+	//	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+	//		backBuffer.Get(),
+	//		D3D12_RESOURCE_STATE_RENDER_TARGET, // 백 버퍼의 현재 상태
+	//		D3D12_RESOURCE_STATE_COPY_SOURCE);
+	//	GRAPHICS_CMD_LIST->ResourceBarrier(1, &resourceBarrier); // 복사 소스로 변경
+	//}
+
+	//GRAPHICS_CMD_LIST->CopyResource(
+	//	GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetTex2D().Get(), // 복사 대상
+	//	backBuffer.Get()); // 복사 원본
+
+	//{
+	//	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
+	//		backBuffer.Get(),
+	//		D3D12_RESOURCE_STATE_COPY_SOURCE, // 백 버퍼의 현재 상태
+	//		D3D12_RESOURCE_STATE_RENDER_TARGET);
+	//	GRAPHICS_CMD_LIST->ResourceBarrier(1, &resourceBarrier); // 복사 소스로 변경
+	//}
+
+
+	//
 }
 
 void Engine::RenderBegin()
@@ -419,7 +454,7 @@ void Engine::RenderEnd()
 	SetMainViewport();
 	m_graphicsCmdQueue->RenderEnd();
 }
-
+ 
 void Engine::SetMainViewport()
 {
 	D3D12_VIEWPORT viewport = {};
@@ -465,12 +500,12 @@ void Engine::UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 
 void Engine::CreateRenderTargetGroups()
 {
+
 	// DepthStencil
 	shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
 	dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
 		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
-
 	// SwapChain Group
 	{
 		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
@@ -480,11 +515,23 @@ void Engine::CreateRenderTargetGroups()
 			m_swapChain->GetSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource));
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->CreateFromResource(resource);
+
+			resource->SetName(L"SwapChainTexture");
 		}
 		//TODO. dsTexture 여기에 셋팅할 필요가..?
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)] = std::make_shared<RenderTargetGroup>();
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
 	}
+
+	shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
+	D3D12_RESOURCE_DESC depthDesc = dsTexture->GetTex2D()->GetDesc();
+	depthDesc.SampleDesc.Count = 4;
+	depthDesc.SampleDesc.Quality = 0;
+	depthDesc.MipLevels= 1;
+	
+	dsMultiSamplingTexture->Create(depthDesc,
+		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 
 	D3D12_RESOURCE_DESC desc;
 	// FLOAT MSAA
@@ -498,12 +545,12 @@ void Engine::CreateRenderTargetGroups()
 
 		if (CheckMultisampleQualityLevels(DEVICE, DXGI_FORMAT_R16G16B16A16_FLOAT, 4))
 		{
-			m_numQualityLevels = 4;
+			m_numQualityLevels = 1;
 		}
 		if (m_numQualityLevels)
 		{
 			desc.SampleDesc.Count = 4;
-			desc.SampleDesc.Quality = m_numQualityLevels - 1;
+			desc.SampleDesc.Quality = 0;// m_numQualityLevels;// -1;
 		}
 		else
 		{
@@ -516,10 +563,11 @@ void Engine::CreateRenderTargetGroups()
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			rtVec[i].target->GetTex2D()->SetName(L"FloatBufferTexture");
 		}
 
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsTexture);
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsMultiSamplingTexture);
 	}
 
 	// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
@@ -533,9 +581,10 @@ void Engine::CreateRenderTargetGroups()
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+			rtVec[i].target->GetTex2D()->SetName(L"ResolveTexture");
 		}
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, rtVec, nullptr);
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, rtVec, dsMultiSamplingTexture);
 	}
 }
 

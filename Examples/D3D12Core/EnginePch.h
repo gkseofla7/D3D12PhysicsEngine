@@ -97,7 +97,12 @@ enum
 	RENDER_TARGET_GROUP_COUNT = static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::END)
 };
 
-
+enum class PSOType
+{
+	DEFAULT,
+	SKYBOX,
+	SAMPLING,
+};
 
 struct WindowInfo
 {
