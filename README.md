@@ -1,11 +1,14 @@
-# DaerimD3D11PhysicsEngine
+# DaerimD3D12PhysicsEngine
 # 영상
 https://github.com/user-attachments/assets/0dd9a327-22c1-4db6-9243-89e9853470e1
 
 
 https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
 
-# D3D11과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
+# D3D12과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
+# D3D12로 벡엔드 변경
+- 기존 홍정모 그래픽스 새싹 코스 Part4에서 제공하는 D3D11 예제 코드에 대해서 D3D12로 벡엔드 수정 작업 완료
+- 현재 매우 비효율적으로 한 프레임 그리고 끝날때 까지 기다리고있는데.. 프레임마다 리소스를 분리 및 GPU가 프레임을 그리는작업을 진행중일때 CPU는 다른 프레임으로 준비 가능하도록 수정 예정
 # Mesh, Animation등에 대한 데이터 모두 비동기 로딩
 - Mesh 로딩에 경우엔 MeshLoadHelper 클래스, Animation 로딩에 경우엔 AnimHelper에서 로딩을 담당하고 있다.
 - Loading에 관여하는 Thread 5개를 Thread Pool에서 가져와서 로드한다. (ThreadPool.h)
