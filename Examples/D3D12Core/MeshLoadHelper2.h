@@ -50,6 +50,7 @@ public:
 
 	static bool LoadModelData(const string& inPath, const string& inName);
 	static void LoadModel(const string& key);
+	static void LoadModel(const string& InKey, vector<dengine::MeshData> MeshDatas);
 	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants);
 	static bool GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants);
 	static string LoadBoxMesh(float InHalfExtent, bool bIndicesReverse = false);

@@ -46,6 +46,7 @@ void GraphicsPipelineState::Init()
 
 	{
 		D3D12_GRAPHICS_PIPELINE_STATE_DESC skyboxRSDesc = psoDesc;
+		skyboxRSDesc.pRootSignature = ROOTSIGNATURE->GetSkyboxRootSignature().Get();
 		skyboxRSDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkyboxVS().Get());
 		skyboxRSDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkyboxPS().Get());
 		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&skyboxRSDesc, IID_PPV_ARGS(&m_skyboxPipelineState)));

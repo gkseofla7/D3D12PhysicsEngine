@@ -11,6 +11,7 @@
 #include "ConstantBuffer.h"
 #include "DSkinnedMeshModel2.h"
 #include "MeshLoadHelper2.h"
+#include "GeometryGenerator2.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	UINT msg,
 	WPARAM wParam,
@@ -260,7 +261,7 @@ void Engine::InitPSO()
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState(), PSOType::DEFAULT);
 
 	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO>();
-	m_skyboxGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState(), PSOType::SKYBOX);
+	m_skyboxGraphicsPSO->Init(m_rootSignature->GetSkyboxRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState(), PSOType::SKYBOX);
 
 	m_postEffectGraphicsPSO = std::make_shared<GraphicsPSO>();
 	m_postEffectGraphicsPSO->Init(m_rootSignature->GetSamplingRootSignature(), m_graphicsPipelineState->GetPostEffectPipelineState(), PSOType::SAMPLING);
@@ -276,6 +277,13 @@ void Engine::InitGlobalBuffer()
 	m_irradianceTex = std::make_shared<Texture>();
 	m_specularTex = std::make_shared<Texture>();
 	m_brdfTex = std::make_shared<Texture>();
+
+	ComPtr<ID3D12Resource> backBuffer;
+	m_swapChain->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
+	D3D12_RESOURCE_DESC desc = backBuffer->GetDesc();
+	m_defaultTex = make_shared<Texture>();
+	m_defaultTex->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
 }
 
 void Engine::InitCubemaps(wstring basePath, wstring envFilename,
@@ -334,11 +342,35 @@ bool Engine::InitScene()
 			m_activeModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
 				Matrix::CreateTranslation(center));
 			m_activeModel->SetScale(0.2f);
-
+		}
+		{
 			string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
 			m_skybox = std::make_shared<DModel2>(meshKey);
 		}
+		{
+			auto mesh = GeometryGenerator::MakeSquare(5.0, { 10.0f, 10.0f });
+			string path = "../Assets/Textures/PBR/stringy-marble-ue/";
+			mesh.albedoTextureFilename = path + "stringy_marble_albedo.png";
+			mesh.emissiveTextureFilename = "";
+			mesh.aoTextureFilename = path + "stringy_marble_ao.png";
+			mesh.metallicTextureFilename = path + "stringy_marble_Metallic.png";
+			mesh.normalTextureFilename = path + "stringy_marble_Normal-dx.png";
+			mesh.roughnessTextureFilename = path + "stringy_marble_Roughness.png";
+			std::string meshKey = "Ground";
+			vector<MeshData> meshDataList;
+			meshDataList.push_back(mesh);
+			MeshLoadHelper::LoadModel(meshKey, meshDataList);
 
+			m_ground = make_shared<DModel2>(meshKey);
+			m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+			m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
+			m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
+			m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
+
+			Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+			m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+				Matrix::CreateTranslation(position));
+		}
 		{
 			string meshKey = MeshLoadHelper::LoadSquareMesh();
 			m_screenSquare = make_shared<DModel2>(meshKey);
@@ -358,7 +390,7 @@ void Engine::Update(float dt)
 	m_activeModel->Tick(dt);
 	m_skybox->Tick(dt);
 	m_screenSquare->Tick(dt);
-
+	m_ground->Tick(dt);
 	// 반사 행렬 추가
 	const Vector3 eyeWorld = m_camera.GetEyePos();
 	const Matrix reflectRow; //Matrix::CreateReflection(m_mirrorPlane);
@@ -376,8 +408,9 @@ void Engine::Render()
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
 	m_skybox->Render();
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	m_ground->Render();
 	m_activeModel->Render();
-
+	
 	PostRender();
 	RenderEnd(); 
 }
@@ -446,7 +479,7 @@ void Engine::RenderBegin()
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
 	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
 
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
 }
 
 void Engine::RenderEnd()
@@ -528,10 +561,9 @@ void Engine::CreateRenderTargetGroups()
 	depthDesc.SampleDesc.Count = 4;
 	depthDesc.SampleDesc.Quality = 0;
 	depthDesc.MipLevels= 1;
-	
 	dsMultiSamplingTexture->Create(depthDesc,
 		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 
 	D3D12_RESOURCE_DESC desc;
 	// FLOAT MSAA
@@ -550,7 +582,7 @@ void Engine::CreateRenderTargetGroups()
 		if (m_numQualityLevels)
 		{
 			desc.SampleDesc.Count = 4;
-			desc.SampleDesc.Quality = 0;// m_numQualityLevels;// -1;
+			desc.SampleDesc.Quality = m_numQualityLevels -1;
 		}
 		else
 		{

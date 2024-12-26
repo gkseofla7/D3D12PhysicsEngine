@@ -239,7 +239,7 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		}
 		
-		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.MipLevels = m_desc.MipLevels;
 		DEVICE->CreateShaderResourceView(m_tex2D.Get(), &srvDesc, m_srvHeapBegin);
 	}
 }

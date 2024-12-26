@@ -46,9 +46,21 @@ void GraphicsDescriptorHeap::CommitTable()
 {
 	// 항상 RootSignature과 맞춰야된다
 	// t10은 공용데이터지만 
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, GetGPUHandle(CBV_REGISTER::b1));
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, GetGPUHandle(SRV_REGISTER::t0));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, GetGPUHandle(CBV_REGISTER::b1));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(4, GetGPUHandle(SRV_REGISTER::t0));
 	m_currentGroupIndex++;
+}
+
+void GraphicsDescriptorHeap::ClearSRV()
+{
+	// TODO. 항상 빈 텍스처라도 셋팅을 해두기, 더 좋은 방법 없을까..
+	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GEngine->GetDefaultTexture()->GetSRVHandle();
+	SetSRV(srvHandle, SRV_REGISTER::t0);
+	SetSRV(srvHandle, SRV_REGISTER::t1);
+	SetSRV(srvHandle, SRV_REGISTER::t2);
+	SetSRV(srvHandle, SRV_REGISTER::t3);
+	SetSRV(srvHandle, SRV_REGISTER::t4);
+	SetSRV(srvHandle, SRV_REGISTER::t5);
 }
 
 void GraphicsDescriptorHeap::CommitTableForSampling()

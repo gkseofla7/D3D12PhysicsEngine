@@ -12,6 +12,8 @@ public:
 	void SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg);
 	void SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg);
 
+	void ClearSRV();
+
 	void CommitTable();
 	void CommitTableForSampling();
 

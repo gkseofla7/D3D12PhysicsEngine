@@ -359,6 +359,17 @@ void MeshLoadHelper::LoadModel(const string& key)
     MeshMap[key].MeshLoadType = hlab::ELoadType::Loaded;
 }
 
+void MeshLoadHelper::LoadModel(const string& InKey, vector<dengine::MeshData> MeshDatas)
+{
+    if (MeshMap.find(InKey) != MeshMap.end())
+    {
+        return;
+    }
+    std::vector<MeshData>& meshDatas = MeshMap[InKey].MeshDatas;
+    meshDatas = MeshDatas;
+    MeshMap[InKey].MeshDataLoadType = hlab::ELoadType::Loaded;
+    LoadModel(InKey);
+}
 
 bool MeshLoadHelper::GetMesh(const string& inPath, const string& inName, vector<DMesh>*& OutMesh)
 {

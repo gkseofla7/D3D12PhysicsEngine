@@ -131,10 +131,11 @@ void DModel2::Render()
     {
         for (auto& mesh : *m_meshes) 
         {
-            if (GEngine->GetPSOType() != PSOType::SAMPLING)
+            if (GEngine->GetPSOType() == PSOType::DEFAULT)
             {
                 m_meshConsts.PushGraphicsData();
                 m_materialConsts.PushGraphicsData();
+                GEngine->GetGraphicsDescHeap()->ClearSRV();
                 if (mesh.heightTexture != nullptr)
                 {
                     GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
