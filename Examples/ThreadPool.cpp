@@ -14,7 +14,6 @@
 #include "ThreadPool.h"
 #include <iostream>
 namespace hlab {
-
     ThreadPool::ThreadPool(size_t num_threads)
         : num_threads_(num_threads), stop_all(false) {
         worker_threads_.reserve(num_threads_);

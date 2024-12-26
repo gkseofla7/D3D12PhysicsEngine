@@ -12,12 +12,12 @@ namespace dengine {
     using std::string;
     using std::vector;
 //class GraphicsPSO2;
-class DModel2 
+class DModel 
 {
 public:
-    DModel2() {}
-    DModel2(const string& basePath, const string& filename);
-    DModel2(const string& meshKey);
+    DModel() {}
+    DModel(const string& basePath, const string& filename);
+    DModel(const string& meshKey);
     virtual void Initialize(const string& basePath,
         const string& filename);
     void Initialize(const string& meshKey);

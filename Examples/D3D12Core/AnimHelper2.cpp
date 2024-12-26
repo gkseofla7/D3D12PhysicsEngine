@@ -5,7 +5,7 @@
 
 #include "DSkinnedMeshModel2.h"
 #include "StructuredBuffer2.h"
-//#include "Actor.h"
+#include "Actor2.h"
 namespace dengine {
 
 AnimHelper& AnimHelper::GetInstance()
@@ -34,12 +34,12 @@ dengine::AnimationData GetAnimationFromFile2(string path,string name)
 		dengine::GeometryGenerator::ReadAnimationFromFile(path, name);
 	return ani;
 }
-bool AnimHelper::LoadAnimation(DSkinnedMeshModel2* inModel, string inState)
+bool AnimHelper::LoadAnimation(DSkinnedMeshModel* inModel, string inState)
 {
 	bool bInit;
 	return LoadAnimation(inModel, inState, bInit);
 }
-bool AnimHelper::LoadAnimation(DSkinnedMeshModel2* inModel, string inState, bool& bInit)
+bool AnimHelper::LoadAnimation(DSkinnedMeshModel* inModel, string inState, bool& bInit)
 {
 	bInit = false;
 	int modelId = inModel->m_modelId;
@@ -99,37 +99,37 @@ bool AnimHelper::LoadAnimation(DSkinnedMeshModel2* inModel, string inState, bool
 bool AnimHelper::UpdateAnimation(Actor* InActor, string inState,
 	int frame, int type)
 { 
-	//std::shared_ptr<DSkinnedMeshModel2> skinnedMeshModel = std::dynamic_pointer_cast<DSkinnedMeshModel2>(InActor->GetModel());
-	//if (skinnedMeshModel == nullptr)
-	//{
-	//	return false;
-	//}
-	//bool bInit = false;
-	//if (LoadAnimation(skinnedMeshModel.get(), inState, bInit) == false)
-	//{
-	//	return false;
-	//}
-	//if (frame == 0 && m_actorAnimState[InActor->GetObjectId()] != inState)
-	//{
-	//	skinnedMeshModel->IntegrateRootTransformToWorldTransform();
-	//}
-	//m_actorAnimState[InActor->GetObjectId()] = inState;
+	std::shared_ptr<DSkinnedMeshModel> skinnedMeshModel = std::dynamic_pointer_cast<DSkinnedMeshModel>(InActor->GetModel());
+	if (skinnedMeshModel == nullptr)
+	{
+		return false;
+	}
+	bool bInit = false;
+	if (LoadAnimation(skinnedMeshModel.get(), inState, bInit) == false)
+	{
+		return false;
+	}
+	if (frame == 0 && m_actorAnimState[InActor->GetObjectId()] != inState)
+	{
+		skinnedMeshModel->IntegrateRootTransformToWorldTransform();
+	}
+	m_actorAnimState[InActor->GetObjectId()] = inState;
 
-	//int modelId = skinnedMeshModel->m_modelId;
-	//AnimationBlock& animBlock = m_animDatas[modelId];
-	//skinnedMeshModel->m_maxFrame = animBlock.AniData.clipMaps[inState].keys[0].size();
-	//vector<Matrix> boneTransform;
-	//boneTransform.resize(m_animDatas[modelId].AniData.boneTransforms.size());
-	//m_animDatas[modelId].AniData.GetBoneTransform(InActor->GetObjectId(),inState, frame, skinnedMeshModel->GetAccumulatedRootTransform(), boneTransform, bInit, type);
-	//for (int i = 0; i < skinnedMeshModel->m_boneTransforms->GetCpu().size(); i++) {
-	//	skinnedMeshModel->m_boneTransforms->GetCpu()[i] =
-	//		m_animDatas[modelId].AniData.GetAnimationTransform(i, boneTransform[i]).Transpose();
-	//	if (i == 0)
-	//	{
-	//		skinnedMeshModel->SetAccumulatedRootTransformToLocal( m_animDatas[modelId].AniData.GetAnimationTransform(i, boneTransform[i]));
-	//	}
-	//}
-	//skinnedMeshModel->m_boneTransforms->Upload();
+	int modelId = skinnedMeshModel->m_modelId;
+	AnimationBlock& animBlock = m_animDatas[modelId];
+	skinnedMeshModel->m_maxFrame = animBlock.AniData.clipMaps[inState].keys[0].size();
+	vector<Matrix> boneTransform;
+	boneTransform.resize(m_animDatas[modelId].AniData.boneTransforms.size());
+	m_animDatas[modelId].AniData.GetBoneTransform(InActor->GetObjectId(),inState, frame, skinnedMeshModel->GetAccumulatedRootTransform(), boneTransform, bInit, type);
+	for (int i = 0; i < skinnedMeshModel->m_boneTransforms->GetCpu().size(); i++) {
+		skinnedMeshModel->m_boneTransforms->GetCpu()[i] =
+			m_animDatas[modelId].AniData.GetAnimationTransform(i, boneTransform[i]).Transpose();
+		if (i == 0)
+		{
+			skinnedMeshModel->SetAccumulatedRootTransformToLocal( m_animDatas[modelId].AniData.GetAnimationTransform(i, boneTransform[i]));
+		}
+	}
+	skinnedMeshModel->m_boneTransforms->Upload();
 	return true;
 }
 

@@ -25,8 +25,13 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device)
 	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&m_cmdList));
 	m_cmdList->Close();
 
-	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_resCmdAlloc));
-	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&m_resCmdList));
+	for (int i = 0; i < 5; i++)
+	{
+		ResourceCommandList ResCommandList;
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
+		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, ResCommandList.m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&ResCommandList.m_resCmdList));
+		m_resCmdLists.push(ResCommandList);
+	}
 
 	// CreateFence
 	// - CPU와 GPU의 동기화 수단으로 쓰인다
@@ -103,18 +108,35 @@ void GraphicsCommandQueue::RenderEnd()
 	m_swapChain->SwapIndex();
 }
 
-void GraphicsCommandQueue::FlushResourceCommandQueue()
+void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList)
 {
-	m_resCmdList->Close();
+	// TODO. Excute 하는 시점에 경계조건이어야되지않나 싶은데..
+	// Fence값이 보장안되다보니
+	rscCommandList.m_resCmdList->Close();
 
-	ID3D12CommandList* cmdListArr[] = { m_resCmdList.Get() };
+	ID3D12CommandList* cmdListArr[] = { rscCommandList.m_resCmdList.Get() };
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
 
 	WaitSync();
 
-	m_resCmdAlloc->Reset();
-	m_resCmdList->Reset(m_resCmdAlloc.Get(), nullptr);
+	rscCommandList.m_resCmdAlloc->Reset();
+	rscCommandList.m_resCmdList->Reset(rscCommandList.m_resCmdAlloc.Get(), nullptr);
+	m_resCmdLists.push(rscCommandList);
+	m_rscCv.notify_one();
 }
 
+ResourceCommandList GraphicsCommandQueue::GetResourceCmdList()
+{
+	while (true) 
+	{
+		std::unique_lock<std::mutex> lock(m_rscMutex);
+		m_rscCv.wait(lock, [this]() { return !m_resCmdLists.empty(); });
+
+		ResourceCommandList rcsCommandList = m_resCmdLists.front();
+		m_resCmdLists.pop();
+		lock.unlock();
+		return rcsCommandList;
+	}
+}
 
 }

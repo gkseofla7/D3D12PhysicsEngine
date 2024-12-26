@@ -20,8 +20,9 @@ class GraphicsPipelineState;
 class GraphicsPSO;
 class Texture;
 class Samplers;
-class DModel2;
-class DSkinnedMeshModel2;
+class DModel;
+class DSkinnedMeshModel;
+class Wizard;
 template <typename T_CONSTS> class ConstantBuffer2;
 struct GlobalConstants2;
 
@@ -97,6 +98,7 @@ private:
 	shared_ptr<Samplers> m_samplers;
 
 	shared_ptr<GraphicsPSO> m_defaultGraphicsPSO;
+	shared_ptr<GraphicsPSO> m_skinnedGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_skyboxGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_postEffectGraphicsPSO;
 
@@ -134,10 +136,11 @@ public:
 	// ÄÁÅÙÃ÷ °ü·Ã
 	hlab::Camera m_camera;
 	// DaerimGTA
-	shared_ptr<DSkinnedMeshModel2> m_activeModel;
-	shared_ptr<DModel2> m_skybox;
-	shared_ptr<DModel2> m_screenSquare;
-	shared_ptr<DModel2> m_ground;
+
+	shared_ptr<DModel> m_skybox;
+	shared_ptr<DModel> m_screenSquare;
+	shared_ptr<DModel> m_ground;
+	shared_ptr<Wizard> m_wizard;
 	// EDaerimGTA
 };
 }

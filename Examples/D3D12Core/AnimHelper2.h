@@ -8,7 +8,7 @@
 
 namespace dengine {
 using namespace std;
-class DSkinnedMeshModel2;
+class DSkinnedMeshModel;
 class Actor;
 struct AnimationBlock
 {
@@ -36,12 +36,12 @@ public:
 	void Initialize();
 	void AddAnimPath(int InActorId, string InPathName);
 	void AddAnimStateToAnim(int InActorId, string inState, string inAnimName);
-	bool LoadAnimation(DSkinnedMeshModel2* InActor, string inState);
+	bool LoadAnimation(DSkinnedMeshModel* InActor, string inState);
 	bool UpdateAnimation(Actor* InActor, string inState,
 		int frame, int type = 0);
 
 private:
-	bool LoadAnimation(DSkinnedMeshModel2* InActor, string inState, bool& bInit);
+	bool LoadAnimation(DSkinnedMeshModel* InActor, string inState, bool& bInit);
 private:
 
 	map<int ,map<string, string>> m_animStateToAnim;

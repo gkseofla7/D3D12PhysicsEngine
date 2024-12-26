@@ -11,16 +11,16 @@ namespace dengine {
 
 using namespace std;
 using namespace DirectX;
-DModel2::DModel2(const string& basePath, const string& filename)
+DModel::DModel(const string& basePath, const string& filename)
 {
     Initialize(basePath, filename);
 }
-DModel2::DModel2(const string& meshKey)
+DModel::DModel(const string& meshKey)
 {
     Initialize(meshKey);
 }
 
-void DModel2::InitMeshBuffers(const MeshData& meshData,
+void DModel::InitMeshBuffers(const MeshData& meshData,
     shared_ptr<DMesh>& newMesh)
 {
     D3D12Utils::CreateVertexBuffer(DEVICE, meshData.vertices,
@@ -32,7 +32,7 @@ void DModel2::InitMeshBuffers(const MeshData& meshData,
         newMesh->indexBuffer, newMesh->indexBufferView);
 }
 
-void DModel2::Initialize(const std::string& basePath,
+void DModel::Initialize(const std::string& basePath,
     const std::string& filename) {
     // 일반적으로는 DMesh들이 m_mesh/materialConsts를 각자 소유 가능
     // 여기서는 한 Model 안의 여러 DMesh들이 Consts를 모두 공유
@@ -48,7 +48,7 @@ void DModel2::Initialize(const std::string& basePath,
         MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
     }
 }
-void DModel2::Initialize(const string& meshKey) 
+void DModel::Initialize(const string& meshKey) 
 {
     m_meshKey = meshKey;
 
@@ -56,7 +56,7 @@ void DModel2::Initialize(const string& meshKey)
     m_meshConsts.Init(CBV_REGISTER::b1, FRAMEBUFFER_COUNT);
     m_materialConsts.Init(CBV_REGISTER::b2, FRAMEBUFFER_COUNT);
 }
-void DModel2::UpdateConstantBuffers() 
+void DModel::UpdateConstantBuffers() 
 {
     if (m_initializeMesh == false)
     {
@@ -67,7 +67,7 @@ void DModel2::UpdateConstantBuffers()
         m_materialConsts.Upload();
     }
 }
-void DModel2::Tick(float dt)
+void DModel::Tick(float dt)
 {
     if (m_initializeMesh == false)
     {
@@ -79,18 +79,18 @@ void DModel2::Tick(float dt)
     }
     UpdateConstantBuffers();
 }
-void DModel2::UpdatePosition(const Vector3& inDelta) 
+void DModel::UpdatePosition(const Vector3& inDelta) 
 {
     Matrix newMatrix = Matrix::CreateTranslation(inDelta) * m_worldRow;
     UpdateWorldRow(newMatrix);
 }
-void DModel2::SetWorldPosition(const Vector3& InPos)
+void DModel::SetWorldPosition(const Vector3& InPos)
 {
     m_worldRow.Translation(InPos);
     UpdateWorldRow(m_worldRow);
 }
 
-void DModel2::UpdateRotation(const Matrix& inDelta)
+void DModel::UpdateRotation(const Matrix& inDelta)
 {
     m_direction = Vector3::Transform(m_direction, inDelta);
     m_direction.Normalize();
@@ -101,7 +101,7 @@ void DModel2::UpdateRotation(const Matrix& inDelta)
     newMatrix.Translation(ModelPos);
     UpdateWorldRow(newMatrix);
 }
-void DModel2::SetDirection(const Vector3& inDirection)
+void DModel::SetDirection(const Vector3& inDirection)
 {
     Vector4 dir(0.0f, 0.0f, -1.0f, 0.0f);
     dir = Vector4::Transform(
@@ -111,17 +111,17 @@ void DModel2::SetDirection(const Vector3& inDirection)
     float theta = acos(dir3.Dot(inDirection) / (dir3.Length() * inDirection.Length()));
     UpdateRotation(Matrix::CreateRotationY(theta));
 }
-//GraphicsPSO2& DModel2::GetPSO() {
+//GraphicsPSO2& DModel::GetPSO() {
 //    return Graphics::defaultSolidPSO;
 //}
 
-//GraphicsPSO2& DModel2::GetDepthOnlyPSO() { return Graphics::depthOnlyPSO; }
+//GraphicsPSO2& DModel::GetDepthOnlyPSO() { return Graphics::depthOnlyPSO; }
 //
-//GraphicsPSO2& DModel2::GetReflectPSO(const bool wired) {
+//GraphicsPSO2& DModel::GetReflectPSO(const bool wired) {
 //    return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
 //}
  
-void DModel2::Render()
+void DModel::Render()
 { 
     if (m_initializeMesh == false)
     {
@@ -163,7 +163,6 @@ void DModel2::Render()
                 GEngine->GetGraphicsDescHeap()->CommitTable();
             }
 
-
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
             GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);
@@ -171,7 +170,7 @@ void DModel2::Render()
     }
 }
 
-void DModel2::UpdateAnimation(string clipId, int frame, int type) {
+void DModel::UpdateAnimation(string clipId, int frame, int type) {
     // class skinnedMeshModel에서 override
     cout << "Model::UpdateAnimation(ComPtr<ID3D11DeviceContext> &context, "
         "int clipId, int frame) was not implemented."
@@ -180,7 +179,7 @@ void DModel2::UpdateAnimation(string clipId, int frame, int type) {
 }
 
 
-void DModel2::UpdateWorldRow(const Matrix& worldRow) {
+void DModel::UpdateWorldRow(const Matrix& worldRow) {
     this->m_worldRow = worldRow;
     this->m_worldITRow = worldRow;
     m_worldITRow.Translation(Vector3(0.0f));
@@ -196,7 +195,7 @@ void DModel2::UpdateWorldRow(const Matrix& worldRow) {
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
 }
 
-bool DModel2::LoadMesh()
+bool DModel::LoadMesh()
 {
     if (m_initializeMesh)
     {

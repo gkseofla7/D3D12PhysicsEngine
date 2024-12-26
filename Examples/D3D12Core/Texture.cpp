@@ -59,15 +59,15 @@ void Texture::Load(const wstring& path, bool isCubeMap)
 
 	if (FAILED(hr))
 		assert(nullptr);
-
-	::UpdateSubresources(RESOURCE_CMD_LIST.Get(),
+	ResourceCommandList rscCommandList = RESOURCE_CMD_LIST;
+	::UpdateSubresources(rscCommandList.m_resCmdList.Get(),
 		m_tex2D.Get(),
 		textureUploadHeap.Get(),
 		0, 0,
 		static_cast<unsigned int>(subResources.size()),
 		subResources.data());
 
-	GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue();
+	GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 	srvHeapDesc.NumDescriptors = 1;

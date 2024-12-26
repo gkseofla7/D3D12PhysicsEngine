@@ -7,6 +7,7 @@ void RootSignature::Init()
 {
 	//CreateGraphicsRootSignature();
 	CreateDefaultRootSignature();
+	//CreateSkinnedRootSignature();
 	CreateSkyboxRootSignature();
 	CreateSamplingRootSignature();
 }
@@ -14,7 +15,7 @@ void RootSignature::Init()
 void RootSignature::CreateDefaultRootSignature()
 {
 	vector<CD3DX12_ROOT_PARAMETER1> rootParameters;
-	rootParameters.resize(6);
+	rootParameters.resize(7);
 	// 공용 데이터
 	// b0, GlobalConstants
 	{
@@ -59,13 +60,17 @@ void RootSignature::CreateDefaultRootSignature()
 		ranges[5].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 5);
 		rootParameters[4].InitAsDescriptorTable(6, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
-
+	{// t9 : BoneTransform
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[1];
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 9);
+		rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
 
 	// TODO 임시로, 제거 필요
 	const int MAX_LIGHTS = 3;
 	CD3DX12_DESCRIPTOR_RANGE1 shadowMapRange;
 	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS, 15); // Start from t15
-	rootParameters[5].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
+	rootParameters[6].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
 
 	CreateRootSignature(m_defaultRootSignature, rootParameters);
 }

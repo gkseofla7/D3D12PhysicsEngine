@@ -6,9 +6,9 @@
 namespace dengine {
 // DModel에서는 Mesh Loading
 // DSkinnedMeshModel에서는 Animation Loading
-class DSkinnedMeshModel2 : public DModel2 {
+class DSkinnedMeshModel : public DModel {
 public:
-    DSkinnedMeshModel2(const string& basePath,
+    DSkinnedMeshModel(const string& basePath,
         const string& filename);
     virtual void InitMeshBuffers(const MeshData& meshData, shared_ptr<DMesh>& newMesh) override;
 

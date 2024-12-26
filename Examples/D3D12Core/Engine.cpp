@@ -12,6 +12,7 @@
 #include "DSkinnedMeshModel2.h"
 #include "MeshLoadHelper2.h"
 #include "GeometryGenerator2.h"
+#include "Wizard2.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	UINT msg,
 	WPARAM wParam,
@@ -260,6 +261,9 @@ void Engine::InitPSO()
 	m_defaultGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_defaultGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetDefaultPipelineState(), PSOType::DEFAULT);
 
+	m_skinnedGraphicsPSO = std::make_shared< GraphicsPSO>();
+	m_skinnedGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkinnedPipelineState(), PSOType::DEFAULT);
+
 	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_skyboxGraphicsPSO->Init(m_rootSignature->GetSkyboxRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState(), PSOType::SKYBOX);
 
@@ -335,17 +339,20 @@ bool Engine::InitScene()
 			std::string path = "../Assets/Characters/Mixamo/";
 			std::string characterName = "character.fbx";
 			Vector3 center(0.5f, 0.1f, 1.0f);
-			m_activeModel = std::make_shared<DSkinnedMeshModel2>(path, characterName);
-			m_activeModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-			m_activeModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-			m_activeModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-			m_activeModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+			shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
+			wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+			wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+			wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+			wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
 				Matrix::CreateTranslation(center));
-			m_activeModel->SetScale(0.2f);
+			wizardModel->SetScale(0.2f);
+
+			m_wizard =make_shared<Wizard>(wizardModel);
+			m_wizard->Initialize(wizardModel);
 		}
 		{
 			string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
-			m_skybox = std::make_shared<DModel2>(meshKey);
+			m_skybox = std::make_shared<DModel>(meshKey);
 		}
 		{
 			auto mesh = GeometryGenerator::MakeSquare(5.0, { 10.0f, 10.0f });
@@ -361,7 +368,7 @@ bool Engine::InitScene()
 			meshDataList.push_back(mesh);
 			MeshLoadHelper::LoadModel(meshKey, meshDataList);
 
-			m_ground = make_shared<DModel2>(meshKey);
+			m_ground = make_shared<DModel>(meshKey);
 			m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
 			m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
 			m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
@@ -373,7 +380,7 @@ bool Engine::InitScene()
 		}
 		{
 			string meshKey = MeshLoadHelper::LoadSquareMesh();
-			m_screenSquare = make_shared<DModel2>(meshKey);
+			m_screenSquare = make_shared<DModel>(meshKey);
 		}
 		// EDaerimGTA
 	}
@@ -387,7 +394,7 @@ void Engine::Update(float dt)
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 
-	m_activeModel->Tick(dt);
+	m_wizard->Tick(dt);
 	m_skybox->Tick(dt);
 	m_screenSquare->Tick(dt);
 	m_ground->Tick(dt);
@@ -409,7 +416,8 @@ void Engine::Render()
 	m_skybox->Render();
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	m_ground->Render();
-	m_activeModel->Render();
+	m_skinnedGraphicsPSO->UploadGraphicsPSO();
+	m_wizard->Render();
 	
 	PostRender();
 	RenderEnd(); 

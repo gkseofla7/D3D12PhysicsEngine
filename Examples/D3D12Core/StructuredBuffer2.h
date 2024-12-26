@@ -86,27 +86,28 @@ public:
 		uint8* dataBegin = nullptr;
 		D3D12_RANGE readRange{ 0, 0 };
 		readBuffer->Map(0, &readRange, reinterpret_cast<void**>(&dataBegin));
-		memcpy(dataBegin, m_cpu, bufferSize);
+		memcpy(dataBegin, reinterpret_cast<void*>(&m_cpu), bufferSize);
 		readBuffer->Unmap(0, nullptr);
 
 		// Common -> Copy
+		ResourceCommandList rscCommandList = RESOURCE_CMD_LIST;
 		{
 			D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer.Get(),
 				D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_COPY_DEST);
-
-			RESOURCE_CMD_LIST->ResourceBarrier(1, &barrier);
+			
+			rscCommandList.m_resCmdList->ResourceBarrier(1, &barrier);
 		}
 
-		RESOURCE_CMD_LIST->CopyBufferRegion(m_buffer.Get(), 0, readBuffer.Get(), 0, bufferSize);
+		rscCommandList.m_resCmdList->CopyBufferRegion(m_buffer.Get(), 0, readBuffer.Get(), 0, bufferSize);
 
 		// Copy -> Common
 		{
 			D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(m_buffer.Get(),
 				D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_COMMON);
-			RESOURCE_CMD_LIST->ResourceBarrier(1, &barrier);
+			rscCommandList.m_resCmdList->ResourceBarrier(1, &barrier);
 		}
 
-		GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue();
+		GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
 
 		m_resourceState = D3D12_RESOURCE_STATE_COMMON;
 	}

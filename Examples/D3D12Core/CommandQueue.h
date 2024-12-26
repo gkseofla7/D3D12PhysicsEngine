@@ -1,10 +1,15 @@
 #pragma once
 #include "EnginePch.h"
-
-
+#include <queue>
+#include <mutex>
 namespace dengine {
 class SwapChain;
 class DescriptorHeap;
+struct ResourceCommandList
+{
+	ComPtr<ID3D12CommandAllocator>		m_resCmdAlloc;
+	ComPtr<ID3D12GraphicsCommandList>	m_resCmdList;
+};
 class GraphicsCommandQueue
 {
 public:
@@ -16,21 +21,22 @@ public:
 	void RenderBegin();
 	void RenderEnd();
 
-	void FlushResourceCommandQueue();
+	void FlushResourceCommandQueue(ResourceCommandList& rscCommandList);
 
 	void SetSwapChain(shared_ptr<SwapChain>	swapChain) { m_swapChain = swapChain; }
 
 	ComPtr<ID3D12CommandQueue> GetCmdQueue() { return m_cmdQueue; }
 	ComPtr<ID3D12GraphicsCommandList> GetGraphicsCmdList() { return	m_cmdList; }
-	ComPtr<ID3D12GraphicsCommandList> GetResourceCmdList() { return	m_resCmdList; }
-
+	ResourceCommandList GetResourceCmdList();
 private:
 	ComPtr<ID3D12CommandQueue>			m_cmdQueue;
 	ComPtr<ID3D12CommandAllocator>		m_cmdAlloc;
 	ComPtr<ID3D12GraphicsCommandList>	m_cmdList;
 
-	ComPtr<ID3D12CommandAllocator>		m_resCmdAlloc;
-	ComPtr<ID3D12GraphicsCommandList>	m_resCmdList;
+	// 리소스 관련 commandList를 여러개 만들고 Pooling
+	std::queue<ResourceCommandList> m_resCmdLists;
+	std::mutex m_rscMutex;
+	std::condition_variable m_rscCv;
 
 	ComPtr<ID3D12Fence>					m_fence;
 	uint32								m_fenceValue = 0;
