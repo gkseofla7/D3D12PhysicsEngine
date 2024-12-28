@@ -4,7 +4,8 @@
 #include <future>
 #include <unordered_set>
 #include "GeometryGenerator2.h"
-#include "EnginePch.h"
+#include "../D3D12Core/EnginePch.h"
+#include <shared_mutex>
 
 namespace dengine {
 using namespace std;
@@ -12,20 +13,34 @@ class DSkinnedMeshModel;
 class Actor;
 struct AnimationBlock
 {
-	//AnimationBlock() = default;
-	//AnimationBlock(AnimationBlock&&) noexcept = default; // 이동 생성자
-	//AnimationBlock& operator=(AnimationBlock&&) noexcept = default; // 이동 대입 연산자
+	AnimationBlock() = default;
+	AnimationBlock(const AnimationBlock& other) = delete;
 
-	//// 복사 금지
-	//AnimationBlock(const AnimationBlock&) = delete;
-	//AnimationBlock& operator=(const AnimationBlock&) = delete;
+	AnimationBlock(AnimationBlock&& other)
+	{
+		PathName = other.PathName;
+		AniData = other.AniData;
+		Loaders = std::move(other.Loaders);
+		IsFirstSetting = other.IsFirstSetting;
+	}
 
-	//map<int, string > AnimStateToAnimName;
+	AnimationBlock& operator=(const AnimationBlock& other) = delete;
+
+	AnimationBlock& operator=(AnimationBlock&& other) noexcept {
+		if (this != &other) {
+			PathName = other.PathName;
+			AniData = other.AniData;
+			Loaders = std::move(other.Loaders);
+			IsFirstSetting = other.IsFirstSetting;
+		}
+		return *this;
+	}
+
 	string PathName;
 	AnimationData AniData;
 	std::unordered_map<string,std::future<AnimationData>> Loaders;
 	bool IsFirstSetting = true;
-	std::mutex mtx;
+	std::shared_mutex mtx;
 };
 class AnimHelper
 {
@@ -47,12 +62,14 @@ private:
 	map<int ,map<string, string>> m_animStateToAnim;
 	map<int, string> m_pathMap;
 	// modelId -> AnimationBlock
+	// 여러 스레드가 동시에 접근하면 문제 발생하기 때문에
+	// 쓰기/읽기 락 분리
 	map<int, AnimationBlock> m_animDatas;
 
 	// 액터의 현재 애니메이션
 	map<int, string> m_actorAnimState;
 	
-	std::mutex mtx;
+	std::shared_mutex mtx;
 };
 
 }

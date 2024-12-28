@@ -81,8 +81,67 @@ struct AnimationClip {
     double ticksPerSec;       // Frames per second
 };
 
-struct AnimationData {
+struct AnimationData 
+{
+    AnimationData() = default;
+    AnimationData(const AnimationData& other)
+    {
+        boneNameToId = other.boneNameToId;
+        boneIdToName = other.boneIdToName;
+        boneParents = other.boneParents;
+        offsetMatrices = other.offsetMatrices;
+        boneTransforms = other.boneTransforms;
+        clips = other.clips;
+        clipMaps = other.clipMaps;
+        defaultTransform = other.defaultTransform;
+        rootTransform = other.rootTransform;
+        accumulatedRootTransform = other.accumulatedRootTransform;
+        actorRootPrevPosMap = other.actorRootPrevPosMap;
+        lowerBodyBones = other.lowerBodyBones;
 
+        rootWeight = other.rootWeight;
+    }
+    AnimationData& operator=(const AnimationData& other) 
+    {
+
+        if (this != &other) {
+            boneNameToId =other.boneNameToId;
+            boneIdToName =other.boneIdToName;
+            boneParents = other.boneParents;
+            offsetMatrices = other.offsetMatrices;
+            boneTransforms = other.boneTransforms;
+            clips = other.clips;
+            clipMaps = other.clipMaps;
+            defaultTransform = other.defaultTransform;
+            rootTransform = other.rootTransform;
+            accumulatedRootTransform = other.accumulatedRootTransform;
+            actorRootPrevPosMap = other.actorRootPrevPosMap;
+            lowerBodyBones = other.lowerBodyBones;
+
+            rootWeight = other.rootWeight;
+        }
+        return *this;
+    }
+    AnimationData& operator=(AnimationData&& other) noexcept 
+    {
+        if (this != &other) {
+            boneNameToId = std::move(other.boneNameToId);
+            boneIdToName = std::move(other.boneIdToName);
+            boneParents = std::move(other.boneParents);
+            offsetMatrices = std::move(other.offsetMatrices);
+            boneTransforms = std::move(other.boneTransforms);;
+            clips = std::move(other.clips);;
+            clipMaps = std::move(other.clipMaps);
+            defaultTransform = std::move(other.defaultTransform);
+            rootTransform = std::move(other.rootTransform);
+            accumulatedRootTransform = std::move(other.accumulatedRootTransform);
+            actorRootPrevPosMap = std::move(other.actorRootPrevPosMap);
+            lowerBodyBones = std::move(other.lowerBodyBones);
+
+            rootWeight = other.rootWeight;
+        }
+        return *this;
+    }
     map<string, int32_t> boneNameToId; // 뼈 이름과 인덱스 정수
     vector<string> boneIdToName; // boneNameToId의 Id 순서대로 뼈 이름 저장
     vector<int32_t> boneParents; // 부모 뼈의 인덱스

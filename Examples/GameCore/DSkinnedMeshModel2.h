@@ -1,8 +1,8 @@
 #pragma once
-#include "EnginePch.h"
+#include "../D3D12Core/EnginePch.h"
 #include "../GeometryGenerator.h"
 #include "DModel2.h"
-#include "StructuredBuffer2.h"
+#include "../D3D12Core/StructuredBuffer2.h"
 namespace dengine {
 // DModel에서는 Mesh Loading
 // DSkinnedMeshModel에서는 Animation Loading

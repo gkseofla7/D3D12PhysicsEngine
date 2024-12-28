@@ -1,6 +1,6 @@
 ﻿#pragma once
-#include "EnginePch.h"
-#include "Texture.h"
+#include "../D3D12Core/EnginePch.h"
+#include "../D3D12Core/Texture.h"
 namespace dengine {
 
 class Texture;

@@ -1,7 +1,7 @@
 #include "MeshLoadHelper2.h"
-#include "Engine.h"
-#include "Device.h"
-#include "D3D12Utils.h"
+#include "../D3D12Core/Engine.h"
+#include "../D3D12Core/Device.h"
+#include "../D3D12Core/D3D12Utils.h"
 #include "GeometryGenerator2.h"
 #include "../ThreadPool.h"
 #include <filesystem>

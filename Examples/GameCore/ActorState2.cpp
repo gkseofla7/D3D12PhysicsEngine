@@ -26,7 +26,7 @@ void ActorState::Tick(float dt)
 		{
 			UpdateAnimation();
 			m_frame++;
-			if (m_frame >= derivedPtr->m_maxFrame)
+			if (m_frame >= derivedPtr->GetMaxFrame())
 			{
 				m_frame = 0;
 				if (false == m_loopState)

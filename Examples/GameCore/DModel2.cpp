@@ -1,10 +1,10 @@
 #include "DModel2.h"
-#include "D3D12Utils.h"
+#include "../D3D12Core/D3D12Utils.h"
 //#include "GeometryGenerator.h"
 #include "MeshLoadHelper2.h"
-#include "Engine.h"
-#include "Device.h"
-#include "CommandQueue.h"
+#include "../D3D12Core/Engine.h"
+#include "../D3D12Core/Device.h"
+#include "../D3D12Core/CommandQueue.h"
 #include <filesystem>
 
 namespace dengine {

@@ -1,14 +1,13 @@
 #include "DSkinnedMeshModel2.h"
-#include "Engine.h"
-#include "EnginePch.h"
-#include "Device.h"
-#include "D3D12Utils.h"
+#include "../D3D12Core/Engine.h"
+#include "../D3D12Core/EnginePch.h"
+#include "../D3D12Core/Device.h"
+#include "../D3D12Core/D3D12Utils.h"
 namespace dengine {
 using std::make_shared;
 DSkinnedMeshModel::DSkinnedMeshModel(const string& basePath, const string& filename)
 {
     m_boneTransforms = std::make_shared<StructuredBuffer2<Matrix>>();
-    m_boneTransforms->Init();
     Initialize(basePath, filename);
 }
 

@@ -17,7 +17,7 @@ Wizard::Wizard(shared_ptr<DModel> inModel)
 void Wizard::Initialize(shared_ptr<DModel> inModel)
 {
     Actor::Initialize(inModel);
-    m_model->m_modelId = 1;
+    m_model->SetModelId(1);
 
 	//InitBoundingKey();
     InitAnimPath();
@@ -58,9 +58,9 @@ void Wizard::InitAnimPath()
 {
     // 애니메이션 관련, 따로 테이블을 만들어서 관리하는게..
     string path = "../Assets/Characters/Mixamo/";
-    AnimHelper::GetInstance().AddAnimPath(m_model->m_modelId, path);
+    AnimHelper::GetInstance().AddAnimPath(m_model->GetModelId(), path);
     // Idle
-    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
     LoadAnimAsync(magic_enum::enum_name(EActorStateType::Idle).data());
     // Attack
     //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Attack).data(), "Fireball.fbx");
