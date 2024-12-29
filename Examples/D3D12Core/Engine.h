@@ -44,7 +44,9 @@ public:
 		wstring specularFilename, wstring irradianceFilename,
 		wstring brdfFilename);
 	virtual bool InitScene();
+
 	void Update(float dt);
+	void UpdateLights(float dt);
 
 	float GetAspectRatio() const;
 
@@ -62,6 +64,7 @@ public:
 
 public:
 	void Render();
+	void RenderShadowMaps();
 	void PostRender();
 
 	void RenderBegin();
@@ -111,6 +114,7 @@ public:
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 
 	shared_ptr<ConstantBuffer<GlobalConstants>> m_globalConstsBuffer;
+	shared_ptr<ConstantBuffer<GlobalConstants>> m_shadowGlobalConstsBuffer[MAX_LIGHTS_COUNT];
 
 	shared_ptr<Texture> m_envTex;
 	shared_ptr<Texture> m_irradianceTex;
@@ -138,6 +142,7 @@ public:
 	// ÄÁÅÙÃ÷ °ü·Ã
 	hlab::Camera m_camera;
 	// DaerimGTA
+	bool m_lightRotate = false;
 
 	shared_ptr<DModel> m_skybox;
 	shared_ptr<DModel> m_screenSquare;

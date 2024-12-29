@@ -3,7 +3,6 @@
 #include "Engine.h"
 #include "Device.h"
 // "Common.hlsli"와 동일해야 함
-#define MAX_LIGHTS 3
 #define LIGHT_OFF 0x00
 #define LIGHT_DIRECTIONAL 0x01
 #define LIGHT_POINT 0x02
@@ -110,7 +109,7 @@ __declspec(align(256)) struct GlobalConstants {
     float lodBias = 2.0f;    // 다른 물체들 LodBias
     float globalTime = 0.0f;
 
-    Light2 lights[MAX_LIGHTS];
+    Light2 lights[MAX_LIGHTS_COUNT];
 };
 
 // bone 개수 제약을 없애기 위해 StructuredBuffer로 교체

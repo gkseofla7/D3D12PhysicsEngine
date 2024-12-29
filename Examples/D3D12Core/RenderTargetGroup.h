@@ -13,10 +13,11 @@ struct RenderTarget
 class RenderTargetGroup
 {
 public:
-	void Create(RENDER_TARGET_GROUP_TYPE groupType, vector<RenderTarget>& rtVec, shared_ptr<Texture> dsTexture);
+	void Create(RENDER_TARGET_GROUP_TYPE groupType, const vector<RenderTarget>& rtVec, const vector<shared_ptr<Texture>>& dsTexture);
 
 	void OMSetRenderTargets(uint32 count, uint32 offset);
 	void OMSetRenderTargets();
+	void OMSetOnlyDepthStencil(uint32 count, uint32 offset);
 
 	void ClearRenderTargetView(uint32 index);
 	void ClearRenderTargetView();
@@ -25,7 +26,7 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetShaderResourceHeap() { return m_srvHeap; }
 
 	shared_ptr<Texture> GetRTTexture(uint32 index);
-	shared_ptr<Texture> GetDSTexture();
+	shared_ptr<Texture> GetDSTexture(uint32 index);
 
 	void WaitTargetToResource();
 	void WaitTargetToResource(int index);
@@ -34,14 +35,19 @@ public:
 
 private:
 	RENDER_TARGET_GROUP_TYPE		m_groupType;
+	
 	vector<RenderTarget>			m_rtVec;
 	uint32							m_rtCount;
-	shared_ptr<Texture>				m_dsTexture;
+
+	vector<shared_ptr<Texture>>		m_dsTextures;
+	uint32							m_dsCount;
+	
 	ComPtr<ID3D12DescriptorHeap>	m_rtvHeap;
 	ComPtr<ID3D12DescriptorHeap>	m_srvHeap;
-
+	ComPtr<ID3D12DescriptorHeap>	m_dsvHeap;
 private:
 	uint32							m_rtvHeapSize;
+	uint32							m_dtvHeapSize;
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_rtvHeapBegin;
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_dsvHeapBegin;
 

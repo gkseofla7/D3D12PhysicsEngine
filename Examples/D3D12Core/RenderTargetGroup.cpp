@@ -3,43 +3,72 @@
 #include "Device.h"
 #include "CommandQueue.h"
 namespace dengine {
-	void RenderTargetGroup::Create(RENDER_TARGET_GROUP_TYPE groupType, vector<RenderTarget>& rtVec, shared_ptr<Texture> dsTexture)
+void RenderTargetGroup::Create(RENDER_TARGET_GROUP_TYPE groupType, const vector<RenderTarget>& rtVec, const vector<shared_ptr<Texture>>& dsTextures)
 {
 	m_groupType = groupType;
 	m_rtVec = rtVec;
 	m_rtCount = static_cast<uint32>(rtVec.size());
-	m_dsTexture = dsTexture;
+	m_dsTextures = dsTextures;
+	m_dsCount = dsTextures.size();
 
-	D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
-	rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-	rtvHeapDesc.NumDescriptors = m_rtCount;
-	rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-	rtvHeapDesc.NodeMask = 0;
-
-	ThrowIfFailed(DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
-
-	// SRV
-	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-	srvHeapDesc.NumDescriptors = 1;
-	srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-	srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-	DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
-
-	m_rtvHeapSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-	m_rtvHeapBegin = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
-	m_dsvHeapBegin = m_dsTexture->GetDSV()->GetCPUDescriptorHandleForHeapStart();
-
-	for (uint32 i = 0; i < m_rtCount; i++)
+	if (m_rtCount > 0)
 	{
-		uint32 destSize = 1;
-		D3D12_CPU_DESCRIPTOR_HANDLE destHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, i * m_rtvHeapSize);
+		D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc = {};
+		rtvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		rtvHeapDesc.NumDescriptors = m_rtCount;
+		rtvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		rtvHeapDesc.NodeMask = 0;
+		ThrowIfFailed(DEVICE->CreateDescriptorHeap(&rtvHeapDesc, IID_PPV_ARGS(&m_rtvHeap)));
 
-		uint32 srcSize = 1;
-		ComPtr<ID3D12DescriptorHeap> srcRtvHeapBegin = m_rtVec[i].target->GetRTV();
-		D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = srcRtvHeapBegin->GetCPUDescriptorHandleForHeapStart();
+		m_rtvHeapSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		m_rtvHeapBegin = m_rtvHeap->GetCPUDescriptorHandleForHeapStart();
 
-		DEVICE->CopyDescriptors(1, &destHandle, &destSize, 1, &srcHandle, &srcSize, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		for (uint32 i = 0; i < m_rtCount; i++)
+		{
+			uint32 destSize = 1;
+			D3D12_CPU_DESCRIPTOR_HANDLE destHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, i * m_rtvHeapSize);
+
+			uint32 srcSize = 1;
+			ComPtr<ID3D12DescriptorHeap> srcRtvHeapBegin = m_rtVec[i].target->GetRTV();
+			D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = srcRtvHeapBegin->GetCPUDescriptorHandleForHeapStart();
+
+			DEVICE->CopyDescriptors(1, &destHandle, &destSize, 1, &srcHandle, &srcSize, D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		}
+
+		// SRV
+		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
+		srvHeapDesc.NumDescriptors = 1;
+		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
 	}
+
+	if (m_dsCount > 0)
+	{
+		// DSV
+		D3D12_DESCRIPTOR_HEAP_DESC heapDesc = {};
+		heapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		heapDesc.NumDescriptors = m_dsCount;
+		heapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		heapDesc.NodeMask = 0;
+		DEVICE->CreateDescriptorHeap(&heapDesc, IID_PPV_ARGS(&m_dsvHeap));
+
+		m_dtvHeapSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		m_dsvHeapBegin = m_dsvHeap->GetCPUDescriptorHandleForHeapStart();
+
+		for (uint32 i = 0; i < m_dsCount; i++)
+		{
+			uint32 destSize = 1;
+			D3D12_CPU_DESCRIPTOR_HANDLE destHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, i * m_dtvHeapSize);
+
+			uint32 srcSize = 1;
+			ComPtr<ID3D12DescriptorHeap> dsvHeapBegin = dsTextures[i]->GetDSV();
+			D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = dsvHeapBegin->GetCPUDescriptorHandleForHeapStart();
+
+			DEVICE->CopyDescriptors(1, &destHandle, &destSize, 1, &srcHandle, &srcSize, D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		}
+	}
+	
 
 	for (int i = 0; i < m_rtCount; ++i)
 	{
@@ -60,7 +89,8 @@ void RenderTargetGroup::OMSetRenderTargets(uint32 count, uint32 offset)
 	GRAPHICS_CMD_LIST->RSSetScissorRects(1, &rect);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, offset * m_rtvHeapSize);
-	GRAPHICS_CMD_LIST->OMSetRenderTargets(count, &rtvHandle, FALSE/*1개*/, &m_dsvHeapBegin);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, offset * m_dtvHeapSize);
+	GRAPHICS_CMD_LIST->OMSetRenderTargets(count, &rtvHandle, FALSE/*1개*/, &dsvHandle);
 }
 
 void RenderTargetGroup::OMSetRenderTargets()
@@ -74,12 +104,26 @@ void RenderTargetGroup::OMSetRenderTargets()
 	GRAPHICS_CMD_LIST->OMSetRenderTargets(m_rtCount, &m_rtvHeapBegin, TRUE/*다중*/, &m_dsvHeapBegin);
 }
 
+void RenderTargetGroup::OMSetOnlyDepthStencil(uint32 count, uint32 offset)
+{
+	assert(m_dsTextures.size() > offset);
+
+	D3D12_VIEWPORT vp = D3D12_VIEWPORT{ 0.f, 0.f, m_dsTextures[offset]->GetWidth() , m_dsTextures[offset]->GetHeight(), 0.f, 1.f};
+	D3D12_RECT rect = D3D12_RECT{ 0, 0, static_cast<LONG>(m_dsTextures[offset]->GetWidth()),  static_cast<LONG>(m_dsTextures[offset]->GetHeight())};
+
+	GRAPHICS_CMD_LIST->RSSetViewports(1, &vp);
+	GRAPHICS_CMD_LIST->RSSetScissorRects(1, &rect);
+
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, offset * m_dtvHeapSize);
+	GRAPHICS_CMD_LIST->OMSetRenderTargets(count, nullptr, TRUE/*다중*/, &dsvHandle);
+}
+
 void RenderTargetGroup::ClearRenderTargetView(uint32 index)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, index * m_rtvHeapSize);
 	GRAPHICS_CMD_LIST->ClearRenderTargetView(rtvHandle, m_rtVec[index].clearColor, 0, nullptr);
-
-	GRAPHICS_CMD_LIST->ClearDepthStencilView(m_dsvHeapBegin, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, index * m_dtvHeapSize);
+	GRAPHICS_CMD_LIST->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
 }
 
 void RenderTargetGroup::ClearRenderTargetView()
@@ -91,17 +135,20 @@ void RenderTargetGroup::ClearRenderTargetView()
 		D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, i * m_rtvHeapSize);
 		GRAPHICS_CMD_LIST->ClearRenderTargetView(rtvHandle, m_rtVec[i].clearColor, 0, nullptr);
 	}
-
-	GRAPHICS_CMD_LIST->ClearDepthStencilView(m_dsvHeapBegin, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+	for (uint32 i = 0; i < m_dsCount; i++)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, i * m_dtvHeapSize);
+		GRAPHICS_CMD_LIST->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+	}
 }
 
 shared_ptr<Texture> RenderTargetGroup::GetRTTexture(uint32 index)
 {
 	return m_rtVec[index].target; 
 }
-shared_ptr<Texture> RenderTargetGroup::GetDSTexture()
+shared_ptr<Texture> RenderTargetGroup::GetDSTexture(uint32 index)
 {
-	return m_dsTexture; 
+	return m_dsTextures[index]; 
 }
 void RenderTargetGroup::WaitTargetToResource()
 {

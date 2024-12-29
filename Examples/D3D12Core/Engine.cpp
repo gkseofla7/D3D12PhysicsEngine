@@ -279,7 +279,13 @@ void Engine::InitPSO()
 void Engine::InitGlobalBuffer()
 {
 	m_globalConstsBuffer = std::make_shared<ConstantBuffer<GlobalConstants>>();
-	m_globalConstsBuffer->Init(CBV_REGISTER::b0, 3);
+	m_globalConstsBuffer->Init(CBV_REGISTER::b0, FRAMEBUFFER_COUNT);
+
+	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+	{
+		m_shadowGlobalConstsBuffer[i] = std::make_shared<ConstantBuffer<GlobalConstants>>();
+		m_shadowGlobalConstsBuffer[i]->Init(CBV_REGISTER::b0, FRAMEBUFFER_COUNT);
+	}
 
 	m_envTex = std::make_shared<Texture>();
 	m_irradianceTex = std::make_shared<Texture>();
@@ -331,63 +337,63 @@ bool Engine::InitScene()
 		// DaerimGTA
 		globalConstsCPU.strengthIBL = 0.1f;
 		globalConstsCPU.lodBias = 0.0f;
-	 
-		m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
-			0.0654498f);
-
-		InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
-			L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
-			L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
-
-		{
-			std::string path = "../Assets/Characters/Mixamo/";
-			std::string characterName = "character.fbx";
-			Vector3 center(0.5f, 0.1f, 1.0f);
-			shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
-			wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-			wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-			wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
-			wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
-				Matrix::CreateTranslation(center));
-			wizardModel->SetScale(0.2f);
-
-			m_wizard =make_shared<Wizard>(wizardModel);
-			m_wizard->Initialize(wizardModel);
-		}
-		{
-			string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
-			m_skybox = std::make_shared<DModel>(meshKey);
-		}
-		{
-			auto mesh = GeometryGenerator::MakeSquare(5.0, { 10.0f, 10.0f });
-			string path = "../Assets/Textures/PBR/stringy-marble-ue/";
-			mesh.albedoTextureFilename = path + "stringy_marble_albedo.png";
-			mesh.emissiveTextureFilename = "";
-			mesh.aoTextureFilename = path + "stringy_marble_ao.png";
-			mesh.metallicTextureFilename = path + "stringy_marble_Metallic.png";
-			mesh.normalTextureFilename = path + "stringy_marble_Normal-dx.png";
-			mesh.roughnessTextureFilename = path + "stringy_marble_Roughness.png";
-			std::string meshKey = "Ground";
-			vector<MeshData> meshDataList;
-			meshDataList.push_back(mesh);
-			MeshLoadHelper::LoadModel(meshKey, meshDataList);
-
-			m_ground = make_shared<DModel>(meshKey);
-			m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
-			m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
-			m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
-			m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
-
-			Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
-			m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
-				Matrix::CreateTranslation(position));
-		}
-		{
-			string meshKey = MeshLoadHelper::LoadSquareMesh();
-			m_screenSquare = make_shared<DModel>(meshKey);
-		}
-		// EDaerimGTA
 	}
+
+	m_camera.Reset(Vector3(1.60851f, 0.409084f, 0.560064f), -1.65915f,
+		0.0654498f);
+
+	InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
+		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
+		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
+
+	{
+		std::string path = "../Assets/Characters/Mixamo/";
+		std::string characterName = "character.fbx";
+		Vector3 center(0.5f, 0.1f, 1.0f);
+		shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
+		wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
+		wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
+		wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+		wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+			Matrix::CreateTranslation(center));
+		wizardModel->SetScale(0.2f);
+
+		m_wizard = make_shared<Wizard>(wizardModel);
+		m_wizard->Initialize(wizardModel);
+	}
+	{
+		string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
+		m_skybox = std::make_shared<DModel>(meshKey);
+	}
+	{
+		auto mesh = GeometryGenerator::MakeSquare(5.0, { 10.0f, 10.0f });
+		string path = "../Assets/Textures/PBR/stringy-marble-ue/";
+		mesh.albedoTextureFilename = path + "stringy_marble_albedo.png";
+		mesh.emissiveTextureFilename = "";
+		mesh.aoTextureFilename = path + "stringy_marble_ao.png";
+		mesh.metallicTextureFilename = path + "stringy_marble_Metallic.png";
+		mesh.normalTextureFilename = path + "stringy_marble_Normal-dx.png";
+		mesh.roughnessTextureFilename = path + "stringy_marble_Roughness.png";
+		std::string meshKey = "Ground";
+		vector<MeshData> meshDataList;
+		meshDataList.push_back(mesh);
+		MeshLoadHelper::LoadModel(meshKey, meshDataList);
+
+		m_ground = make_shared<DModel>(meshKey);
+		m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
+		m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
+		m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
+		m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
+
+		Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
+		m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+			Matrix::CreateTranslation(position));
+	}
+	{
+		string meshKey = MeshLoadHelper::LoadSquareMesh();
+		m_screenSquare = make_shared<DModel>(meshKey);
+	}
+
 
 	return true;
 }
@@ -408,10 +414,80 @@ void Engine::Update(float dt)
 	const Matrix viewRow = m_camera.GetViewRow();
 	const Matrix projRow = m_camera.GetProjRow();
 	UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
+	UpdateLights(dt);
 
-	Render();
+	m_globalConstsBuffer->Upload();
+	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+	{
+		m_shadowGlobalConstsBuffer[i]->Upload();
+	}
 }
 
+void Engine::UpdateLights(float dt)
+{
+	// 회전하는 lights[1] 업데이트
+	static Vector3 lightDev = Vector3(1.0f, 0.0f, 0.0f);
+	if (m_lightRotate) {
+		lightDev = Vector3::Transform(
+			lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
+	}
+
+	GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
+	globalConstsCPU.lights[1].position = Vector3(0.0f, 1.1f, 2.0f) + lightDev;
+	Vector3 focusPosition = Vector3(0.0f, -0.5f, 1.7f);
+	globalConstsCPU.lights[1].direction =
+		focusPosition - globalConstsCPU.lights[1].position;
+	globalConstsCPU.lights[1].direction.Normalize();
+
+	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+	{
+		const auto& light = m_globalConstsBuffer->GetCpu().lights[i];
+		if (light.type & LIGHT_SHADOW) {
+
+			Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
+			if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
+				up = Vector3(1.0f, 0.0f, 0.0f);
+
+			// 그림자맵을 만들 때 필요
+			Matrix lightViewRow = XMMatrixLookAtLH(
+				light.position, light.position + light.direction, up);
+
+			Matrix lightProjRow = XMMatrixPerspectiveFovLH(
+				XMConvertToRadians(120.0f), 1.0f, 0.1f, 10.0f);
+
+			GlobalConstants& shadowGlobalConstsCPU = m_shadowGlobalConstsBuffer[i]->GetCpu();
+			shadowGlobalConstsCPU.eyeWorld = light.position;
+			shadowGlobalConstsCPU.view = lightViewRow.Transpose();
+			shadowGlobalConstsCPU.proj = lightProjRow.Transpose();
+			shadowGlobalConstsCPU.invProj =
+				lightProjRow.Invert().Transpose();
+			shadowGlobalConstsCPU.viewProj =
+				(lightViewRow * lightProjRow).Transpose();
+
+			// LIGHT_FRUSTUM_WIDTH 확인
+			// Vector4 eye(0.0f, 0.0f, 0.0f, 1.0f);
+			// Vector4 xLeft(-1.0f, -1.0f, 0.0f, 1.0f);
+			// Vector4 xRight(1.0f, 1.0f, 0.0f, 1.0f);
+			// eye = Vector4::Transform(eye, lightProjRow);
+			// xLeft = Vector4::Transform(xLeft, lightProjRow.Invert());
+			// xRight = Vector4::Transform(xRight, lightProjRow.Invert());
+			// xLeft /= xLeft.w;
+			// xRight /= xRight.w;
+			// cout << "LIGHT_FRUSTUM_WIDTH = " << xRight.x - xLeft.x <<
+			// endl;
+
+			// 그림자를 실제로 렌더링할 때 필요
+			globalConstsCPU.lights[i].viewProj =
+				shadowGlobalConstsCPU.viewProj;
+			globalConstsCPU.lights[i].invProj =
+				shadowGlobalConstsCPU.invProj;
+
+			// 반사된 장면에서도 그림자를 그리고 싶다면 조명도 반사시켜서 넣어줌
+
+		}
+	}
+
+}
 void Engine::Render()
 {
 	RenderBegin();
@@ -427,6 +503,22 @@ void Engine::Render()
 	
 	PostRender();
 	RenderEnd(); 
+}
+
+void Engine::RenderShadowMaps()
+{
+	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
+	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+	{
+		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
+		{
+			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
+			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
+
+		}
+	}
+	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
+	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
 }
 
 void Engine::PostRender() 
@@ -542,8 +634,6 @@ void Engine::UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 
 	// 그림자 렌더링에 사용
 	globalCpuData.invViewProj = globalCpuData.viewProj.Invert();
-
-	m_globalConstsBuffer->Upload();
 }
 
 void Engine::CommintGlobalData()
@@ -563,14 +653,10 @@ void Engine::CommintGlobalData()
 void Engine::CreateRenderTargetGroups()
 {
 
-	// DepthStencil
-	shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
-	dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
-		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 	// SwapChain Group
 	{
 		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
+		vector< shared_ptr<Texture>> dsTextures;
 		for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
 		{
 			ComPtr<ID3D12Resource> resource;
@@ -579,24 +665,40 @@ void Engine::CreateRenderTargetGroups()
 			rtVec[i].target->CreateFromResource(resource);
 
 			resource->SetName(L"SwapChainTexture");
+
+			shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
+			dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
+				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+			dsTextures.push_back(dsTexture);
 		}
-		//TODO. dsTexture 여기에 셋팅할 필요가..?
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTexture);
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTextures);
 	}
 
-	shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
-	D3D12_RESOURCE_DESC depthDesc = dsTexture->GetTex2D()->GetDesc();
-	depthDesc.SampleDesc.Count = 4;
-	depthDesc.SampleDesc.Quality = 0;
-	depthDesc.MipLevels= 1;
-	dsMultiSamplingTexture->Create(depthDesc,
-		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-
-	D3D12_RESOURCE_DESC desc;
-	// FLOAT MSAA
+	if (CheckMultisampleQualityLevels(DEVICE, DXGI_FORMAT_R16G16B16A16_FLOAT, 4))
 	{
+		m_numQualityLevels = 1;
+	}
+
+	D3D12_RESOURCE_DESC backBufferDepthDesc = m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetDSTexture(0)->GetTex2D()->GetDesc();
+	{
+		// DepthStencilView
+		D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
+		if (m_numQualityLevels)
+		{
+			depthDesc.SampleDesc.Count = 4;
+			depthDesc.SampleDesc.Quality = m_numQualityLevels - 1;
+		}
+		else
+		{
+			depthDesc.SampleDesc.Count = 1;
+			depthDesc.SampleDesc.Quality = 0;
+		}
+		depthDesc.MipLevels = 1;
+
+		D3D12_RESOURCE_DESC desc;
+		// FLOAT MSAA
 		ComPtr<ID3D12Resource> backBuffer;
 		m_swapChain->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 		desc = backBuffer->GetDesc();
@@ -604,14 +706,11 @@ void Engine::CreateRenderTargetGroups()
 		desc.MipLevels = desc.DepthOrArraySize = 1;
 		desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
 
-		if (CheckMultisampleQualityLevels(DEVICE, DXGI_FORMAT_R16G16B16A16_FLOAT, 4))
-		{
-			m_numQualityLevels = 1;
-		}
+
 		if (m_numQualityLevels)
 		{
 			desc.SampleDesc.Count = 4;
-			desc.SampleDesc.Quality = m_numQualityLevels -1;
+			desc.SampleDesc.Quality = m_numQualityLevels - 1;
 		}
 		else
 		{
@@ -619,33 +718,78 @@ void Engine::CreateRenderTargetGroups()
 			desc.SampleDesc.Quality = 0;
 		}
 		vector<RenderTarget> rtVec(FRAMEBUFFER_COUNT);
+		vector <shared_ptr<Texture>> dsTextures;
 		for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
 		{
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			rtVec[i].target->GetTex2D()->SetName(L"FloatBufferTexture");
+
+			shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
+			dsMultiSamplingTexture->Create(depthDesc,
+				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+			dsTextures.push_back(dsMultiSamplingTexture);
 		}
 
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsMultiSamplingTexture);
-	}
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsTextures);
 
-	// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
-	{
+
+		// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
-		
-		vector<RenderTarget> rtVec(FRAMEBUFFER_COUNT);
+
+		vector<RenderTarget> resolveRtVec(FRAMEBUFFER_COUNT);
 		for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
 		{
-			rtVec[i].target = std::make_shared<Texture>();
-			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			resolveRtVec[i].target = std::make_shared<Texture>();
+			resolveRtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-			rtVec[i].target->GetTex2D()->SetName(L"ResolveTexture");
+			resolveRtVec[i].target->GetTex2D()->SetName(L"ResolveTexture");
 		}
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, rtVec, dsMultiSamplingTexture);
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, resolveRtVec, dsTextures);
+	}
+	
+
+	// Shadow
+	{
+		const int shadowWidth = 1280;
+		const int shadowHeight = 1280;
+
+		
+		D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
+		if (m_numQualityLevels)
+		{
+			depthDesc.SampleDesc.Count = 4;
+			depthDesc.SampleDesc.Quality = m_numQualityLevels - 1;
+		}
+		else
+		{
+			depthDesc.SampleDesc.Count = 1;
+			depthDesc.SampleDesc.Quality = 0;
+		}
+		depthDesc.Format = DXGI_FORMAT_R32_TYPELESS;
+		depthDesc.Width = shadowWidth;
+		depthDesc.Height = shadowHeight;
+		depthDesc.MipLevels = 1;
+
+		vector <shared_ptr<Texture>> dsTextures;
+		for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+		{
+			shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
+			dsMultiSamplingTexture->Create(depthDesc,
+				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+
+			dsTextures.push_back(dsMultiSamplingTexture);
+		}
+
+		vector<RenderTarget> rtVec;
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = std::make_shared<RenderTargetGroup>();
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
 	}
 }
 

@@ -82,9 +82,8 @@ void RootSignature::CreateDefaultRootSignature()
 	}
 
 	// TODO 임시로, 제거 필요
-	const int MAX_LIGHTS = 3;
 	CD3DX12_DESCRIPTOR_RANGE1 shadowMapRange;
-	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS, 15); // Start from t15
+	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS_COUNT, 15); // Start from t15
 	rootParameters[6].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
 
 	CreateRootSignature(m_defaultRootSignature, rootParameters);

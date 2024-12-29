@@ -1,10 +1,6 @@
 ﻿#include <memory>
 #include <windows.h>
 
-#include "ExampleApp.h"
-#include "Example_TEMPLATE.h"
-#include "DaerimGTA.h"
-#include "D3D12Core/EnginePch.h"
 #include "D3D12Core/Engine.h"
 
 using namespace std;

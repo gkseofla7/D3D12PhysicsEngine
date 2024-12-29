@@ -1,6 +1,6 @@
 #pragma once
+#include <d3dx12.h>
 #include <d3d12.h>
-#include "d3dx12.h"
 #include <d3dcompiler.h>
 #include <dxgi1_6.h>
 #include "DirectXTex.h"
@@ -133,6 +133,7 @@ public:								\
 #define BACKBUFFER_INDEX	GEngine->GetSwapChain()->GetBackBufferIndex()
 
 #define FRAMEBUFFER_COUNT 3
+#define MAX_LIGHTS_COUNT 3
 
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;

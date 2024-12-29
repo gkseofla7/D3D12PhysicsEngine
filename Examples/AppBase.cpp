@@ -267,8 +267,8 @@ void AppBase::Update(float dt) {
     }
 }
 
-void AppBase::UpdateLights(float dt) {
-
+void AppBase::UpdateLights(float dt) 
+{
     // 회전하는 lights[1] 업데이트
     static Vector3 lightDev = Vector3(1.0f, 0.0f, 0.0f);
     if (m_lightRotate) {
