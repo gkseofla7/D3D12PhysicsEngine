@@ -196,8 +196,10 @@ void MeshLoadHelper::LoadModel(const string& key)
                         DEVICE, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, false,
                         tex2D);
+                    tex2D->SetName(L"albedoTexture");
                     newMesh.albedoTexture = std::make_shared<Texture>();
                     newMesh.albedoTexture->CreateFromResource(tex2D);
+
                 }
                 else 
                 {
@@ -205,6 +207,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                     D3D12Utils::CreateTexture(
                         DEVICE, meshData.albedoTextureFilename, true,
                         tex2D);
+                    tex2D->SetName(L"albedoTexture");
                     newMesh.albedoTexture = std::make_shared<Texture>();
                     newMesh.albedoTexture->CreateFromResource(tex2D);
                 }
@@ -223,6 +226,7 @@ void MeshLoadHelper::LoadModel(const string& key)
             {
                 ComPtr<ID3D12Resource> tex2D;
                 D3D12Utils::CreateTexture(DEVICE, meshData.emissiveTextureFilename, true, tex2D);
+                tex2D->SetName(L"emissiveTexture");
                 newMesh.emissiveTexture = std::make_shared<Texture>();
                 newMesh.emissiveTexture->CreateFromResource(tex2D);
                 meshBlock.useEmissiveMap = true;
@@ -238,6 +242,7 @@ void MeshLoadHelper::LoadModel(const string& key)
             if (filesystem::exists(meshData.normalTextureFilename)) {
                 ComPtr<ID3D12Resource> tex2D;
                 D3D12Utils::CreateTexture(DEVICE, meshData.normalTextureFilename, false,tex2D);
+                tex2D->SetName(L"normalTexture");
                 newMesh.normalTexture = std::make_shared<Texture>();
                 newMesh.normalTexture->CreateFromResource(tex2D);
                 meshBlock.useNormalMap = true;
@@ -252,6 +257,7 @@ void MeshLoadHelper::LoadModel(const string& key)
             if (filesystem::exists(meshData.heightTextureFilename)) {
                 ComPtr<ID3D12Resource> tex2D;
                 D3D12Utils::CreateTexture(DEVICE, meshData.heightTextureFilename, false, tex2D);
+                tex2D->SetName(L"heightTexture");
                 newMesh.heightTexture = std::make_shared<Texture>();
                 newMesh.heightTexture->CreateFromResource(tex2D);
                 meshBlock.useHeightMap = true;
@@ -267,6 +273,7 @@ void MeshLoadHelper::LoadModel(const string& key)
             {
                 ComPtr<ID3D12Resource> tex2D;
                 D3D12Utils::CreateTexture(DEVICE, meshData.aoTextureFilename, false, tex2D);
+                tex2D->SetName(L"aoTexture");
                 newMesh.aoTexture = std::make_shared<Texture>();
                 newMesh.aoTexture->CreateFromResource(tex2D);
                 meshBlock.useAOMap = true;
@@ -289,6 +296,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 D3D12Utils::CreateMetallicRoughnessTexture(
                     DEVICE, meshData.metallicTextureFilename,
                     meshData.roughnessTextureFilename, tex2D);
+                tex2D->SetName(L"metallicRoughnessTexture");
                 newMesh.metallicRoughnessTexture = std::make_shared<Texture>();
                 newMesh.metallicRoughnessTexture->CreateFromResource(tex2D);
             }

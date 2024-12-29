@@ -23,8 +23,8 @@ class Samplers;
 class DModel;
 class DSkinnedMeshModel;
 class Wizard;
-template <typename T_CONSTS> class ConstantBuffer2;
-struct GlobalConstants2;
+template <typename T_CONSTS> class ConstantBuffer;
+struct GlobalConstants;
 
 class Engine
 {
@@ -74,6 +74,8 @@ public:
 	PSOType GetPSOType() { return m_psoType; }
 
 	shared_ptr<Texture> GetDefaultTexture() { return m_defaultTex; }
+
+	void CommintGlobalData();
 private:
 	void UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 		const Matrix& viewRow,
@@ -108,7 +110,7 @@ private:
 public:
 	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
 
-	shared_ptr<ConstantBuffer2<GlobalConstants2>> m_globalConstsBuffer;
+	shared_ptr<ConstantBuffer<GlobalConstants>> m_globalConstsBuffer;
 
 	shared_ptr<Texture> m_envTex;
 	shared_ptr<Texture> m_irradianceTex;

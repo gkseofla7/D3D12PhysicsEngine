@@ -94,7 +94,7 @@ struct Light2
 };
 
 // register(b1) 사용
-__declspec(align(256)) struct GlobalConstants2 {
+__declspec(align(256)) struct GlobalConstants {
     Matrix view;
     Matrix proj;
     Matrix invProj; // 역프로젝션행렬
@@ -132,10 +132,10 @@ enum
 };
 
 template <typename T_CONSTS>
-class ConstantBuffer2
+class ConstantBuffer
 {
 public:
-    ~ConstantBuffer2()
+    ~ConstantBuffer()
     {
         if (m_cbvBuffer)
         {

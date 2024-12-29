@@ -320,7 +320,8 @@ namespace dengine {
         textureData.SlicePitch = textureData.RowPitch * height;
         ResourceCommandList rscCommandList = RESOURCE_CMD_LIST;
         UpdateSubresources(rscCommandList.m_resCmdList.Get(), texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
-        CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(), 
+            D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
         rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
         
         GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);

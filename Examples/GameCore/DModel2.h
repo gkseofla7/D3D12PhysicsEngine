@@ -63,8 +63,8 @@ public:
 
     vector<DMesh>* m_meshes;
 
-    ConstantBuffer2<MeshConstants2> m_meshConsts;
-    ConstantBuffer2<MaterialConstants2> m_materialConsts;
+    ConstantBuffer<MeshConstants2> m_meshConsts;
+    ConstantBuffer<MaterialConstants2> m_materialConsts;
 
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;

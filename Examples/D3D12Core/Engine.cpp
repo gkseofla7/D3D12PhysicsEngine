@@ -9,10 +9,10 @@
 #include "GraphicsPSO2.h"
 #include "Samplers2.h"
 #include "ConstantBuffer.h"
-#include "DSkinnedMeshModel2.h"
-#include "MeshLoadHelper2.h"
-#include "GeometryGenerator2.h"
-#include "Wizard2.h"
+#include "../GameCore/DSkinnedMeshModel2.h"
+#include "../GameCore/MeshLoadHelper2.h"
+#include "../GameCore/GeometryGenerator2.h"
+#include "../GameCore/Wizard2.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	UINT msg,
 	WPARAM wParam,
@@ -117,6 +117,9 @@ void Engine::Init(const WindowInfo& info)
 }
 int Engine::Run()
 {
+#ifdef _DEBUG
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
 	{ 
@@ -147,6 +150,7 @@ int Engine::Run()
 
 		}
 	}
+	_ASSERT(_CrtCheckMemory());
 
 	return 0;
 }
@@ -274,7 +278,7 @@ void Engine::InitPSO()
 
 void Engine::InitGlobalBuffer()
 {
-	m_globalConstsBuffer = std::make_shared<ConstantBuffer2<GlobalConstants2>>();
+	m_globalConstsBuffer = std::make_shared<ConstantBuffer<GlobalConstants>>();
 	m_globalConstsBuffer->Init(CBV_REGISTER::b0, 3);
 
 	m_envTex = std::make_shared<Texture>();
@@ -304,7 +308,7 @@ bool Engine::InitScene()
 {
 	// 조명 설정
 	{
-		GlobalConstants2& globalConstsCPU = m_globalConstsBuffer->GetCpu();
+		GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
 		// 조명 0은 고정
 		globalConstsCPU.lights[0].radiance = Vector3(5.0f);
 		globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.1f);
@@ -414,8 +418,10 @@ void Engine::Render()
 
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
 	m_skybox->Render();
+
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	m_ground->Render();
+
 	m_skinnedGraphicsPSO->UploadGraphicsPSO();
 	m_wizard->Render();
 	
@@ -440,7 +446,7 @@ void Engine::PostRender()
 	
 	GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetSRVHandle()
 		, SRV_REGISTER::t0);
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
 	GEngine->GetGraphicsDescHeap()->CommitTableForSampling();
 
 	m_screenSquare->Render();
@@ -476,8 +482,6 @@ void Engine::RenderBegin()
 	m_graphicsCmdQueue->RenderBegin();
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	// 공용 데이터 셋팅
-	// b0
-	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(0, m_globalConstsBuffer->GetGpuVirtualAddress(0));
 
 	// 공통으로 사용할 텍스춰들: t10 ~ t13, 해당 작업은 단 한번만
 	// 텍스처 로딩이 완료됐을경우에만(비동기 로딩일 경우 콜백 함수로 넘겨야될듯)
@@ -487,7 +491,10 @@ void Engine::RenderBegin()
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
 	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
 
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(2, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+
+	// b0
+	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_globalConstsBuffer->GetGpuVirtualAddress(0));
 }
 
 void Engine::RenderEnd()
@@ -524,7 +531,7 @@ void Engine::UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 	const Matrix& viewRow,
 	const Matrix& projRow, const Matrix& refl) 
 {
-	GlobalConstants2& globalCpuData = m_globalConstsBuffer->GetCpu();
+	GlobalConstants& globalCpuData = m_globalConstsBuffer->GetCpu();
 	globalCpuData.globalTime += dt;
 	globalCpuData.eyeWorld = eyeWorld;
 	globalCpuData.view = viewRow.Transpose();
@@ -537,6 +544,20 @@ void Engine::UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
 	globalCpuData.invViewProj = globalCpuData.viewProj.Invert();
 
 	m_globalConstsBuffer->Upload();
+}
+
+void Engine::CommintGlobalData()
+{
+	// b0
+	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_globalConstsBuffer->GetGpuVirtualAddress(0));
+	// s0~s6
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	// t10~t13
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
 }
 
 void Engine::CreateRenderTargetGroups()

@@ -46,8 +46,11 @@ void GraphicsDescriptorHeap::CommitTable()
 {
 	// 항상 RootSignature과 맞춰야된다
 	// t10은 공용데이터지만 
+	// TODO. 여러 객체가 RootSignature가 다를때마다 Commit 해줘야되는게 다른데..
+	// 일단 마무리 후 다른 프로젝트 참고해서 수정해보자
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, GetGPUHandle(CBV_REGISTER::b1));
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(4, GetGPUHandle(SRV_REGISTER::t0));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(5, GetGPUHandle(SRV_REGISTER::t9));
 	m_currentGroupIndex++;
 }
 
@@ -76,8 +79,6 @@ void GraphicsDescriptorHeap::CommitGlobalTextureTable()
 {
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(SRV_REGISTER::t10));
 }
-
-
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(CBV_REGISTER reg)
 {

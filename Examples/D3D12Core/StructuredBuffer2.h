@@ -66,10 +66,15 @@ public:
 
 			//DEVICE->CreateConstantBufferView(&cbvDesc, cbvHandle);
 		}
+		m_init = true;
 	}
 
 	void Upload()
 	{
+		if (m_init == false)
+		{
+			return;
+		}
 		ComPtr<ID3D12Resource> readBuffer = nullptr;
 		UINT bufferSize = GetBufferSize();
 		D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
@@ -86,7 +91,7 @@ public:
 		uint8* dataBegin = nullptr;
 		D3D12_RANGE readRange{ 0, 0 };
 		readBuffer->Map(0, &readRange, reinterpret_cast<void**>(&dataBegin));
-		memcpy(dataBegin, reinterpret_cast<void*>(&m_cpu), bufferSize);
+		memcpy(dataBegin, reinterpret_cast<void*>(&m_cpu[0]), bufferSize);
 		readBuffer->Unmap(0, nullptr);
 
 		// Common -> Copy
@@ -114,6 +119,10 @@ public:
 
 	void PushGraphicsData(SRV_REGISTER reg)
 	{
+		if (m_init == false)
+		{
+			return;
+		}
 		GEngine->GetGraphicsDescHeap()->SetSRV(m_srvHeapBegin, reg);
 	}
 
@@ -144,6 +153,8 @@ private:
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHeapBegin = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE _uavHeapBegin = {};
+
+	bool m_init = false;
 };
 
 

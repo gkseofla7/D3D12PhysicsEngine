@@ -67,6 +67,10 @@ void Texture::Load(const wstring& path, bool isCubeMap)
 		static_cast<unsigned int>(subResources.size()),
 		subResources.data());
 
+	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(m_tex2D.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+	rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
+
 	GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
 
 	D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
