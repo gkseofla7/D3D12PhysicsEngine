@@ -5,9 +5,14 @@ struct DepthOnlyPixelShaderInput
     float4 posProj : SV_POSITION;
 };
 
-void main(float4 pos : SV_POSITION)
+//void main(float4 pos : SV_POSITION)
+//{
+//    // 아무것도 하지 않음 (Depth Only)
+//}
+
+float4 main(float4 pos : SV_POSITION) : SV_Target0
 {
-    // 아무것도 하지 않음 (Depth Only)
+    return float4(pos.z / pos.w, 0.f, 0.f, 0.f);
 }
 
 /* 비교: 반환 자료형 불필요

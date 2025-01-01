@@ -274,6 +274,9 @@ void Engine::InitPSO()
 	m_postEffectGraphicsPSO = std::make_shared<GraphicsPSO>();
 	m_postEffectGraphicsPSO->Init(m_rootSignature->GetSamplingRootSignature(), m_graphicsPipelineState->GetPostEffectPipelineState(), PSOType::SAMPLING);
 
+	m_shadowGraphicsPSO = std::make_shared<GraphicsPSO>();
+	m_shadowGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetShadowPipelineState(), PSOType::SHADOW);
+
 }
 
 void Engine::InitGlobalBuffer()
@@ -307,7 +310,7 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	m_envTex->Load((basePath + envFilename).c_str(), true);
 	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
 	m_specularTex->Load((basePath + specularFilename).c_str(), true);
-	m_brdfTex->Load((basePath + brdfFilename).c_str(), true);
+	m_brdfTex->Load((basePath + brdfFilename).c_str(), false);
 }
 
 bool Engine::InitScene()
@@ -322,7 +325,7 @@ bool Engine::InitScene()
 		globalConstsCPU.lights[0].spotPower = 3.0f;
 		globalConstsCPU.lights[0].radius = 0.04f;
 		globalConstsCPU.lights[0].type =
-			LIGHT_SPOT;// | LIGHT_SHADOW; // Point with shadow
+			LIGHT_SPOT| LIGHT_SHADOW; // Point with shadow
 
 		// 조명 1의 위치와 방향은 Update()에서 설정
 		globalConstsCPU.lights[1].radiance = Vector3(5.0f);
@@ -330,7 +333,7 @@ bool Engine::InitScene()
 		globalConstsCPU.lights[1].fallOffEnd = 20.0f;
 		globalConstsCPU.lights[1].radius = 0.02f;
 		globalConstsCPU.lights[1].type =
-			LIGHT_SPOT;// | LIGHT_SHADOW; // Point with shadow
+			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 2는 꺼놓음
 		globalConstsCPU.lights[2].type = LIGHT_OFF;
@@ -491,14 +494,20 @@ void Engine::UpdateLights(float dt)
 void Engine::Render()
 {
 	RenderBegin();
+	
+	RenderShadowMaps();
 
-	m_skyboxGraphicsPSO->UploadGraphicsPSO();
-	m_skybox->Render();
+	int8 backIndex = m_swapChain->GetBackBufferIndex();
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
+	//m_skyboxGraphicsPSO->UploadGraphicsPSO();
+	//m_skybox->Render();
 
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15);
 	m_ground->Render();
-
+	 
 	m_skinnedGraphicsPSO->UploadGraphicsPSO();
+	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15);
 	m_wizard->Render();
 	
 	PostRender();
@@ -507,16 +516,24 @@ void Engine::Render()
 
 void Engine::RenderShadowMaps()
 {
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
+	m_shadowGraphicsPSO->UploadGraphicsPSO();
 	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 	{
 		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
 		{
 			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
+			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView(i);
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
 
+			// b0
+			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
+			m_wizard->Render();
 		}
 	}
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
+	
 	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
 	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
 }
@@ -527,10 +544,6 @@ void Engine::PostRender()
 	int8 backIndex = m_swapChain->GetBackBufferIndex();
 	ResolveMSAATexture(GRAPHICS_CMD_LIST.Get(), GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->GetRTTexture(backIndex)->GetTex2D().Get()
 		, GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetTex2D().Get(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-
-	//TODO. 제거 예정, 임시
-	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->WaitTargetToResource();
-	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->WaitTargetToResource(backIndex);
 
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
@@ -565,28 +578,12 @@ void Engine::PostRender()
 	//	GRAPHICS_CMD_LIST->ResourceBarrier(1, &resourceBarrier); // 복사 소스로 변경
 	//}
 
-
-	//
 }
 
 void Engine::RenderBegin()
 {	
 	m_graphicsCmdQueue->RenderBegin();
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	// 공용 데이터 셋팅
-
-	// 공통으로 사용할 텍스춰들: t10 ~ t13, 해당 작업은 단 한번만
-	// 텍스처 로딩이 완료됐을경우에만(비동기 로딩일 경우 콜백 함수로 넘겨야될듯)
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
-	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
-
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
-
-	// b0
-	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_globalConstsBuffer->GetGpuVirtualAddress(0));
 }
 
 void Engine::RenderEnd()
@@ -647,13 +644,13 @@ void Engine::CommintGlobalData()
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
 	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+	//GEngine->GetGraphicsDescHeap()->SetSRV(m_defaultTex->GetSRVHandle(), SRV_REGISTER::t15);
 	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
 }
 
 void Engine::CreateRenderTargetGroups()
 {
-
-	// SwapChain Group
+	// SwapChain Group 
 	{
 		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
 		vector< shared_ptr<Texture>> dsTextures;
@@ -664,7 +661,7 @@ void Engine::CreateRenderTargetGroups()
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->CreateFromResource(resource);
 
-			resource->SetName(L"SwapChainTexture");
+			resource->SetName(L"SwapChainTexture"); 
 
 			shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
 			dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
@@ -752,45 +749,70 @@ void Engine::CreateRenderTargetGroups()
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)] = std::make_shared<RenderTargetGroup>();
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, resolveRtVec, dsTextures);
 	}
-	
-
+	 
 	// Shadow
 	{
-		const int shadowWidth = 1280;
-		const int shadowHeight = 1280;
-
-		
 		D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
-		if (m_numQualityLevels)
-		{
-			depthDesc.SampleDesc.Count = 4;
-			depthDesc.SampleDesc.Quality = m_numQualityLevels - 1;
-		}
-		else
-		{
-			depthDesc.SampleDesc.Count = 1;
-			depthDesc.SampleDesc.Quality = 0;
-		}
-		depthDesc.Format = DXGI_FORMAT_R32_TYPELESS;
-		depthDesc.Width = shadowWidth;
-		depthDesc.Height = shadowHeight;
-		depthDesc.MipLevels = 1;
 
-		vector <shared_ptr<Texture>> dsTextures;
+		vector<RenderTarget> rtVec(MAX_LIGHTS_COUNT);
+
 		for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 		{
-			shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
-			dsMultiSamplingTexture->Create(depthDesc,
+			rtVec[i].target = std::make_shared<Texture>();
+			rtVec[i].target->Create(DXGI_FORMAT_R32_FLOAT, 4096, 4096,
 				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-
-			dsTextures.push_back(dsMultiSamplingTexture);
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 		}
 
-		vector<RenderTarget> rtVec;
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = std::make_shared<RenderTargetGroup>();
+		vector <shared_ptr<Texture>> dsTextures;
+		shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
+		depthDesc.Width = 4096;
+		depthDesc.Height = 4096;
+		dsTexture->Create(depthDesc,
+			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+		dsTextures.push_back(dsTexture);
+
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = make_shared<RenderTargetGroup>();
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
 	}
+	//{
+	//	const int shadowWidth = 1280;
+	//	const int shadowHeight = 1280;
+
+	//	
+	//	D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
+	//	if (m_numQualityLevels)
+	//	{
+	//		depthDesc.SampleDesc.Count = 4;
+	//		depthDesc.SampleDesc.Quality = m_numQualityLevels - 1;
+	//	}
+	//	else
+	//	{
+	//		depthDesc.SampleDesc.Count = 1;
+	//		depthDesc.SampleDesc.Quality = 0;
+	//	}
+	//	// TODO. typeless로 해야될지 다시 확인
+	//	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	//	depthDesc.Width = shadowWidth;
+	//	depthDesc.Height = shadowHeight;
+	//	depthDesc.MipLevels = 1;
+
+	//	vector <shared_ptr<Texture>> dsTextures;
+	//	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+	//	{
+	//		shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
+	//		dsMultiSamplingTexture->Create(depthDesc,
+	//			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+	//			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	//		dsTextures.push_back(dsMultiSamplingTexture);
+	//	}
+
+	//	vector<RenderTarget> rtVec;
+	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = std::make_shared<RenderTargetGroup>();
+	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
+	//}
 }
 
 void Engine::OnMouseMove(int mouseX, int mouseY) {

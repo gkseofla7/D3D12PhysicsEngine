@@ -24,6 +24,7 @@ public:
 
 	ComPtr<ID3D12DescriptorHeap> GetRenderTargetHeap() { return m_rtvHeap; }
 	ComPtr<ID3D12DescriptorHeap> GetShaderResourceHeap() { return m_srvHeap; }
+	ComPtr<ID3D12DescriptorHeap> GetDepthStencilViewHeap() { return m_dsvHeap; }
 
 	shared_ptr<Texture> GetRTTexture(uint32 index);
 	shared_ptr<Texture> GetDSTexture(uint32 index);
@@ -48,8 +49,10 @@ private:
 private:
 	uint32							m_rtvHeapSize;
 	uint32							m_dtvHeapSize;
+	uint32							m_srvHeapSize;
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_rtvHeapBegin;
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_dsvHeapBegin;
+	D3D12_CPU_DESCRIPTOR_HANDLE		m_srvHeapBegin;
 
 private:
 	D3D12_RESOURCE_BARRIER			m_targetToResource[8];

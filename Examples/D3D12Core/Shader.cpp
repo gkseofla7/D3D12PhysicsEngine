@@ -21,6 +21,7 @@ void Shader::Init()
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
 	D3D12Utils::CreateVertexShader(DEVICE, L"SkyboxVS.hlsl", m_skyboxVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"SamplingVS.hlsl", m_samplingVS);
+	D3D12Utils::CreateVertexShader(DEVICE, L"DepthOnlyVS.hlsl", m_depthOnlyVS);
 
 
 	// Pixel Shader
@@ -28,6 +29,7 @@ void Shader::Init()
 	D3D12Utils::CreatePixelShader(DEVICE, L"SkyboxPS.hlsl", m_skyboxPS);
 	D3D12Utils::CreatePixelShader(DEVICE, L"SamplingPS.hlsl", m_samplingPS);
 	D3D12Utils::CreatePixelShader(DEVICE, L"PostEffectsPS.hlsl", m_postEffectsPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"DepthOnlyPS.hlsl", m_depthOnlyPS);
 }
 
 

@@ -51,6 +51,10 @@ void GraphicsDescriptorHeap::CommitTable()
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, GetGPUHandle(CBV_REGISTER::b1));
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(4, GetGPUHandle(SRV_REGISTER::t0));
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(5, GetGPUHandle(SRV_REGISTER::t9));
+	if (GEngine->GetPSOType() == PSOType::DEFAULT)
+	{
+		GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(6, GetGPUHandle(SRV_REGISTER::t15));
+	}
 	m_currentGroupIndex++;
 }
 
@@ -64,7 +68,22 @@ void GraphicsDescriptorHeap::ClearSRV()
 	SetSRV(srvHandle, SRV_REGISTER::t3);
 	SetSRV(srvHandle, SRV_REGISTER::t4);
 	SetSRV(srvHandle, SRV_REGISTER::t5);
+	SetSRV(srvHandle, SRV_REGISTER::t9);
+	SetSRV(srvHandle, SRV_REGISTER::t15);
 }
+
+//void GraphicsDescriptorHeap::ClearCBV()
+//{
+//	// TODO. 항상 빈 텍스처라도 셋팅을 해두기, 더 좋은 방법 없을까..
+//	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GEngine->GetDefaultTexture()->GetSRVHandle();
+//	SetSRV(srvHandle, CBV_REGISTER::b1);
+//	SetSRV(srvHandle, SRV_REGISTER::t1);
+//	SetSRV(srvHandle, SRV_REGISTER::t2);
+//	SetSRV(srvHandle, SRV_REGISTER::t3);
+//	SetSRV(srvHandle, SRV_REGISTER::t4);
+//	SetSRV(srvHandle, SRV_REGISTER::t5);
+//	SetSRV(srvHandle, SRV_REGISTER::t15);
+//}
 
 void GraphicsDescriptorHeap::CommitTableForSampling()
 {

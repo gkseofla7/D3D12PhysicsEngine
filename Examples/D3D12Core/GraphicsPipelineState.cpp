@@ -106,5 +106,15 @@ void GraphicsPipelineState::Init()
 		postEffectRSDesc.SampleDesc.Count = 1;
 		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&postEffectRSDesc, IID_PPV_ARGS(&m_postEffectPipelineState)));
 	}
+
+	{
+		D3D12_GRAPHICS_PIPELINE_STATE_DESC shadowPsoDesc = psoDesc;
+
+		shadowPsoDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetDepthOnlyVS().Get());
+		shadowPsoDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetDepthOnlyPS().Get());
+		shadowPsoDesc.RTVFormats[0] = DXGI_FORMAT_R32_FLOAT;
+		shadowPsoDesc.SampleDesc.Count = 1;
+		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&shadowPsoDesc, IID_PPV_ARGS(&m_shadowPipelineState)));
+	}
 }
 }

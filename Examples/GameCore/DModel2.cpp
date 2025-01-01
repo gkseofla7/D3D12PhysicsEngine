@@ -129,13 +129,15 @@ void DModel::Render()
     }
     if (m_isVisible) 
     {
+        
         for (auto& mesh : *m_meshes) 
         {
-            if (GEngine->GetPSOType() == PSOType::DEFAULT)
+            if (GEngine->GetPSOType() == PSOType::DEFAULT
+                    || GEngine->GetPSOType() == PSOType::SHADOW)
             {
+                GEngine->GetGraphicsDescHeap()->ClearSRV();
                 m_meshConsts.PushGraphicsData();
                 m_materialConsts.PushGraphicsData();
-                GEngine->GetGraphicsDescHeap()->ClearSRV();
                 if (mesh.heightTexture != nullptr)
                 {
                     GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
@@ -162,6 +164,7 @@ void DModel::Render()
                 }
                 GEngine->GetGraphicsDescHeap()->CommitTable();
             }
+            
 
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);

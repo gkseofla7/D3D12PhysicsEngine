@@ -37,10 +37,25 @@ void RenderTargetGroup::Create(RENDER_TARGET_GROUP_TYPE groupType, const vector<
 
 		// SRV
 		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-		srvHeapDesc.NumDescriptors = 1;
+		srvHeapDesc.NumDescriptors = m_rtCount;
 		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO. 다시 확인 필요
 		DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
+
+		m_srvHeapSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		m_srvHeapBegin = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
+
+		for (uint32 i = 0; i < m_rtCount; i++)
+		{
+			uint32 destSize = 1;
+			D3D12_CPU_DESCRIPTOR_HANDLE destHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_srvHeapBegin, i * m_srvHeapSize);
+
+			uint32 srcSize = 1;
+			ComPtr<ID3D12DescriptorHeap> srcSRVHeapBegin = m_rtVec[i].target->GetSRV();
+			D3D12_CPU_DESCRIPTOR_HANDLE srcHandle = srcSRVHeapBegin->GetCPUDescriptorHandleForHeapStart();
+
+			DEVICE->CopyDescriptors(1, &destHandle, &destSize, 1, &srcHandle, &srcSize, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		}
 	}
 
 	if (m_dsCount > 0)
@@ -89,8 +104,15 @@ void RenderTargetGroup::OMSetRenderTargets(uint32 count, uint32 offset)
 	GRAPHICS_CMD_LIST->RSSetScissorRects(1, &rect);
 
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, offset * m_rtvHeapSize);
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, offset * m_dtvHeapSize);
-	GRAPHICS_CMD_LIST->OMSetRenderTargets(count, &rtvHandle, FALSE/*1개*/, &dsvHandle);
+	if (m_dsCount > offset)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, offset * m_dtvHeapSize);
+		GRAPHICS_CMD_LIST->OMSetRenderTargets(count, &rtvHandle, FALSE/*1개*/, &dsvHandle);
+	}
+	else
+	{
+		GRAPHICS_CMD_LIST->OMSetRenderTargets(count, &rtvHandle, FALSE/*1개*/, &m_dsvHeapBegin);
+	}
 }
 
 void RenderTargetGroup::OMSetRenderTargets()
@@ -122,8 +144,15 @@ void RenderTargetGroup::ClearRenderTargetView(uint32 index)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_rtvHeapBegin, index * m_rtvHeapSize);
 	GRAPHICS_CMD_LIST->ClearRenderTargetView(rtvHandle, m_rtVec[index].clearColor, 0, nullptr);
-	D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, index * m_dtvHeapSize);
-	GRAPHICS_CMD_LIST->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+	if (m_dsCount > index)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE(m_dsvHeapBegin, index * m_dtvHeapSize);
+		GRAPHICS_CMD_LIST->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+	}
+	else
+	{
+		GRAPHICS_CMD_LIST->ClearDepthStencilView(m_dsvHeapBegin, D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+	}
 }
 
 void RenderTargetGroup::ClearRenderTargetView()

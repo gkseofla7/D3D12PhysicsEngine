@@ -102,6 +102,7 @@ enum class PSOType
 	DEFAULT,
 	SKYBOX,
 	SAMPLING,
+	SHADOW
 };
 
 struct WindowInfo
