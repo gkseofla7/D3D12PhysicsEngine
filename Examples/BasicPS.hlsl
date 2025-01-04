@@ -132,6 +132,14 @@ float PCF_Filter(float2 uv, float zReceiverNdc, float filterRadiusUV, Texture2D 
     for (int i = 0; i < 64; ++i)
     {
         float2 offset = diskSamples64[i] * filterRadiusUV;
+        float shadowMapDepth =
+            shadowMap.SampleLevel(shadowPointSampler, float2(uv) + offset, 0).r;
+        if (shadowMapDepth >= zReceiverNdc)
+        {
+            sum++;
+        }
+        continue;
+        // TODO. shadowCompareSampler 제대로 작동 안함,, 원인 파악 필요
         sum += shadowMap.SampleCmpLevelZero(
             shadowCompareSampler, uv + offset, zReceiverNdc);
     }
@@ -167,6 +175,8 @@ void FindBlocker(out float avgBlockerDepthView, out float numBlockers, float2 uv
 
 float PCSS(float2 uv, float zReceiverNdc, Texture2D shadowMap, matrix invProj, float lightRadiusWorld)
 {
+    
+    
     float lightRadiusUV = lightRadiusWorld / LIGHT_FRUSTUM_WIDTH;
     
     float zReceiverView = N2V(zReceiverNdc, invProj);
@@ -176,7 +186,7 @@ float PCSS(float2 uv, float zReceiverNdc, Texture2D shadowMap, matrix invProj, f
     float numBlockers = 0;
 
     FindBlocker(avgBlockerDepthView, numBlockers, uv, zReceiverView, shadowMap, invProj, lightRadiusWorld);
-
+  
     if (numBlockers < 1)
     {
         // There are no occluders so early out(this saves filtering)

@@ -60,7 +60,8 @@ enum class SRV_REGISTER : UINT8
 	t13,
 	t14,
 	t15,
-
+	t15_1,
+	t15_2,
 	END
 };
 

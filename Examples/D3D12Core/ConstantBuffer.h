@@ -170,13 +170,14 @@ public:
         ::memcpy(&m_mappedBuffer[m_currentIndex * m_elementSize], &m_cpu, m_elementSize);
     }
 
-    void PushGraphicsData()
+    void PushGraphicsData(bool bIncreaseIndex = true)
     {
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCpuHandle(m_currentIndex);
         GEngine->GetGraphicsDescHeap()->SetCBV(cpuHandle, m_reg);
-
-        m_currentIndex = (m_currentIndex+ 1)% m_elementCount;
-        
+        if (bIncreaseIndex)
+        {
+            m_currentIndex = (m_currentIndex + 1) % m_elementCount;
+        }
     }
 
     D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress(uint32 index)

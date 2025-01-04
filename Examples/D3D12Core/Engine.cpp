@@ -325,7 +325,7 @@ bool Engine::InitScene()
 		globalConstsCPU.lights[0].spotPower = 3.0f;
 		globalConstsCPU.lights[0].radius = 0.04f;
 		globalConstsCPU.lights[0].type =
-			LIGHT_SPOT| LIGHT_SHADOW; // Point with shadow
+			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 1의 위치와 방향은 Update()에서 설정
 		globalConstsCPU.lights[1].radiance = Vector3(5.0f);
@@ -499,17 +499,19 @@ void Engine::Render()
 
 	int8 backIndex = m_swapChain->GetBackBufferIndex();
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
-	//m_skyboxGraphicsPSO->UploadGraphicsPSO();
-	//m_skybox->Render();
+	m_skyboxGraphicsPSO->UploadGraphicsPSO();
+	m_skybox->Render();
+
+	m_skinnedGraphicsPSO->UploadGraphicsPSO();
+	GEngine->GetGraphicsDescHeap()->ClearSRV();
+	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
+	m_wizard->Render();
 
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15);
+	GEngine->GetGraphicsDescHeap()->ClearSRV();
+	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
 	m_ground->Render();
-	 
-	m_skinnedGraphicsPSO->UploadGraphicsPSO();
-	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15);
-	m_wizard->Render();
-	
+
 	PostRender();
 	RenderEnd(); 
 }
@@ -530,6 +532,7 @@ void Engine::RenderShadowMaps()
 			// b0
 			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
 			m_wizard->Render();
+			m_ground->Render();
 		}
 	}
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
@@ -650,7 +653,7 @@ void Engine::CommintGlobalData()
 
 void Engine::CreateRenderTargetGroups()
 {
-	// SwapChain Group 
+	// SwapChain Group
 	{
 		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
 		vector< shared_ptr<Texture>> dsTextures;
@@ -722,7 +725,6 @@ void Engine::CreateRenderTargetGroups()
 			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			rtVec[i].target->GetTex2D()->SetName(L"FloatBufferTexture");
-
 			shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
 			dsMultiSamplingTexture->Create(depthDesc,
 				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -732,7 +734,6 @@ void Engine::CreateRenderTargetGroups()
 
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsTextures);
-
 
 		// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
 		desc.SampleDesc.Count = 1;
@@ -759,15 +760,21 @@ void Engine::CreateRenderTargetGroups()
 		for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 		{
 			rtVec[i].target = std::make_shared<Texture>();
-			rtVec[i].target->Create(DXGI_FORMAT_R32_FLOAT, 4096, 4096,
+			rtVec[i].target->Create(DXGI_FORMAT_R16G16B16A16_FLOAT, 1280, 1280,
 				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+				Vector4(1.0f, 1.0f, 1.0f, 1.0f)); 
+			rtVec[i].clearColor[0] = 1.0f;
+			rtVec[i].clearColor[1] = 1.0f;
+			rtVec[i].clearColor[2] = 1.0f;
+			rtVec[i].clearColor[3] = 1.0f;
 		}
+
 
 		vector <shared_ptr<Texture>> dsTextures;
 		shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
-		depthDesc.Width = 4096;
-		depthDesc.Height = 4096;
+		depthDesc.Width = 1280;
+		depthDesc.Height = 1280;
 		dsTexture->Create(depthDesc,
 			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));

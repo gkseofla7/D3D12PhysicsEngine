@@ -39,7 +39,7 @@ void RenderTargetGroup::Create(RENDER_TARGET_GROUP_TYPE groupType, const vector<
 		D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
 		srvHeapDesc.NumDescriptors = m_rtCount;
 		srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO. 다시 확인 필요
+		srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 		DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
 
 		m_srvHeapSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);

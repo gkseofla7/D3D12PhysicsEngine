@@ -146,10 +146,18 @@ void Texture::Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTI
 	D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor)
 {
 	m_desc = resourceDesc;
+
 	D3D12_RESOURCE_STATES resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_COMMON;
+
 	float arrFloat[4] = { clearColor.x, clearColor.y, clearColor.z, clearColor.w };
 	D3D12_CLEAR_VALUE optimizedClearValue = CD3DX12_CLEAR_VALUE(m_desc.Format, arrFloat);
 	D3D12_CLEAR_VALUE* pOptimizedClearValue = &optimizedClearValue;
+	if (resFlags & D3D12_RESOURCE_FLAGS::D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
+	{
+		resourceStates = D3D12_RESOURCE_STATES::D3D12_RESOURCE_STATE_DEPTH_WRITE;
+		optimizedClearValue = CD3DX12_CLEAR_VALUE(DXGI_FORMAT_D32_FLOAT, 1.0f, 0);
+		pOptimizedClearValue = &optimizedClearValue;
+	}
 	// Create Texture2D
 	HRESULT hr = DEVICE->CreateCommittedResource(
 		&heapProperty,

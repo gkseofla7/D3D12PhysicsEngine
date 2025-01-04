@@ -32,7 +32,7 @@ void Samplers::Init()
     sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampDesc.BorderColor[0] = 100.0f; // 큰 Z값
+    sampDesc.BorderColor[0] = 1.0f;// 100.0f; // 큰 Z값
     sampDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
     sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     m_sampDescs.push_back(sampDesc);

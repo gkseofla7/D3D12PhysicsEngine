@@ -135,9 +135,8 @@ void DModel::Render()
             if (GEngine->GetPSOType() == PSOType::DEFAULT
                     || GEngine->GetPSOType() == PSOType::SHADOW)
             {
-                GEngine->GetGraphicsDescHeap()->ClearSRV();
-                m_meshConsts.PushGraphicsData();
-                m_materialConsts.PushGraphicsData();
+                m_meshConsts.PushGraphicsData(GEngine->GetPSOType() != PSOType::SHADOW);
+                m_materialConsts.PushGraphicsData(GEngine->GetPSOType() != PSOType::SHADOW);
                 if (mesh.heightTexture != nullptr)
                 {
                     GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);

@@ -33,12 +33,12 @@ void GraphicsDescriptorHeap::SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_R
 	DEVICE->CopyDescriptors(1, &destHandle, &destRange, 1, &srcHandle, &srcRange, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
-void GraphicsDescriptorHeap::SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg)
+void GraphicsDescriptorHeap::SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE destHandle = GetCPUHandle(reg);
-
-	uint32 destRange = 1;
-	uint32 srcRange = 1;
+	uint32 destRange = count;
+	uint32 srcRange = count;
+	
 	DEVICE->CopyDescriptors(1, &destHandle, &destRange, 1, &srcHandle, &srcRange, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
@@ -68,7 +68,7 @@ void GraphicsDescriptorHeap::ClearSRV()
 	SetSRV(srvHandle, SRV_REGISTER::t3);
 	SetSRV(srvHandle, SRV_REGISTER::t4);
 	SetSRV(srvHandle, SRV_REGISTER::t5);
-	SetSRV(srvHandle, SRV_REGISTER::t9);
+	//SetSRV(srvHandle, SRV_REGISTER::t9);
 	SetSRV(srvHandle, SRV_REGISTER::t15);
 }
 

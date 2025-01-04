@@ -33,8 +33,14 @@ void GraphicsPipelineState::Init()
 		psoDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetBasicPS().Get());
 		psoDesc.RasterizerState = solidRSDesc;
 		psoDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-		psoDesc.DepthStencilState.DepthEnable = FALSE;
+
+		psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+		psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+		psoDesc.DepthStencilState.DepthEnable = true;
+		psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL; // 깊이 쓰기 활성화
 		psoDesc.DepthStencilState.StencilEnable = FALSE;
+		
+
 		psoDesc.SampleMask = UINT_MAX;
 		psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 		psoDesc.NumRenderTargets = 1;
@@ -112,7 +118,7 @@ void GraphicsPipelineState::Init()
 
 		shadowPsoDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetDepthOnlyVS().Get());
 		shadowPsoDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetDepthOnlyPS().Get());
-		shadowPsoDesc.RTVFormats[0] = DXGI_FORMAT_R32_FLOAT;
+		shadowPsoDesc.RTVFormats[0] = DXGI_FORMAT_R16G16B16A16_FLOAT;
 		shadowPsoDesc.SampleDesc.Count = 1;
 		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&shadowPsoDesc, IID_PPV_ARGS(&m_shadowPipelineState)));
 	}
