@@ -277,6 +277,8 @@ void Engine::InitPSO()
 	m_shadowGraphicsPSO = std::make_shared<GraphicsPSO>();
 	m_shadowGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetShadowPipelineState(), PSOType::SHADOW);
 
+	m_shadowSkinnedGraphicsPSO = std::make_shared<GraphicsPSO>();
+	m_shadowSkinnedGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetShadowSkinnedPipelineState(), PSOType::SHADOW);
 }
 
 void Engine::InitGlobalBuffer()
@@ -519,19 +521,21 @@ void Engine::Render()
 void Engine::RenderShadowMaps()
 {
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
-	m_shadowGraphicsPSO->UploadGraphicsPSO();
+	
 	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 	{
 		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
 		{
+
 			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView(i);
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
-
-			// b0
+			m_shadowSkinnedGraphicsPSO->UploadGraphicsPSO();
 			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
 			m_wizard->Render();
+			m_shadowGraphicsPSO->UploadGraphicsPSO();
+			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
 			m_ground->Render();
 		}
 	}

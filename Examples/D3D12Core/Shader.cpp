@@ -22,6 +22,8 @@ void Shader::Init()
 	D3D12Utils::CreateVertexShader(DEVICE, L"SkyboxVS.hlsl", m_skyboxVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"SamplingVS.hlsl", m_samplingVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"DepthOnlyVS.hlsl", m_depthOnlyVS);
+	D3D12Utils::CreateVertexShader(DEVICE, L"DepthOnlyVS.hlsl", m_depthOnlySkinnedVS,
+		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
 
 
 	// Pixel Shader

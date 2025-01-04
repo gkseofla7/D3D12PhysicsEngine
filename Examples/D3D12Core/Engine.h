@@ -107,6 +107,7 @@ private:
 	shared_ptr<GraphicsPSO> m_skyboxGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_postEffectGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_shadowGraphicsPSO;
+	shared_ptr<GraphicsPSO> m_shadowSkinnedGraphicsPSO;
 
 	UINT m_numQualityLevels = 0;
 

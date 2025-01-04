@@ -15,6 +15,7 @@ public:
 	ComPtr<ID3DBlob> GetSkyboxVS() { return m_skyboxVS; }
 	ComPtr<ID3DBlob> GetSamplinigVS() { return m_samplingVS; }
 	ComPtr<ID3DBlob> GetDepthOnlyVS() { return m_depthOnlyVS; }
+	ComPtr<ID3DBlob> GetDepthOnlySkinnedVS() { return m_depthOnlySkinnedVS; }
 
 
 	ComPtr<ID3DBlob> GetBasicPS() { return m_basicPS; }
@@ -34,6 +35,7 @@ private:
 	ComPtr<ID3DBlob> m_skyboxVS;
 	ComPtr<ID3DBlob> m_samplingVS;
 	ComPtr<ID3DBlob> m_depthOnlyVS;
+	ComPtr<ID3DBlob> m_depthOnlySkinnedVS;
 
 	ComPtr<ID3DBlob> m_basicPS;
 	ComPtr<ID3DBlob> m_skyboxPS;
