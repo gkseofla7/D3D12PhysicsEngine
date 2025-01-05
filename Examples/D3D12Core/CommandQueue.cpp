@@ -73,11 +73,7 @@ void GraphicsCommandQueue::RenderBegin()
 	m_cmdList->ResourceBarrier(1, &barrier);
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->WaitResourceToTarget(backIndex);
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->ClearRenderTargetView(backIndex);
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
 	GEngine->GetGraphicsDescHeap()->Clear();
-
-	//ID3D12DescriptorHeap* descHeap = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();
-	//m_cmdList->SetDescriptorHeaps(1, &descHeap);
 
 	ID3D12DescriptorHeap* descHeap[2];
 	descHeap[0] = GEngine->GetGraphicsDescHeap()->GetDescriptorHeap().Get();

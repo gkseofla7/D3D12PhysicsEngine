@@ -9,19 +9,37 @@ void GraphicsDescriptorHeap::Init(uint32 count)
 	m_groupCount = count;
 
 	D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-	desc.NumDescriptors = count * (CBV_SRV_REGISTER_COUNT - 1); // b0는 전역
+	desc.NumDescriptors = count * (CBV_SRV_REGISTER_COUNT); // b0는 전역
 	desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
 	desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 
 	DEVICE->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&m_descHeap));
 
 	m_handleSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-	m_groupSize = m_handleSize * (CBV_SRV_REGISTER_COUNT - 1); // b0는 전역
+	m_groupSize = m_handleSize * (CBV_SRV_REGISTER_COUNT); // b0는 전역 -1 제거
 }
 
 void GraphicsDescriptorHeap::Clear()
+{// 인덱스 0은 글로벌 데이터 애들만 셋팅
+	m_currentGroupIndex = 1;
+}
+
+void GraphicsDescriptorHeap::SetGlobalCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg)
 {
-	m_currentGroupIndex = 0;
+	D3D12_CPU_DESCRIPTOR_HANDLE destHandle = GetGlobalCPUHandle(reg);
+
+	uint32 destRange = 1;
+	uint32 srcRange = 1;
+	DEVICE->CopyDescriptors(1, &destHandle, &destRange, 1, &srcHandle, &srcRange, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+}
+
+void GraphicsDescriptorHeap::SetGlobalSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count)
+{
+	D3D12_CPU_DESCRIPTOR_HANDLE destHandle = GetGlobalCPUHandle(reg);
+	uint32 destRange = count;
+	uint32 srcRange = count;
+
+	DEVICE->CopyDescriptors(1, &destHandle, &destRange, 1, &srcHandle, &srcRange, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
 void GraphicsDescriptorHeap::SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg)
@@ -51,10 +69,6 @@ void GraphicsDescriptorHeap::CommitTable()
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(3, GetGPUHandle(CBV_REGISTER::b1));
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(4, GetGPUHandle(SRV_REGISTER::t0));
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(5, GetGPUHandle(SRV_REGISTER::t9));
-	if (GEngine->GetPSOType() == PSOType::DEFAULT)
-	{
-		GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(6, GetGPUHandle(SRV_REGISTER::t15));
-	}
 	m_currentGroupIndex++;
 }
 
@@ -94,9 +108,14 @@ void GraphicsDescriptorHeap::CommitTableForSampling()
 	m_currentGroupIndex++;
 }
 
-void GraphicsDescriptorHeap::CommitGlobalTextureTable()
+void GraphicsDescriptorHeap::CommitGlobalTable()
 {
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGPUHandle(SRV_REGISTER::t10));
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(1, GetGlobalGPUHandle(SRV_REGISTER::t10));
+	// TODO. PSO Type보단 비트 연산자로 추가하는게 좋을듯 보인다.
+	if (GEngine->GetPSOType() == PSOType::DEFAULT)
+	{
+		GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(6, GetGlobalGPUHandle(SRV_REGISTER::t15));
+	}
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(CBV_REGISTER reg)
@@ -118,6 +137,23 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetCPUHandle(uint8 reg)
 	return handle;
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(CBV_REGISTER reg)
+{
+	return GetGlobalCPUHandle(static_cast<uint8>(reg));
+}
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(SRV_REGISTER reg)
+{
+	return GetGlobalCPUHandle(static_cast<uint8>(reg));
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(uint8 reg)
+{
+	assert(reg >= 0);
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_descHeap->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += (reg)*m_handleSize;
+	return handle;
+}
+
 D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGPUHandle(CBV_REGISTER reg)
 {
 	return GetGPUHandle(static_cast<uint8>(reg));
@@ -132,6 +168,22 @@ D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGPUHandle(uint8 reg)
 	D3D12_GPU_DESCRIPTOR_HANDLE handle = m_descHeap->GetGPUDescriptorHandleForHeapStart();
 	handle.ptr += m_currentGroupIndex * m_groupSize;
 	handle.ptr += (reg) * m_handleSize;
+	return handle;
+}
+
+D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalGPUHandle(CBV_REGISTER reg)
+{
+	return GetGlobalGPUHandle(static_cast<uint8>(reg));
+}
+D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalGPUHandle(SRV_REGISTER reg)
+{
+	return GetGlobalGPUHandle(static_cast<uint8>(reg));
+}
+D3D12_GPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalGPUHandle(uint8 reg)
+{
+	assert(reg >= 0);
+	D3D12_GPU_DESCRIPTOR_HANDLE handle = m_descHeap->GetGPUDescriptorHandleForHeapStart();
+	handle.ptr += (reg)*m_handleSize;
 	return handle;
 }
 

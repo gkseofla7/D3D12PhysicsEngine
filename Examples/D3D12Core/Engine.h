@@ -64,6 +64,7 @@ public:
 
 public:
 	void Render();
+	void RenderOpaqueObjects();
 	void RenderShadowMaps();
 	void PostRender();
 

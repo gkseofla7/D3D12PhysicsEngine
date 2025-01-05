@@ -313,6 +313,12 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
 	m_specularTex->Load((basePath + specularFilename).c_str(), true);
 	m_brdfTex->Load((basePath + brdfFilename).c_str(), false);
+
+	// t10~t13, TODO. 비동기 로딩으로 변경하면 수정 필요
+	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
 }
 
 bool Engine::InitScene()
@@ -499,50 +505,53 @@ void Engine::Render()
 	
 	RenderShadowMaps();
 
-	int8 backIndex = m_swapChain->GetBackBufferIndex();
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
-	m_skyboxGraphicsPSO->UploadGraphicsPSO();
-	m_skybox->Render();
-
-	m_skinnedGraphicsPSO->UploadGraphicsPSO();
-	GEngine->GetGraphicsDescHeap()->ClearSRV();
-	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
-	m_wizard->Render();
-
-	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	GEngine->GetGraphicsDescHeap()->ClearSRV();
-	GEngine->GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
-	m_ground->Render();
+	RenderOpaqueObjects();
 
 	PostRender();
 	RenderEnd(); 
 }
 
+void Engine::RenderOpaqueObjects()
+{
+	int8 backIndex = m_swapChain->GetBackBufferIndex();
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
+
+	m_skyboxGraphicsPSO->UploadGraphicsPSO();
+	m_skybox->Render();
+
+	m_skinnedGraphicsPSO->UploadGraphicsPSO();
+	GEngine->GetGraphicsDescHeap()->ClearSRV();
+	m_wizard->Render();
+
+	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	GEngine->GetGraphicsDescHeap()->ClearSRV();
+	m_ground->Render();
+}
+
 void Engine::RenderShadowMaps()
 {
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
-	
 	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 	{
 		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
 		{
-
 			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView(i);
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
+
+			// Render Skinned
 			m_shadowSkinnedGraphicsPSO->UploadGraphicsPSO();
 			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
 			m_wizard->Render();
+			// Render Default
 			m_shadowGraphicsPSO->UploadGraphicsPSO();
 			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
 			m_ground->Render();
 		}
 	}
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
-	
-	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
-	//GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
+	GetGraphicsDescHeap()->SetGlobalSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
 }
 
 void Engine::PostRender() 
@@ -590,7 +599,6 @@ void Engine::PostRender()
 void Engine::RenderBegin()
 {	
 	m_graphicsCmdQueue->RenderBegin();
-	m_defaultGraphicsPSO->UploadGraphicsPSO();
 }
 
 void Engine::RenderEnd()
@@ -646,13 +654,7 @@ void Engine::CommintGlobalData()
 	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_globalConstsBuffer->GetGpuVirtualAddress(0));
 	// s0~s6
 	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
-	// t10~t13
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
-	GEngine->GetGraphicsDescHeap()->SetSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
-	//GEngine->GetGraphicsDescHeap()->SetSRV(m_defaultTex->GetSRVHandle(), SRV_REGISTER::t15);
-	GEngine->GetGraphicsDescHeap()->CommitGlobalTextureTable();
+	GetGraphicsDescHeap()->CommitGlobalTable();
 }
 
 void Engine::CreateRenderTargetGroups()
