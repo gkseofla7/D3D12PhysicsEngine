@@ -40,8 +40,8 @@ void DModel::Initialize(const std::string& basePath,
     m_filename = filename;
 
     m_meshConsts.GetCpu().world = Matrix();
-    m_meshConsts.Init(CBV_REGISTER::b1, FRAMEBUFFER_COUNT);
-    m_materialConsts.Init(CBV_REGISTER::b2, FRAMEBUFFER_COUNT);
+    m_meshConsts.Init(CBV_REGISTER::b1, SWAP_CHAIN_BUFFER_COUNT);
+    m_materialConsts.Init(CBV_REGISTER::b2, SWAP_CHAIN_BUFFER_COUNT);
 
     if (MeshLoadHelper::LoadModelData(basePath, filename))
     {
@@ -53,8 +53,8 @@ void DModel::Initialize(const string& meshKey)
     m_meshKey = meshKey;
 
     m_meshConsts.GetCpu().world = Matrix();
-    m_meshConsts.Init(CBV_REGISTER::b1, FRAMEBUFFER_COUNT);
-    m_materialConsts.Init(CBV_REGISTER::b2, FRAMEBUFFER_COUNT);
+    m_meshConsts.Init(CBV_REGISTER::b1, SWAP_CHAIN_BUFFER_COUNT);
+    m_materialConsts.Init(CBV_REGISTER::b2, SWAP_CHAIN_BUFFER_COUNT);
 }
 void DModel::UpdateConstantBuffers() 
 {
@@ -135,8 +135,16 @@ void DModel::Render()
             if (GEngine->GetPSOType() == PSOType::DEFAULT
                     || GEngine->GetPSOType() == PSOType::SHADOW)
             {
-                m_meshConsts.PushGraphicsData(GEngine->GetPSOType() != PSOType::SHADOW);
-                m_materialConsts.PushGraphicsData(GEngine->GetPSOType() != PSOType::SHADOW);
+                m_meshConsts.PushGraphicsData();
+                m_materialConsts.PushGraphicsData();
+
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t0);
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t1);
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t2);
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t3);
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t4);
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t5);
+
                 if (mesh.heightTexture != nullptr)
                 {
                     GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
@@ -164,7 +172,6 @@ void DModel::Render()
                 GEngine->GetGraphicsDescHeap()->CommitTable();
             }
             
-
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
             GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);

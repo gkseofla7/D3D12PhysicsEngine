@@ -20,10 +20,14 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device)
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_cmdQueue));
+	
+	for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
+	{
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAlloc[i]));
+		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_cmdAlloc[i].Get(), nullptr, IID_PPV_ARGS(&m_cmdList[i]));
+		m_cmdList[i]->Close();
+	}
 
-	device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAlloc));
-	device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_cmdAlloc.Get(), nullptr, IID_PPV_ARGS(&m_cmdList));
-	m_cmdList->Close();
 
 	for (int i = 0; i < 5; i++)
 	{
@@ -38,19 +42,31 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device)
 	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
 	m_fenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
-
+ComPtr<ID3D12GraphicsCommandList> GraphicsCommandQueue::GetCurrentGraphicsCmdList()
+{
+	return m_cmdList[BACKBUFFER_INDEX];
+}
 void GraphicsCommandQueue::WaitSync()
 {
-	// Advance the fence value to mark commands up to this fence point.
-	m_fenceValue++;
+	static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 
-	// Add an instruction to the command queue to set a new fence point.  Because we 
-	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
-	// processing all the commands prior to this Signal().
-	m_cmdQueue->Signal(m_fence.Get(), m_fenceValue);
+	uint64 fenceValue = Fence();
 
 	// Wait until the GPU has completed commands up to this fence point.
 	if (m_fence->GetCompletedValue() < m_fenceValue)
+	{
+		// Fire event when GPU hits current fence.  
+		m_fence->SetEventOnCompletion(m_fenceValue, threadFenceEvent);
+
+		// Wait until the GPU hits current fence event is fired.
+		::WaitForSingleObject(threadFenceEvent, INFINITE);
+	}
+}
+
+void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
+{
+	// Wait until the GPU has completed commands up to this fence point.
+	if (m_fence->GetCompletedValue() < m_lastFenceValue[frameIndex])
 	{
 		// Fire event when GPU hits current fence.  
 		m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent);
@@ -60,17 +76,36 @@ void GraphicsCommandQueue::WaitSync()
 	}
 }
 
+void GraphicsCommandQueue::FenceFrame(int index)
+{
+	m_lastFenceValue[index] = Fence();
+}
+
+uint64 GraphicsCommandQueue::Fence()
+{
+	std::lock_guard<std::mutex> lock(m_fenceMutex);
+	// Advance the fence value to mark commands up to this fence point.
+	m_fenceValue++;
+
+	// Add an instruction to the command queue to set a new fence point.  Because we 
+	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
+	// processing all the commands prior to this Signal().
+	m_cmdQueue->Signal(m_fence.Get(), m_fenceValue);
+	return m_fenceValue;
+}
+
 void GraphicsCommandQueue::RenderBegin()
 {
-	m_cmdAlloc->Reset();
-	m_cmdList->Reset(m_cmdAlloc.Get(), nullptr);
+	const int8 backIndex = BACKBUFFER_INDEX;
 
-	int8 backIndex = m_swapChain->GetBackBufferIndex();
+	m_cmdAlloc[backIndex]->Reset();
+	m_cmdList[backIndex]->Reset(m_cmdAlloc[backIndex].Get(), nullptr);
+
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(backIndex)->GetTex2D().Get(),
 		D3D12_RESOURCE_STATE_PRESENT, // 화면 출력
 		D3D12_RESOURCE_STATE_RENDER_TARGET); // 외주 결과물
-	m_cmdList->ResourceBarrier(1, &barrier);
+	m_cmdList[backIndex]->ResourceBarrier(1, &barrier);
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->WaitResourceToTarget(backIndex);
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->ClearRenderTargetView(backIndex);
 	GEngine->GetGraphicsDescHeap()->Clear();
@@ -90,16 +125,16 @@ void GraphicsCommandQueue::RenderEnd()
 		D3D12_RESOURCE_STATE_RENDER_TARGET, // 외주 결과물
 		D3D12_RESOURCE_STATE_PRESENT); // 화면 출력
 
-	m_cmdList->ResourceBarrier(1, &barrier);
-	m_cmdList->Close();
+	m_cmdList[backIndex]->ResourceBarrier(1, &barrier);
+	m_cmdList[backIndex]->Close();
 
 	// 커맨드 리스트 수행
-	ID3D12CommandList* cmdListArr[] = { m_cmdList.Get() };
+	ID3D12CommandList* cmdListArr[] = { m_cmdList[backIndex].Get()};
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
 
 	m_swapChain->Present();
-
-	WaitSync();
+	FenceFrame(backIndex);
+	//WaitSync();
 
 	m_swapChain->SwapIndex();
 }

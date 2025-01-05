@@ -23,7 +23,7 @@ public:
     void IntegrateRootTransformToWorldTransform();
 public:
     // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
-    shared_ptr<StructuredBuffer2<Matrix>> m_boneTransforms;
+    shared_ptr<StructuredBuffer<Matrix>> m_boneTransforms;
 private:
     Matrix m_accumulatedRootTransform;
     Matrix m_accumulatedRootTransformToLocal;

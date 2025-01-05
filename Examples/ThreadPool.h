@@ -54,9 +54,6 @@ namespace hlab {
         std::thread m_renderThread;
         std::queue<std::function<void()>> m_renderJobs_;
 
-        
-
-
         // 모든 쓰레드 종료
         bool stop_all;
 

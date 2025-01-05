@@ -24,46 +24,8 @@ void ResolveMSAATexture(
     ID3D12GraphicsCommandList* commandList,
     ID3D12Resource* msaaRenderTarget,
     ID3D12Resource* resolvedTarget,
-    DXGI_FORMAT format)
-{
-    // Ensure the resources are in the correct states
-    D3D12_RESOURCE_BARRIER barriers[2] = {};
+    DXGI_FORMAT format);
 
-    // Transition MSAA render target to RESOLVE_SOURCE state
-    barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barriers[0].Transition.pResource = msaaRenderTarget;
-    barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
-    barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-    // Transition resolved target to RESOLVE_DEST state
-    barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barriers[1].Transition.pResource = resolvedTarget;
-    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON; // Or appropriate state
-    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
-    barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-    // Apply the barriers
-    commandList->ResourceBarrier(2, barriers);
-
-    // Resolve the MSAA render target into the resolved target
-    commandList->ResolveSubresource(
-        resolvedTarget,  // Destination resource
-        0,               // Destination subresource index
-        msaaRenderTarget,// Source resource
-        0,               // Source subresource index
-        format           // Format (must match the resource format)
-    );
-
-    // Transition resources back to their original states if needed
-    barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
-    barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
-
-    barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
-    barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
-
-    commandList->ResourceBarrier(2, barriers);
-}
 bool CheckMultisampleQualityLevels(ComPtr<ID3D12Device> device, DXGI_FORMAT format, UINT sampleCount)
 {
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msQualityLevels = {};
@@ -214,12 +176,10 @@ bool Engine::InitGUI() {
 	if (!ImGui_ImplDX12_Init(DEVICE.Get(), SWAP_CHAIN_BUFFER_COUNT, DXGI_FORMAT_R8G8B8A8_UNORM,
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap().Get(),
 		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(),
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetGPUDescriptorHandleForHeapStart()
-		)) 
+		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetGPUDescriptorHandleForHeapStart())) 
 	{
 		return false;
 	}
-
 
 	return true;
 }
@@ -284,12 +244,12 @@ void Engine::InitPSO()
 void Engine::InitGlobalBuffer()
 {
 	m_globalConstsBuffer = std::make_shared<ConstantBuffer<GlobalConstants>>();
-	m_globalConstsBuffer->Init(CBV_REGISTER::b0, FRAMEBUFFER_COUNT);
+	m_globalConstsBuffer->Init(CBV_REGISTER::b0, SWAP_CHAIN_BUFFER_COUNT);
 
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 	{
 		m_shadowGlobalConstsBuffer[i] = std::make_shared<ConstantBuffer<GlobalConstants>>();
-		m_shadowGlobalConstsBuffer[i]->Init(CBV_REGISTER::b0, FRAMEBUFFER_COUNT);
+		m_shadowGlobalConstsBuffer[i]->Init(CBV_REGISTER::b0, SWAP_CHAIN_BUFFER_COUNT);
 	}
 
 	m_envTex = std::make_shared<Texture>();
@@ -313,12 +273,6 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
 	m_specularTex->Load((basePath + specularFilename).c_str(), true);
 	m_brdfTex->Load((basePath + brdfFilename).c_str(), false);
-
-	// t10~t13, TODO. 비동기 로딩으로 변경하면 수정 필요
-	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
 }
 
 bool Engine::InitScene()
@@ -411,6 +365,8 @@ bool Engine::InitScene()
 
 void Engine::Update(float dt)
 {
+	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
+
 	MeshLoadHelper::LoadAllUnloadedModel();
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
@@ -438,9 +394,9 @@ void Engine::UpdateLights(float dt)
 {
 	// 회전하는 lights[1] 업데이트
 	static Vector3 lightDev = Vector3(1.0f, 0.0f, 0.0f);
-	if (m_lightRotate) {
-		lightDev = Vector3::Transform(
-			lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
+	if (m_lightRotate) 
+	{
+		lightDev = Vector3::Transform(lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
 	}
 
 	GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
@@ -501,6 +457,12 @@ void Engine::UpdateLights(float dt)
 }
 void Engine::Render()
 {
+	// t10~t13, TODO. 비동기 로딩으로 변경하면 수정 필요
+	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+
 	RenderBegin();
 	
 	RenderShadowMaps();
@@ -513,18 +475,15 @@ void Engine::Render()
 
 void Engine::RenderOpaqueObjects()
 {
-	int8 backIndex = m_swapChain->GetBackBufferIndex();
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, backIndex);
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, BACKBUFFER_INDEX);
 
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
 	m_skybox->Render();
 
 	m_skinnedGraphicsPSO->UploadGraphicsPSO();
-	GEngine->GetGraphicsDescHeap()->ClearSRV();
 	m_wizard->Render();
 
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	GEngine->GetGraphicsDescHeap()->ClearSRV();
 	m_ground->Render();
 }
 
@@ -723,9 +682,9 @@ void Engine::CreateRenderTargetGroups()
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
 		}
-		vector<RenderTarget> rtVec(FRAMEBUFFER_COUNT);
+		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
 		vector <shared_ptr<Texture>> dsTextures;
-		for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
+		for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
 		{
 			rtVec[i].target = std::make_shared<Texture>();
 			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -745,8 +704,8 @@ void Engine::CreateRenderTargetGroups()
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 
-		vector<RenderTarget> resolveRtVec(FRAMEBUFFER_COUNT);
-		for (int i = 0; i < FRAMEBUFFER_COUNT; i++)
+		vector<RenderTarget> resolveRtVec(SWAP_CHAIN_BUFFER_COUNT);
+		for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
 		{
 			resolveRtVec[i].target = std::make_shared<Texture>();
 			resolveRtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -971,5 +930,51 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 float Engine::GetAspectRatio() const
 {
 	return float(m_window.width) / m_window.height;
+}
+
+
+void ResolveMSAATexture(
+	ID3D12GraphicsCommandList* commandList,
+	ID3D12Resource* msaaRenderTarget,
+	ID3D12Resource* resolvedTarget,
+	DXGI_FORMAT format)
+{
+	// Ensure the resources are in the correct states
+	D3D12_RESOURCE_BARRIER barriers[2] = {};
+
+	// Transition MSAA render target to RESOLVE_SOURCE state
+	barriers[0].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barriers[0].Transition.pResource = msaaRenderTarget;
+	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+	barriers[0].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	// Transition resolved target to RESOLVE_DEST state
+	barriers[1].Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+	barriers[1].Transition.pResource = resolvedTarget;
+	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON; // Or appropriate state
+	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+	barriers[1].Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+
+	// Apply the barriers
+	commandList->ResourceBarrier(2, barriers);
+
+	// Resolve the MSAA render target into the resolved target
+	commandList->ResolveSubresource(
+		resolvedTarget,  // Destination resource
+		0,               // Destination subresource index
+		msaaRenderTarget,// Source resource
+		0,               // Source subresource index
+		format           // Format (must match the resource format)
+	);
+
+	// Transition resources back to their original states if needed
+	barriers[0].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_SOURCE;
+	barriers[0].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+
+	barriers[1].Transition.StateBefore = D3D12_RESOURCE_STATE_RESOLVE_DEST;
+	barriers[1].Transition.StateAfter = D3D12_RESOURCE_STATE_COMMON;
+
+	commandList->ResourceBarrier(2, barriers);
 }
 }

@@ -158,26 +158,23 @@ public:
         CreateView();
     }
 
-    void Clear()
-    {
-        m_currentIndex = 0;
-    }
+    //void Clear()
+    //{
+    //    m_currentIndex = 0;
+    //}
 
     void Upload()
     {
+        m_currentIndex = (m_currentIndex + 1) % m_elementCount;
         assert(m_currentIndex < m_elementCount);
 
         ::memcpy(&m_mappedBuffer[m_currentIndex * m_elementSize], &m_cpu, m_elementSize);
     }
 
-    void PushGraphicsData(bool bIncreaseIndex = true)
+    void PushGraphicsData()
     {
         D3D12_CPU_DESCRIPTOR_HANDLE cpuHandle = GetCpuHandle(m_currentIndex);
         GEngine->GetGraphicsDescHeap()->SetCBV(cpuHandle, m_reg);
-        if (bIncreaseIndex)
-        {
-            m_currentIndex = (m_currentIndex + 1) % m_elementCount;
-        }
     }
 
     D3D12_GPU_VIRTUAL_ADDRESS GetGpuVirtualAddress(uint32 index)

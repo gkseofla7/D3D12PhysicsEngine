@@ -89,7 +89,7 @@ enum class RENDER_TARGET_GROUP_TYPE : uint8
 
 enum
 {
-	SWAP_CHAIN_BUFFER_COUNT = 3,
+	SWAP_CHAIN_BUFFER_COUNT = 2,
 	CBV_REGISTER_COUNT = CBV_REGISTER::END,
 	SRV_REGISTER_COUNT = static_cast<uint8>(SRV_REGISTER::END) - CBV_REGISTER_COUNT,
 	CBV_SRV_REGISTER_COUNT = CBV_REGISTER_COUNT + SRV_REGISTER_COUNT,
@@ -130,13 +130,10 @@ public:								\
 #define DEVICE				GEngine->GetDevice()->GetDevice()
 #define ROOTSIGNATURE		GEngine->GetRootSignature()
 #define SHADER				GEngine->GetShader()
-#define GRAPHICS_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetGraphicsCmdList()
+#define GRAPHICS_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetCurrentGraphicsCmdList()
 #define RESOURCE_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetResourceCmdList()
 #define BACKBUFFER_INDEX	GEngine->GetSwapChain()->GetBackBufferIndex()
-
-#define FRAMEBUFFER_COUNT 3
 #define MAX_LIGHTS_COUNT 3
-
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
 using std::wstring;

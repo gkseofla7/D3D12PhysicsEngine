@@ -7,7 +7,7 @@ namespace dengine {
 using std::make_shared;
 DSkinnedMeshModel::DSkinnedMeshModel(const string& basePath, const string& filename)
 {
-    m_boneTransforms = std::make_shared<StructuredBuffer2<Matrix>>();
+    m_boneTransforms = std::make_shared<StructuredBuffer<Matrix>>();
     Initialize(basePath, filename);
 }
 

@@ -13,16 +13,15 @@ public:
 	void SetGlobalSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count = 1);
 	void SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg);
 	void SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count = 1);
+	void ClearSRV(SRV_REGISTER reg);
 
-	void ClearSRV();
-	//void ClearCBV();
 
 	void CommitTable();
 	void CommitTableForSampling();
 	void CommitGlobalTable();
-	void ResetTable();
 
-	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap() { return m_descHeap; }
+
+	ComPtr<ID3D12DescriptorHeap> GetDescriptorHeap();
 
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(CBV_REGISTER reg);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(SRV_REGISTER reg);
@@ -45,7 +44,7 @@ private:
 
 private:
 
-	ComPtr<ID3D12DescriptorHeap> m_descHeap;
+	ComPtr<ID3D12DescriptorHeap> m_descHeap[SWAP_CHAIN_BUFFER_COUNT];
 	uint64					m_handleSize = 0;
 	uint64					m_groupSize = 0;
 	uint64					m_groupCount = 0;

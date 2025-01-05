@@ -4,18 +4,19 @@
 #include "CommandQueue.h"
 namespace dengine {
 template <typename T_ELEMENT>
-class StructuredBuffer2
+class StructuredBuffer
 {
 public:
 	void Init()
 	{ 
 		m_elementSize = sizeof(T_ELEMENT);
 		m_elementCount = m_cpu.size();
+		m_structuredCount = SWAP_CHAIN_BUFFER_COUNT;
 		m_resourceState = D3D12_RESOURCE_STATE_COMMON;
 
 		// Buffer
 		{
-			uint64 bufferSize = static_cast<uint64>(m_elementSize) * m_elementCount;
+			uint64 bufferSize = static_cast<uint64>(m_elementSize) * m_elementCount * m_structuredCount;
 			D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS);
 			D3D12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
@@ -31,41 +32,49 @@ public:
 		// SRV
 		{
 			D3D12_DESCRIPTOR_HEAP_DESC srvHeapDesc = {};
-			srvHeapDesc.NumDescriptors = 1;
+			srvHeapDesc.NumDescriptors = m_structuredCount;
 			srvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
 			srvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
 			DEVICE->CreateDescriptorHeap(&srvHeapDesc, IID_PPV_ARGS(&m_srvHeap));
 
 			m_srvHeapBegin = m_srvHeap->GetCPUDescriptorHandleForHeapStart();
 
-			D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-			srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-			srvDesc.Format = DXGI_FORMAT_UNKNOWN;
-			srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
-			srvDesc.Buffer.FirstElement = 0;
-			srvDesc.Buffer.NumElements = m_elementCount;
-			srvDesc.Buffer.StructureByteStride = m_elementSize;
-			srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+			m_handleSize = DEVICE->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 
-			DEVICE->CreateShaderResourceView(m_buffer.Get(), &srvDesc, m_srvHeapBegin);
+			for (int i = 0; i < m_structuredCount; i++)
+			{
+				D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+				srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+				srvDesc.Format = DXGI_FORMAT_UNKNOWN;
+				srvDesc.ViewDimension = D3D12_SRV_DIMENSION_BUFFER;
+				srvDesc.Buffer.FirstElement = i * m_elementCount;
+				srvDesc.Buffer.NumElements = m_elementCount;
+				srvDesc.Buffer.StructureByteStride = m_elementSize;
+				srvDesc.Buffer.Flags = D3D12_BUFFER_SRV_FLAG_NONE;
+				D3D12_CPU_DESCRIPTOR_HANDLE handle = m_srvHeapBegin;
+				handle.ptr += i * m_handleSize;
+
+				DEVICE->CreateShaderResourceView(m_buffer.Get()
+					, &srvDesc, handle);
+			}
+
 		}
 
-		// CBV
-		// TODO. 작업 필요
-		{
-			D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
-			cbvDesc.NumDescriptors = 1;
-			cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO.
-			cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-			DEVICE->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&m_cbvHeap));
+		//// CBV
+		//{
+		//	D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
+		//	cbvDesc.NumDescriptors = m_structuredCount;
+		//	cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO.
+		//	cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		//	DEVICE->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&m_cbvHeap));
 
 
-			//D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-			//cbvDesc.BufferLocation = m_cbvBuffer->GetGPUVirtualAddress() + static_cast<uint64>(m_elementSize) * i;
-			//cbvDesc.SizeInBytes = m_elementSize;   // CB size is required to be 256-byte aligned.
+		//	//D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+		//	//cbvDesc.BufferLocation = m_cbvBuffer->GetGPUVirtualAddress() + static_cast<uint64>(m_elementSize) * i;
+		//	//cbvDesc.SizeInBytes = m_elementSize;   // CB size is required to be 256-byte aligned.
 
-			//DEVICE->CreateConstantBufferView(&cbvDesc, cbvHandle);
-		}
+		//	//DEVICE->CreateConstantBufferView(&cbvDesc, cbvHandle);
+		//}
 		m_init = true;
 	}
 
@@ -75,6 +84,7 @@ public:
 		{
 			return;
 		}
+		m_structuredIndex = (m_structuredIndex + 1) % m_structuredCount;
 		ComPtr<ID3D12Resource> readBuffer = nullptr;
 		UINT bufferSize = GetBufferSize();
 		D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
@@ -103,7 +113,8 @@ public:
 			rscCommandList.m_resCmdList->ResourceBarrier(1, &barrier);
 		}
 
-		rscCommandList.m_resCmdList->CopyBufferRegion(m_buffer.Get(), 0, readBuffer.Get(), 0, bufferSize);
+		uint64 structuredOffset = m_structuredIndex * m_elementCount*m_elementSize;
+		rscCommandList.m_resCmdList->CopyBufferRegion(m_buffer.Get(), structuredOffset, readBuffer.Get(), 0, bufferSize);
 
 		// Copy -> Common
 		{
@@ -123,7 +134,9 @@ public:
 		{
 			return;
 		}
-		GEngine->GetGraphicsDescHeap()->SetSRV(m_srvHeapBegin, reg);
+		D3D12_CPU_DESCRIPTOR_HANDLE handle = m_srvHeapBegin;
+		handle.ptr += m_structuredIndex * m_handleSize;
+		GEngine->GetGraphicsDescHeap()->SetSRV(handle, reg);
 	}
 
 	vector<T_ELEMENT>& GetCpu() { return m_cpu; }
@@ -148,11 +161,15 @@ private:
 
 	uint32						m_elementSize = 0;
 	uint32						m_elementCount = 0;
+	uint32						m_structuredCount = 0;
+	uint32						m_structuredIndex = 0;
 	D3D12_RESOURCE_STATES		m_resourceState = {};
 
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHeapBegin = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE _uavHeapBegin = {};
+
+	uint64					m_handleSize = 0;
 
 	bool m_init = false;
 };
