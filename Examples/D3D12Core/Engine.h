@@ -77,7 +77,7 @@ public:
 	void SetPSOType(const PSOType psoType) { m_psoType = psoType; }
 	PSOType GetPSOType() { return m_psoType; }
 
-	shared_ptr<Texture> GetDefaultTexture() { return m_defaultTex; }
+	shared_ptr<Texture> GetDefaultTexture() { return m_emptyTex; }
 
 	void CommintGlobalData();
 private:
@@ -123,9 +123,9 @@ public:
 	shared_ptr<Texture> m_irradianceTex;
 	shared_ptr<Texture> m_specularTex;
 	shared_ptr<Texture> m_brdfTex;
-	// TODO. 텍스처 임시 셋팅, 에러 발생 막기위해..
+	// 텍스처 임시 셋팅, 에러 발생 막기위해..
 	// 좀 더 좋은 방법 찾아보자..ㅎ
-	shared_ptr<Texture> m_defaultTex;
+	shared_ptr<Texture> m_emptyTex;
 
 	// 윈도우 관련
 	WindowInfo		m_window;

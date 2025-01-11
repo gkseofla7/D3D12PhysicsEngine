@@ -2,6 +2,7 @@
 #include "EnginePch.h"
 #include "Engine.h"
 #include "../ThreadPool.h"
+#include <shared_mutex>
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
 // Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만
@@ -22,7 +23,20 @@ struct ImageInfo
     std::vector<uint8_t> image;
     DXGI_FORMAT pixelFormat;
 };
+class Resource;
 
+struct ResourceInfo
+{
+    ELoadType loadType = ELoadType::NotLoaded;
+    ComPtr<ID3D12Resource> resource;
+    vector<shared_ptr<Resource>> pendingResources;
+
+    // Texture 전용
+    ScratchImage image;
+
+
+    std::shared_mutex resMutex;
+};
 
 class D3D12Utils {
   public:
@@ -78,9 +92,17 @@ class D3D12Utils {
 
 
     // Texture
+    static void LoadTextureAsync(const std::wstring path, const bool usSRGB,
+        shared_ptr<Resource> outResource);
+
+    static void CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
+        D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor, shared_ptr<Resource> outResource);
+
+
     static void CreateTexture(ComPtr<ID3D12Device> device,
                   const std::string filename, const bool usSRGB,
                     ComPtr<ID3D12Resource>&texture);
+
 
     static void CreateTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
         const std::string opacityFilename,const bool usSRGB, ComPtr<ID3D12Resource>& texture);
@@ -100,7 +122,12 @@ class D3D12Utils {
 
 
     static size_t GetPixelSize(DXGI_FORMAT pixelFormat);
+
+private:
+    static void CreateTextureImpl(const std::wstring path, const bool usSRGB);
 private:
     static std::unordered_map<std::string, ImageInfo> imageMap;
+    static std::unordered_map<std::wstring, ResourceInfo> s_resourceMap;
+
 };
 } // namespace dengine

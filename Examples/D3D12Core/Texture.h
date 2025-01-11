@@ -1,19 +1,17 @@
 #pragma once
 #include "EnginePch.h"
+#include "Resource.h"
 namespace dengine {
 using namespace DirectX;
-class Texture
+class Texture : public Resource
 {
 public:
 	Texture();
 	virtual ~Texture();
 
 	void Load(const wstring& path, bool isCubeMap = false);
-
+	virtual shared_ptr<Texture> GetTexture() { return std::dynamic_pointer_cast<Texture>(shared_from_this()); }
 public:
-	void Create(DXGI_FORMAT format, uint32 width, uint32 height,
-		const D3D12_HEAP_PROPERTIES& heapProperty, D3D12_HEAP_FLAGS heapFlags,
-		D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());
 	void Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty, 
 		D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());
 
@@ -25,16 +23,17 @@ public:
 	ComPtr<ID3D12DescriptorHeap> GetDSV() { return m_dsvHeap; }
 	ComPtr<ID3D12DescriptorHeap> GetUAV() { return m_uavHeap; }
 
-	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVHandle() { return m_srvHeapBegin; }
-	D3D12_CPU_DESCRIPTOR_HANDLE GetUAVHandle() { return m_uavHeapBegin; }
+	D3D12_CPU_DESCRIPTOR_HANDLE GetSRVHandle();
+	D3D12_CPU_DESCRIPTOR_HANDLE GetUAVHandle();
 
 	float GetWidth() { return static_cast<float>(m_desc.Width); }
 	float GetHeight() { return static_cast<float>(m_desc.Height); }
 
 private:
-	ScratchImage			 		m_image;
+	DXGI_FORMAT						m_format;
 	D3D12_RESOURCE_DESC				m_desc;
 	ComPtr<ID3D12Resource>			m_tex2D;
+	bool							m_isCubeMap = false;
 
 	ComPtr<ID3D12DescriptorHeap>	m_srvHeap;
 	ComPtr<ID3D12DescriptorHeap>	m_rtvHeap;

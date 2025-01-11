@@ -64,6 +64,7 @@ Engine::~Engine()
 void Engine::Init(const WindowInfo& info)
 {
 	m_window = info;
+
 	InitMainWindow();
 	InitGraphics();
 	InitGlobalBuffer();
@@ -75,7 +76,6 @@ void Engine::Init(const WindowInfo& info)
 	InitGUI();
 	
 	InitScene();
-	// TODO. CommandList Close 및 실행 필요
 }
 int Engine::Run()
 {
@@ -260,9 +260,9 @@ void Engine::InitGlobalBuffer()
 	ComPtr<ID3D12Resource> backBuffer;
 	m_swapChain->GetSwapChain()->GetBuffer(0, IID_PPV_ARGS(&backBuffer));
 	D3D12_RESOURCE_DESC desc = backBuffer->GetDesc();
-	m_defaultTex = make_shared<Texture>();
-	m_defaultTex->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_DENY_SHADER_RESOURCE);
+	m_emptyTex = make_shared<Texture>();
+	m_emptyTex->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_NONE);
 }
 
 void Engine::InitCubemaps(wstring basePath, wstring envFilename,
@@ -632,8 +632,8 @@ void Engine::CreateRenderTargetGroups()
 			resource->SetName(L"SwapChainTexture"); 
 
 			shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
-			dsTexture->Create(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height,
-				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			CD3DX12_RESOURCE_DESC rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height);
+			dsTexture->Create(rscDesc,CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 			dsTextures.push_back(dsTexture);
 		}
@@ -724,9 +724,10 @@ void Engine::CreateRenderTargetGroups()
 
 		for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 		{
+
 			rtVec[i].target = std::make_shared<Texture>();
-			rtVec[i].target->Create(DXGI_FORMAT_R16G16B16A16_FLOAT, 1280, 1280,
-				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			CD3DX12_RESOURCE_DESC rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 1280, 1280);
+			rtVec[i].target->Create(rscDesc,CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 				Vector4(1.0f, 1.0f, 1.0f, 1.0f)); 
 			rtVec[i].clearColor[0] = 1.0f;
@@ -740,8 +741,7 @@ void Engine::CreateRenderTargetGroups()
 		shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
 		depthDesc.Width = 1280;
 		depthDesc.Height = 1280;
-		dsTexture->Create(depthDesc,
-			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		dsTexture->Create(depthDesc,CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
 		dsTextures.push_back(dsTexture);
 

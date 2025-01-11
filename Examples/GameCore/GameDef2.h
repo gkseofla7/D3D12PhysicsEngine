@@ -33,10 +33,4 @@ enum class EFlyAwayStateType
 };
 
 
-enum class ELoadType
-{
-	NotLoaded,
-	Loading,
-	Loaded,
-};
 }

@@ -106,6 +106,18 @@ enum class PSOType
 	SHADOW
 };
 
+enum class ELoadType
+{
+	NotLoaded,
+	Loading,
+	Loaded,
+};
+enum class EResourceType
+{
+	None,
+	Texture,
+};
+
 struct WindowInfo
 {
 	HWND	hwnd; // 출력 윈도우
