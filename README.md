@@ -36,6 +36,8 @@ https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
 - 상체 하체 애니메이션 분리해서 사용가능하도록 기능 추가
 - 루트 모션 애니메이션에 경우 이동한 Transform 값을 애니메이션 마지막에 world transform과 합쳐주었다.
 # 앞으로 계획
+- 로딩관련 코드 리팩토링(모든 로딩 비동기 로직으로 변경 및 기반 작업) 현재 진행중
+- 디퍼드 렌더링으로 교체
 - 나무 DaerimD3D11PhysicsEngine
 - 액터에 대해 각 업데이트를 병렬처리로 수정하고, 각 액터마다 Tick을 Tick_Concurrency, Tick_GameThread 두개로 분리할 예정이다.
 - 물리에 관심이 있다보니, 좀 더 물리 관련 로직들을 짜고 싶다..
