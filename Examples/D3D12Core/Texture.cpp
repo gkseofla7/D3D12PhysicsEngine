@@ -15,10 +15,10 @@ Texture::~Texture()
 
 }
 
-void Texture::Load(const wstring& path, bool isCubeMap)
+void Texture::Load(const wstring& path, const bool async ,const bool isCubeMap , const bool usSRGB)
 {
 	m_isCubeMap = isCubeMap;
-	D3D12Utils::LoadTextureAsync(path, false, shared_from_this());
+	D3D12Utils::LoadTexture(path, usSRGB, async, shared_from_this());
 }
 
 void Texture::Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,

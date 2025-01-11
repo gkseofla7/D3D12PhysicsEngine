@@ -44,12 +44,10 @@ void CheckResult(HRESULT hr, ID3DBlob* errorBlob) {
         }
     }
 }
-
 std::string wstring_to_string(const std::wstring& wstr) {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
     return converter.to_bytes(wstr);
 }
-
 void D3D12Utils::CreateVertexShader(
     ComPtr<ID3D12Device> device, wstring filename,
     ComPtr<ID3DBlob>& vertexShader,
@@ -419,7 +417,7 @@ void D3D12Utils::CreateTexture(ComPtr<ID3D12Device> device,
     CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat, texture);
 }
 
-void D3D12Utils::LoadTextureAsync(const std::wstring path, const bool usSRGB,
+void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
     shared_ptr<Resource> outResource)
 {
     std::shared_ptr<Texture> outTexture = outResource->GetTexture();
@@ -435,15 +433,24 @@ void D3D12Utils::LoadTextureAsync(const std::wstring path, const bool usSRGB,
     if (s_resourceMap.find(path) == s_resourceMap.end()
         || s_resourceMap[path].loadType == ELoadType::NotLoaded)
     {
-        // 로드하기
-        std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
-        s_resourceMap[path].loadType = ELoadType::Loading;
-        s_resourceMap[path].pendingResources.push_back(outResource);
+        {
+            // 로드하기
+            std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
+            s_resourceMap[path].loadType = ELoadType::Loading;
+            s_resourceMap[path].pendingResources.push_back(outResource);
+        }
+        if (bAsync)
+        {
+            hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+            auto func = [path, usSRGB]() {
+                return LoadTextureImpl(path, usSRGB); };
+            tPool.EnqueueRenderJob(func);
+        }
+        else
+        {
+            LoadTextureImpl(path, usSRGB);
+        }
 
-        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-        auto func = [path, usSRGB]() {
-            return CreateTextureImpl(path, usSRGB); };
-        tPool.EnqueueRenderJob(func);
     }
     else if (s_resourceMap[path].loadType == ELoadType::Loading)
     {
@@ -509,21 +516,28 @@ void D3D12Utils::CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEA
     outTexture->CreateFromResource(resource);
 }
 
-void D3D12Utils::CreateTextureImpl(const std::wstring path, const bool usSRGB)
+void D3D12Utils::LoadTextureImpl(const std::wstring path, const bool usSRGB)
 {
     // 동일한 path에 대해서 두번 이상 호출이 안되도록 보장돼야한다.
-    ScratchImage& image = s_resourceMap[path].image;
+    ScratchImage image;
 
     wstring ext = fs::path(path).extension();
     if (ext == L".dds" || ext == L".DDS")
         DirectX::LoadFromDDSFile(path.c_str(), DDS_FLAGS_NONE, nullptr, image);
     else if (ext == L".tga" || ext == L".TGA")
         DirectX::LoadFromTGAFile(path.c_str(), nullptr, image);
+    else if (ext == L"exr" || ext == L".EXR")
+        DirectX::LoadFromEXRFile(path.c_str(), nullptr, image);
     else // png, jpg, jpeg, bmp
-        DirectX::LoadFromWICFile(path.c_str(), WIC_FLAGS_NONE, nullptr, image);
-
+    {
+        LoadTextureNotUsingScratchImage(path, usSRGB);
+        return;
+    }
+        
     ComPtr<ID3D12Resource> texture;
-    HRESULT hr = DirectX::CreateTexture(DEVICE.Get(), image.GetMetadata(), &texture);
+    TexMetadata texMetaData = image.GetMetadata();
+    texMetaData.format = usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : texMetaData.format;
+    HRESULT hr = DirectX::CreateTexture(DEVICE.Get(), texMetaData, &texture);
     if (FAILED(hr))
         assert(nullptr);
 
@@ -588,6 +602,98 @@ void D3D12Utils::CreateTextureImpl(const std::wstring path, const bool usSRGB)
     }
 }
 
+void D3D12Utils::LoadTextureNotUsingScratchImage(const std::wstring path, const bool usSRGB)
+{
+    ImageInfo info;
+    info.pixelFormat =
+        usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    string ext(path.end() - 3, path.end());
+    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+
+    if (ext == "exr") {
+        ReadEXRImage(wstring_to_string(path), info.image, info.width, info.height, info.pixelFormat);
+    }
+    else {
+        ReadImage(wstring_to_string(path), info.image, info.width, info.height);
+    }
+
+    // Describe and create a Texture2D.
+    ComPtr<ID3D12Resource> texture;
+    D3D12_RESOURCE_DESC textureDesc = {};
+    ZeroMemory(&textureDesc, sizeof(textureDesc));
+    textureDesc.Width = info.width;
+    textureDesc.Height = info.height;
+    textureDesc.MipLevels = 0;// Check. 1?
+    textureDesc.DepthOrArraySize = 1;
+    textureDesc.Format = info.pixelFormat;
+    textureDesc.SampleDesc.Count = 1;
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    textureDesc.SampleDesc.Quality = 1;
+    textureDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    CD3DX12_HEAP_PROPERTIES heapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    ThrowIfFailed(DEVICE->CreateCommittedResource(
+        &heapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &textureDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&texture)));
+
+    // 스테이징 텍스춰 만들고 CPU에서 이미지를 복사
+    const UINT64 uploadBufferSize = GetRequiredIntermediateSize(texture.Get(), 0, 1);
+
+    // Create the GPU upload buffer.
+    // Note: ComPtr's are CPU objects but this resource needs to stay in scope until
+    // the command list that references it has finished executing on the GPU.
+    // We will flush the GPU at the end of this method to ensure the resource is not
+    // prematurely destroyed.
+    CD3DX12_HEAP_PROPERTIES uploadHeapProp = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    CD3DX12_RESOURCE_DESC resourceDesc = CD3DX12_RESOURCE_DESC::Buffer(uploadBufferSize);
+    ComPtr<ID3D12Resource> textureUploadHeap;
+    ThrowIfFailed(DEVICE->CreateCommittedResource(
+        &uploadHeapProp,
+        D3D12_HEAP_FLAG_NONE,
+        &resourceDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&textureUploadHeap)));
+    const int texturePixelSize = GetPixelSize(info.pixelFormat); //4; Check.
+    D3D12_SUBRESOURCE_DATA textureData = {};
+    textureData.pData = &info.image[0];
+    textureData.RowPitch = info.width * texturePixelSize;
+    textureData.SlicePitch = textureData.RowPitch * info.height;
+    ResourceCommandList rscCommandList = RESOURCE_CMD_LIST;
+    UpdateSubresources(rscCommandList.m_resCmdList.Get(), texture.Get(), textureUploadHeap.Get(), 0, 0, 1, &textureData);
+    CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(texture.Get(),
+        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+    rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
+
+    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
+
+    // 해상도를 낮춰가며 밉맵 생성
+   // context->GenerateMips(srv.Get());
+    // TODO. MipMap 생성 필요
+
+    {
+        std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
+        s_resourceMap[path].resource = texture;
+        s_resourceMap[path].loadType = ELoadType::Loaded;
+
+        for (shared_ptr<Resource>& resource : s_resourceMap[path].pendingResources)
+        {
+            std::shared_ptr<Texture> resTex = std::dynamic_pointer_cast<Texture>(resource);
+            if (resTex == nullptr)
+            {
+                continue;
+            }
+            resTex->CreateFromResource(texture);
+        }
+        s_resourceMap[path].pendingResources.clear();
+    }
+
+}
+
 void D3D12Utils::CreateTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
     const std::string opacityFilename, const bool usSRGB, ComPtr<ID3D12Resource>& texture)
 {
@@ -595,7 +701,6 @@ void D3D12Utils::CreateTexture(ComPtr<ID3D12Device> device, const std::string al
     if (imageMap.find(filename) == imageMap.end())
     {// TODO. 여러 스레드 동시에 들어올경우 이슈 발생
         imageMap[filename] = ImageInfo();
-        imageMap[filename];
         int width = 0, height = 0;
         std::vector<uint8_t> image;
         imageMap[filename].pixelFormat =

@@ -6,43 +6,48 @@
 #include "../ThreadPool.h"
 #include <filesystem>
 #include "Mesh2.h"
-
+#include <locale>
+#include <codecvt>
 namespace dengine {
-    using namespace DirectX;
-    map<string, MeshBlock> MeshLoadHelper::MeshMap;
-    std::mutex MeshLoadHelper::m_mtx;
-    BoundingBox GetBoundingBoxFromVertices2(const vector<dengine::Vertex>& vertices) {
+using namespace DirectX;
+map<string, MeshBlock> MeshLoadHelper::MeshMap;
+std::mutex MeshLoadHelper::m_mtx;
+std::wstring string_to_wstring(const std::string& str) {
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    return converter.from_bytes(str);
+}
+BoundingBox GetBoundingBoxFromVertices(const vector<dengine::Vertex>& vertices) {
 
-        if (vertices.size() == 0)
-            return BoundingBox();
+    if (vertices.size() == 0)
+        return BoundingBox();
 
-        Vector3 minCorner = vertices[0].position;
-        Vector3 maxCorner = vertices[0].position;
+    Vector3 minCorner = vertices[0].position;
+    Vector3 maxCorner = vertices[0].position;
 
-        for (size_t i = 1; i < vertices.size(); i++) {
-            minCorner = Vector3::Min(minCorner, vertices[i].position);
-            maxCorner = Vector3::Max(maxCorner, vertices[i].position);
-        }
-
-        Vector3 center = (minCorner + maxCorner) * 0.5f;
-        Vector3 extents = maxCorner - center;
-
-        return BoundingBox(center, extents);
+    for (size_t i = 1; i < vertices.size(); i++) {
+        minCorner = Vector3::Min(minCorner, vertices[i].position);
+        maxCorner = Vector3::Max(maxCorner, vertices[i].position);
     }
 
-    void GetExtendBoundingBox2(const BoundingBox& inBox, BoundingBox& outBox) {
+    Vector3 center = (minCorner + maxCorner) * 0.5f;
+    Vector3 extents = maxCorner - center;
 
-        Vector3 minCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
-        Vector3 maxCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
+    return BoundingBox(center, extents);
+}
 
-        minCorner = Vector3::Min(minCorner,
-            Vector3(outBox.Center) - Vector3(outBox.Extents));
-        maxCorner = Vector3::Max(maxCorner,
-            Vector3(outBox.Center) + Vector3(outBox.Extents));
+void GetExtendBoundingBox2(const BoundingBox& inBox, BoundingBox& outBox) {
 
-        outBox.Center = (minCorner + maxCorner) * 0.5f;
-        outBox.Extents = maxCorner - outBox.Center;
-    }
+    Vector3 minCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
+    Vector3 maxCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
+
+    minCorner = Vector3::Min(minCorner,
+        Vector3(outBox.Center) - Vector3(outBox.Extents));
+    maxCorner = Vector3::Max(maxCorner,
+        Vector3(outBox.Center) + Vector3(outBox.Extents));
+
+    outBox.Center = (minCorner + maxCorner) * 0.5f;
+    outBox.Extents = maxCorner - outBox.Center;
+}
 
 vector<dengine::MeshData> CreateMeshData(MeshBlock& OutMeshBlock)
 { 
@@ -65,7 +70,6 @@ void MeshLoadHelper::LoadAllUnloadedModel()
         if (mBloock.MeshDataLoadType == hlab::ELoadType::Loading && mBloock.Loader._Is_ready() == true)
         {
             hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-            //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
             auto func = [&Pair]() {
                 return LoadModel(Pair.first); };
             tPool.EnqueueJob(func);
@@ -74,6 +78,7 @@ void MeshLoadHelper::LoadAllUnloadedModel()
 }
 bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
 {
+    // TODO. 메인 스레드에서만 실행중이라 아직은 동시 접근이 안됨
 	string key = inPath + inName;
 	if (MeshMap.find(key) == MeshMap.end())
 	{
@@ -84,14 +89,12 @@ bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
         meshBlocks.FileName = inName;
 
         hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-        //음.. 이 순간 저 값들을 캡쳐하는게..ㅋㅋ
         auto func = [&meshBlocks]() {
             return CreateMeshData(meshBlocks); };
 		MeshMap[key].Loader = tPool.EnqueueJob(func);
 		MeshMap[key].MeshDataLoadType = hlab::ELoadType::Loading;
 		return false;
 	}
-	
     return MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loaded;
 }
 bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants)
@@ -123,15 +126,13 @@ void MeshLoadHelper::LoadModel(const string& key)
     {
         std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
 
-        if (MeshMap.find(key) == MeshMap.end())
-        {
-            return;
-        }
         // MeshData 로드 안됨
-        if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::NotLoaded)
+        if (MeshMap.find(key) == MeshMap.end()
+            || MeshMap[key].MeshDataLoadType == hlab::ELoadType::NotLoaded)
         {
             return;
         }
+
         // MeshData 로딩중
         if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && MeshMap[key].Loader._Is_ready() == false)
         {
@@ -162,8 +163,8 @@ void MeshLoadHelper::LoadModel(const string& key)
             meshes.push_back(DMesh());
             
         }
-        DMesh& newMesh = meshes[index];
-         
+
+        DMesh& newMesh = meshes[index]; 
         if (meshData.skinnedVertices.size() > 0)
         {
             D3D12Utils::CreateVertexBuffer(DEVICE, meshData.skinnedVertices,
@@ -199,7 +200,6 @@ void MeshLoadHelper::LoadModel(const string& key)
                     tex2D->SetName(L"albedoTexture");
                     newMesh.albedoTexture = std::make_shared<Texture>();
                     newMesh.albedoTexture->CreateFromResource(tex2D);
-
                 }
                 else 
                 {
@@ -224,11 +224,15 @@ void MeshLoadHelper::LoadModel(const string& key)
         {
             if (filesystem::exists(meshData.emissiveTextureFilename)) 
             {
-                ComPtr<ID3D12Resource> tex2D;
-                D3D12Utils::CreateTexture(DEVICE, meshData.emissiveTextureFilename, true, tex2D);
-                tex2D->SetName(L"emissiveTexture");
+                //ComPtr<ID3D12Resource> tex2D;
+                //D3D12Utils::CreateTexture(DEVICE, meshData.emissiveTextureFilename, true, tex2D);
+                //tex2D->SetName(L"emissiveTexture");
+                //newMesh.emissiveTexture = std::make_shared<Texture>();
+                //newMesh.emissiveTexture->CreateFromResource(tex2D);
+
                 newMesh.emissiveTexture = std::make_shared<Texture>();
-                newMesh.emissiveTexture->CreateFromResource(tex2D);
+                wstring path = string_to_wstring(meshData.emissiveTextureFilename);
+                newMesh.emissiveTexture->Load(path, false, false, true);
                 meshBlock.useEmissiveMap = true;
             }
             else 
@@ -240,11 +244,16 @@ void MeshLoadHelper::LoadModel(const string& key)
 
         if (!meshData.normalTextureFilename.empty()) {
             if (filesystem::exists(meshData.normalTextureFilename)) {
-                ComPtr<ID3D12Resource> tex2D;
-                D3D12Utils::CreateTexture(DEVICE, meshData.normalTextureFilename, false,tex2D);
-                tex2D->SetName(L"normalTexture");
+                //ComPtr<ID3D12Resource> tex2D;
+                //D3D12Utils::CreateTexture(DEVICE, meshData.normalTextureFilename, false,tex2D);
+                //tex2D->SetName(L"normalTexture");
+                //newMesh.normalTexture = std::make_shared<Texture>();
+                //newMesh.normalTexture->CreateFromResource(tex2D);
+                //meshBlock.useNormalMap = true;
+
                 newMesh.normalTexture = std::make_shared<Texture>();
-                newMesh.normalTexture->CreateFromResource(tex2D);
+                wstring path = string_to_wstring(meshData.normalTextureFilename);
+                newMesh.normalTexture->Load(path, false, false, true);
                 meshBlock.useNormalMap = true;
             }
             else {
@@ -319,9 +328,9 @@ void MeshLoadHelper::LoadModel(const string& key)
 
     // Initialize Bounding Box
     {
-        meshBlock.boundingBox = GetBoundingBoxFromVertices2(meshDatas[0].vertices);
+        meshBlock.boundingBox = GetBoundingBoxFromVertices(meshDatas[0].vertices);
         for (size_t i = 1; i < meshDatas.size(); i++) {
-            auto bb = GetBoundingBoxFromVertices2(meshDatas[0].vertices);
+            auto bb = GetBoundingBoxFromVertices(meshDatas[0].vertices);
             GetExtendBoundingBox2(bb, meshBlock.boundingBox);
         }
 

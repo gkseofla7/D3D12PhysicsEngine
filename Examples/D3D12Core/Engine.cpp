@@ -269,10 +269,10 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	wstring specularFilename, wstring irradianceFilename,
 	wstring brdfFilename) {
 	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
-	m_envTex->Load((basePath + envFilename).c_str(), true);
-	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true);
-	m_specularTex->Load((basePath + specularFilename).c_str(), true);
-	m_brdfTex->Load((basePath + brdfFilename).c_str(), false);
+	m_envTex->Load((basePath + envFilename).c_str(), true, true);
+	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true, true);
+	m_specularTex->Load((basePath + specularFilename).c_str(), true, true);
+	m_brdfTex->Load((basePath + brdfFilename).c_str(), true, false);
 }
 
 bool Engine::InitScene()

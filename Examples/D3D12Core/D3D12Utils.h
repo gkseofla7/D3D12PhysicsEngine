@@ -31,9 +31,6 @@ struct ResourceInfo
     ComPtr<ID3D12Resource> resource;
     vector<shared_ptr<Resource>> pendingResources;
 
-    // Texture Àü¿ë
-    ScratchImage image;
-
 
     std::shared_mutex resMutex;
 };
@@ -92,7 +89,7 @@ class D3D12Utils {
 
 
     // Texture
-    static void LoadTextureAsync(const std::wstring path, const bool usSRGB,
+    static void LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
         shared_ptr<Resource> outResource);
 
     static void CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
@@ -124,7 +121,8 @@ class D3D12Utils {
     static size_t GetPixelSize(DXGI_FORMAT pixelFormat);
 
 private:
-    static void CreateTextureImpl(const std::wstring path, const bool usSRGB);
+    static void LoadTextureImpl(const std::wstring path, const bool usSRGB);
+    static void LoadTextureNotUsingScratchImage(const std::wstring path, const bool usSRGB);
 private:
     static std::unordered_map<std::string, ImageInfo> imageMap;
     static std::unordered_map<std::wstring, ResourceInfo> s_resourceMap;
