@@ -91,23 +91,13 @@ class D3D12Utils {
     // Texture
     static void LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
         shared_ptr<Resource> outResource);
-
-    static void CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
-        D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor, shared_ptr<Resource> outResource);
-
-
-    static void CreateTexture(ComPtr<ID3D12Device> device,
-                  const std::string filename, const bool usSRGB,
-                    ComPtr<ID3D12Resource>&texture);
-
-
-    static void CreateTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
-        const std::string opacityFilename,const bool usSRGB, ComPtr<ID3D12Resource>& texture);
-  
-    static void CreateMetallicRoughnessTexture(
+    static void LoadAlbedoOpacityTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
+        const std::string opacityFilename, const bool usSRGB, ComPtr<ID3D12Resource>& texture);
+    static void LoadMetallicRoughnessTexture(
         ComPtr<ID3D12Device> device, const std::string metallicFiilename,
         const std::string roughnessFilename, ComPtr<ID3D12Resource>& texture);
-
+    static void CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
+        D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor, shared_ptr<Resource> outResource);
 
     static void CreateTextureHelper(ComPtr<ID3D12Device>& device,
         const int width, const int height, const vector<uint8_t>& image,

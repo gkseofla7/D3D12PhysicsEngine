@@ -15,7 +15,7 @@ Texture::~Texture()
 
 }
 
-void Texture::Load(const wstring& path, const bool async ,const bool isCubeMap , const bool usSRGB)
+void Texture::LoadTexture(const wstring& path, const bool isCubeMap , const bool usSRGB, const bool async)
 {
 	m_isCubeMap = isCubeMap;
 	D3D12Utils::LoadTexture(path, usSRGB, async, shared_from_this());

@@ -269,10 +269,10 @@ void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	wstring specularFilename, wstring irradianceFilename,
 	wstring brdfFilename) {
 	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
-	m_envTex->Load((basePath + envFilename).c_str(), true, true);
-	m_irradianceTex->Load((basePath + irradianceFilename).c_str(), true, true);
-	m_specularTex->Load((basePath + specularFilename).c_str(), true, true);
-	m_brdfTex->Load((basePath + brdfFilename).c_str(), true, false);
+	m_envTex->LoadTexture((basePath + envFilename).c_str(), true);
+	m_irradianceTex->LoadTexture((basePath + irradianceFilename).c_str(), true);
+	m_specularTex->LoadTexture((basePath + specularFilename).c_str(), true);
+	m_brdfTex->LoadTexture((basePath + brdfFilename).c_str(), false);
 }
 
 bool Engine::InitScene()
@@ -457,12 +457,6 @@ void Engine::UpdateLights(float dt)
 }
 void Engine::Render()
 {
-	// t10~t13, TODO. 비동기 로딩으로 변경하면 수정 필요
-	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
-
 	RenderBegin();
 	
 	RenderShadowMaps();
@@ -530,33 +524,15 @@ void Engine::PostRender()
 	GEngine->GetGraphicsDescHeap()->CommitTableForSampling();
 
 	m_screenSquare->Render();
-
-	//ComPtr<ID3D12Resource> backBuffer;
-	//m_swapChain->GetSwapChain()->GetBuffer(backIndex, IID_PPV_ARGS(&backBuffer));
-	//{
-	//	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-	//		backBuffer.Get(),
-	//		D3D12_RESOURCE_STATE_RENDER_TARGET, // 백 버퍼의 현재 상태
-	//		D3D12_RESOURCE_STATE_COPY_SOURCE);
-	//	GRAPHICS_CMD_LIST->ResourceBarrier(1, &resourceBarrier); // 복사 소스로 변경
-	//}
-
-	//GRAPHICS_CMD_LIST->CopyResource(
-	//	GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetTex2D().Get(), // 복사 대상
-	//	backBuffer.Get()); // 복사 원본
-
-	//{
-	//	CD3DX12_RESOURCE_BARRIER resourceBarrier = CD3DX12_RESOURCE_BARRIER::Transition(
-	//		backBuffer.Get(),
-	//		D3D12_RESOURCE_STATE_COPY_SOURCE, // 백 버퍼의 현재 상태
-	//		D3D12_RESOURCE_STATE_RENDER_TARGET);
-	//	GRAPHICS_CMD_LIST->ResourceBarrier(1, &resourceBarrier); // 복사 소스로 변경
-	//}
-
 }
 
 void Engine::RenderBegin()
-{	
+{
+	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+
 	m_graphicsCmdQueue->RenderBegin();
 }
 

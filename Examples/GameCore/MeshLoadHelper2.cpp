@@ -193,7 +193,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 if (!meshData.opacityTextureFilename.empty()) 
                 {
                     ComPtr<ID3D12Resource> tex2D;
-                    D3D12Utils::CreateTexture(
+                    D3D12Utils::LoadAlbedoOpacityTexture(
                         DEVICE, meshData.albedoTextureFilename,
                         meshData.opacityTextureFilename, false,
                         tex2D);
@@ -203,13 +203,9 @@ void MeshLoadHelper::LoadModel(const string& key)
                 }
                 else 
                 {
-                    ComPtr<ID3D12Resource> tex2D;
-                    D3D12Utils::CreateTexture(
-                        DEVICE, meshData.albedoTextureFilename, true,
-                        tex2D);
-                    tex2D->SetName(L"albedoTexture");
                     newMesh.albedoTexture = std::make_shared<Texture>();
-                    newMesh.albedoTexture->CreateFromResource(tex2D);
+                    wstring path = string_to_wstring(meshData.albedoTextureFilename);
+                    newMesh.albedoTexture->LoadTexture(path, false, true, false);
                 }
                 meshBlock.useAlbedoMap = true;
             }
@@ -224,15 +220,9 @@ void MeshLoadHelper::LoadModel(const string& key)
         {
             if (filesystem::exists(meshData.emissiveTextureFilename)) 
             {
-                //ComPtr<ID3D12Resource> tex2D;
-                //D3D12Utils::CreateTexture(DEVICE, meshData.emissiveTextureFilename, true, tex2D);
-                //tex2D->SetName(L"emissiveTexture");
-                //newMesh.emissiveTexture = std::make_shared<Texture>();
-                //newMesh.emissiveTexture->CreateFromResource(tex2D);
-
                 newMesh.emissiveTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.emissiveTextureFilename);
-                newMesh.emissiveTexture->Load(path, false, false, true);
+                newMesh.emissiveTexture->LoadTexture(path, false, true, false);
                 meshBlock.useEmissiveMap = true;
             }
             else 
@@ -243,17 +233,11 @@ void MeshLoadHelper::LoadModel(const string& key)
         }
 
         if (!meshData.normalTextureFilename.empty()) {
-            if (filesystem::exists(meshData.normalTextureFilename)) {
-                //ComPtr<ID3D12Resource> tex2D;
-                //D3D12Utils::CreateTexture(DEVICE, meshData.normalTextureFilename, false,tex2D);
-                //tex2D->SetName(L"normalTexture");
-                //newMesh.normalTexture = std::make_shared<Texture>();
-                //newMesh.normalTexture->CreateFromResource(tex2D);
-                //meshBlock.useNormalMap = true;
-
+            if (filesystem::exists(meshData.normalTextureFilename)) 
+            {
                 newMesh.normalTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.normalTextureFilename);
-                newMesh.normalTexture->Load(path, false, false, true);
+                newMesh.normalTexture->LoadTexture(path, false, true, false);
                 meshBlock.useNormalMap = true;
             }
             else {
@@ -263,12 +247,11 @@ void MeshLoadHelper::LoadModel(const string& key)
         }
 
         if (!meshData.heightTextureFilename.empty()) {
-            if (filesystem::exists(meshData.heightTextureFilename)) {
-                ComPtr<ID3D12Resource> tex2D;
-                D3D12Utils::CreateTexture(DEVICE, meshData.heightTextureFilename, false, tex2D);
-                tex2D->SetName(L"heightTexture");
+            if (filesystem::exists(meshData.heightTextureFilename)) 
+            {
                 newMesh.heightTexture = std::make_shared<Texture>();
-                newMesh.heightTexture->CreateFromResource(tex2D);
+                wstring path = string_to_wstring(meshData.heightTextureFilename);
+                newMesh.heightTexture->LoadTexture(path, false, true, false);
                 meshBlock.useHeightMap = true;
             }
             else {
@@ -280,11 +263,9 @@ void MeshLoadHelper::LoadModel(const string& key)
         if (!meshData.aoTextureFilename.empty()) {
             if (filesystem::exists(meshData.aoTextureFilename)) 
             {
-                ComPtr<ID3D12Resource> tex2D;
-                D3D12Utils::CreateTexture(DEVICE, meshData.aoTextureFilename, false, tex2D);
-                tex2D->SetName(L"aoTexture");
                 newMesh.aoTexture = std::make_shared<Texture>();
-                newMesh.aoTexture->CreateFromResource(tex2D);
+                wstring path = string_to_wstring(meshData.aoTextureFilename);
+                newMesh.aoTexture->LoadTexture(path, false, false, false);
                 meshBlock.useAOMap = true;
             }
             else {
@@ -301,13 +282,22 @@ void MeshLoadHelper::LoadModel(const string& key)
             if (filesystem::exists(meshData.metallicTextureFilename) &&
                 filesystem::exists(meshData.roughnessTextureFilename)) 
             {
-                ComPtr<ID3D12Resource> tex2D;
-                D3D12Utils::CreateMetallicRoughnessTexture(
-                    DEVICE, meshData.metallicTextureFilename,
-                    meshData.roughnessTextureFilename, tex2D);
-                tex2D->SetName(L"metallicRoughnessTexture");
-                newMesh.metallicRoughnessTexture = std::make_shared<Texture>();
-                newMesh.metallicRoughnessTexture->CreateFromResource(tex2D);
+                if (meshData.metallicTextureFilename == meshData.roughnessTextureFilename)
+                {
+                    newMesh.metallicRoughnessTexture = std::make_shared<Texture>();
+                    wstring path = string_to_wstring(meshData.metallicTextureFilename);
+                    newMesh.aoTexture->LoadTexture(path, false, false, false);
+                }
+                else
+                {
+                    ComPtr<ID3D12Resource> tex2D;
+                    D3D12Utils::LoadMetallicRoughnessTexture(
+                        DEVICE, meshData.metallicTextureFilename,
+                        meshData.roughnessTextureFilename, tex2D);
+                    tex2D->SetName(L"metallicRoughnessTexture");
+                    newMesh.metallicRoughnessTexture = std::make_shared<Texture>();
+                    newMesh.metallicRoughnessTexture->CreateFromResource(tex2D);
+                }
             }
             else {
                 cout << meshData.metallicTextureFilename << " or "

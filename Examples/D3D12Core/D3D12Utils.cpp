@@ -236,47 +236,6 @@ void ReadImage(const std::string albedoFilename,
         }
 }
 
-//ComPtr<ID3D11Texture2D> D3D12Utils::CreateStagingTexture(
-//    ComPtr<ID3D12Device>& device, ComPtr<ID3D11DeviceContext>& context,
-//    const int width, const int height, const std::vector<uint8_t>& image,
-//    const DXGI_FORMAT pixelFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
-//    const int mipLevels = 1, const int arraySize = 1) {
-
-//    // 스테이징 텍스춰 만들기
-//    D3D11_TEXTURE2D_DESC txtDesc;
-//    ZeroMemory(&txtDesc, sizeof(txtDesc));
-//    txtDesc.Width = width;
-//    txtDesc.Height = height;
-//    txtDesc.MipLevels = mipLevels;
-//    txtDesc.ArraySize = arraySize;
-//    txtDesc.Format = pixelFormat;
-//    txtDesc.SampleDesc.Count = 1;
-//    txtDesc.Usage = D3D11_USAGE_STAGING;
-//    txtDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
-
-//    ComPtr<ID3D11Texture2D> stagingTexture;
-//    HRESULT stageTextHr = device->CreateTexture2D(&txtDesc, NULL,
-//        stagingTexture.GetAddressOf());
-//    if (FAILED(stageTextHr)) {
-//        cout << "Failed()" << endl;
-//        return nullptr;
-//    }
-
-//    size_t pixelSize = GetPixelSize(pixelFormat);
-//    D3D11_MAPPED_SUBRESOURCE ms;
-//    HRESULT  hr = context->Map(stagingTexture.Get(), NULL, D3D11_MAP_WRITE, NULL, &ms);
-
-//    uint8_t* pData = (uint8_t*)ms.pData;
-//    for (UINT h = 0; h < UINT(height); h++) { // 가로줄 한 줄씩 복사
-//        memcpy(&pData[h * ms.RowPitch], &image[h * width * pixelSize],
-//            width * pixelSize);
-//    }
-//    context->Unmap(stagingTexture.Get(), 0);
-
-//    return stagingTexture;
-//}
-
-
 void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
     const int width, const int height, const vector<uint8_t>& image,
     const DXGI_FORMAT pixelFormat, ComPtr<ID3D12Resource>& texture)
@@ -339,7 +298,7 @@ void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
 }
 
 
-void D3D12Utils::CreateMetallicRoughnessTexture(
+void D3D12Utils::LoadMetallicRoughnessTexture(
     ComPtr<ID3D12Device> device, const std::string metallicFilename,
     const std::string roughnessFilename, ComPtr<ID3D12Resource>& texture)
 {
@@ -350,7 +309,7 @@ void D3D12Utils::CreateMetallicRoughnessTexture(
         imageMap[filename] = ImageInfo();
         // GLTF 방식은 이미 합쳐져 있음
         if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
-            CreateTexture(device, metallicFilename, false, texture);
+            return;
         }
         else {
             // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
@@ -393,28 +352,6 @@ void D3D12Utils::CreateMetallicRoughnessTexture(
         CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image,
             DXGI_FORMAT_R8G8B8A8_UNORM, texture);
     }
-}
-void D3D12Utils::CreateTexture(ComPtr<ID3D12Device> device,
-    const std::string filename, const bool usSRGB,
-    ComPtr<ID3D12Resource>& texture)
-{
-    if (imageMap.find(filename) == imageMap.end())
-    {
-        imageMap[filename] = ImageInfo();
-        imageMap[filename].pixelFormat =
-            usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        string ext(filename.end() - 3, filename.end());
-        std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-
-        if (ext == "exr") {
-            ReadEXRImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height, imageMap[filename].pixelFormat);
-        }
-        else {
-            ReadImage(filename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
-        }
-    }
-    CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat, texture);
 }
 
 void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
@@ -694,7 +631,7 @@ void D3D12Utils::LoadTextureNotUsingScratchImage(const std::wstring path, const 
 
 }
 
-void D3D12Utils::CreateTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
+void D3D12Utils::LoadAlbedoOpacityTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
     const std::string opacityFilename, const bool usSRGB, ComPtr<ID3D12Resource>& texture)
 {
     string filename = albedoFilename + '_' + opacityFilename;
@@ -773,5 +710,47 @@ size_t D3D12Utils::GetPixelSize(DXGI_FORMAT pixelFormat) {
 
     return sizeof(uint8_t) * 4;
 }
+
+
+//ComPtr<ID3D11Texture2D> D3D12Utils::CreateStagingTexture(
+//    ComPtr<ID3D12Device>& device, ComPtr<ID3D11DeviceContext>& context,
+//    const int width, const int height, const std::vector<uint8_t>& image,
+//    const DXGI_FORMAT pixelFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
+//    const int mipLevels = 1, const int arraySize = 1) {
+
+//    // 스테이징 텍스춰 만들기
+//    D3D11_TEXTURE2D_DESC txtDesc;
+//    ZeroMemory(&txtDesc, sizeof(txtDesc));
+//    txtDesc.Width = width;
+//    txtDesc.Height = height;
+//    txtDesc.MipLevels = mipLevels;
+//    txtDesc.ArraySize = arraySize;
+//    txtDesc.Format = pixelFormat;
+//    txtDesc.SampleDesc.Count = 1;
+//    txtDesc.Usage = D3D11_USAGE_STAGING;
+//    txtDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
+
+//    ComPtr<ID3D11Texture2D> stagingTexture;
+//    HRESULT stageTextHr = device->CreateTexture2D(&txtDesc, NULL,
+//        stagingTexture.GetAddressOf());
+//    if (FAILED(stageTextHr)) {
+//        cout << "Failed()" << endl;
+//        return nullptr;
+//    }
+
+//    size_t pixelSize = GetPixelSize(pixelFormat);
+//    D3D11_MAPPED_SUBRESOURCE ms;
+//    HRESULT  hr = context->Map(stagingTexture.Get(), NULL, D3D11_MAP_WRITE, NULL, &ms);
+
+//    uint8_t* pData = (uint8_t*)ms.pData;
+//    for (UINT h = 0; h < UINT(height); h++) { // 가로줄 한 줄씩 복사
+//        memcpy(&pData[h * ms.RowPitch], &image[h * width * pixelSize],
+//            width * pixelSize);
+//    }
+//    context->Unmap(stagingTexture.Get(), 0);
+
+//    return stagingTexture;
+//}
+
 
 } // namespace dengine

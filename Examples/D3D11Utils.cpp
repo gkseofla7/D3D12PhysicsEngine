@@ -485,7 +485,7 @@ void D3D11Utils::CreateTextureHelperImpl(ComPtr<ID3D11Device>& device,
 }
 
 
-void D3D11Utils::CreateMetallicRoughnessTexture(
+void D3D11Utils::LoadMetallicRoughnessTexture(
     ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
     const std::string metallicFilename, const std::string roughnessFilename,
     ComPtr<ID3D11Texture2D>& texture, ComPtr<ID3D11ShaderResourceView>& srv)

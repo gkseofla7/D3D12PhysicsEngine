@@ -271,7 +271,7 @@ class D3D11Utils {
         const bool usSRGB, ComPtr<ID3D11Texture2D>& texture,
         ComPtr<ID3D11ShaderResourceView>& textureResourceView);
   
-    static void CreateMetallicRoughnessTexture(
+    static void LoadMetallicRoughnessTexture(
         ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,
         const std::string metallicFiilename,
         const std::string roughnessFilename, ComPtr<ID3D11Texture2D>& texture,

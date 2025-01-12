@@ -9,7 +9,7 @@ public:
 	Texture();
 	virtual ~Texture();
 
-	void Load(const wstring& path, const bool async = true, const bool isCubeMap = false, const bool usSRGB = false);
+	void LoadTexture(const wstring& path, const bool isCubeMap = false, const bool usSRGB = false, const bool async = true );
 	virtual shared_ptr<Texture> GetTexture() { return std::dynamic_pointer_cast<Texture>(shared_from_this()); }
 public:
 	void Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty, 

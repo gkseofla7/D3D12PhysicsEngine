@@ -264,7 +264,7 @@ void MeshLoadHelper::LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11Device
             if (filesystem::exists(meshData.metallicTextureFilename) &&
                 filesystem::exists(meshData.roughnessTextureFilename)) {
 
-                D3D11Utils::CreateMetallicRoughnessTexture(
+                D3D11Utils::LoadMetallicRoughnessTexture(
                     device, context, meshData.metallicTextureFilename,
                     meshData.roughnessTextureFilename,
                     newMesh.metallicRoughnessTexture,
