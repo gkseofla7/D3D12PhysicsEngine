@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "Vertex.h"
+#include "../D3D12Core/Vertex.h"
 
-namespace hlab {
+namespace dengine {
 
 using std::string;
 using std::vector;

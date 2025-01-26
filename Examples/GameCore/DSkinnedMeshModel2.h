@@ -1,6 +1,6 @@
 #pragma once
 #include "../D3D12Core/EnginePch.h"
-#include "../GeometryGenerator.h"
+#include "../Legacy/GeometryGenerator.h"
 #include "DModel2.h"
 #include "../D3D12Core/StructuredBuffer2.h"
 namespace dengine {

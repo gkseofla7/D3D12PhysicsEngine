@@ -8,7 +8,7 @@
 #include <imgui_impl_win32.h>
 #include "TableDescriptorHeap.h"
 #include "RenderTargetGroup.h"
-#include "../Camera.h"
+#include "../Legacy/Camera.h"
 namespace dengine {
 class Device;
 class CommandQueue;
