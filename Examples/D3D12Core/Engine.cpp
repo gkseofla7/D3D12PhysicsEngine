@@ -616,6 +616,9 @@ void Engine::CreateRenderTargetGroups()
 			m_swapChain->GetSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource));
 			renderTarget.target = std::make_shared<Texture>();
 			renderTarget.target->CreateFromResource(resource);
+			for (int j = 0; j < 4; j++) {
+				renderTarget.clearColor[j] = 0.0f;
+			}
 			vector<RenderTarget> rtVec;
 			rtVec.push_back(renderTarget);
 			resource->SetName(L"SwapChainTexture"); 
@@ -681,6 +684,9 @@ void Engine::CreateRenderTargetGroups()
 			renderTarget.target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 			renderTarget.target->GetTex2D()->SetName(L"FloatBufferTexture");
+			for (int j = 0; j < 4; j++) {
+				renderTarget.clearColor[j] = 0.0f;
+			}
 			vector<RenderTarget> rtVec;
 			rtVec.push_back(renderTarget);
 
@@ -736,10 +742,9 @@ void Engine::CreateRenderTargetGroups()
 				rtVec[i].target->Create(rscDesc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 					D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
 					Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-				rtVec[i].clearColor[0] = 1.0f;
-				rtVec[i].clearColor[1] = 1.0f;
-				rtVec[i].clearColor[2] = 1.0f;
-				rtVec[i].clearColor[3] = 1.0f;
+				for (int j = 0; j < 4; j++) {
+					rtVec[i].clearColor[j] = 1.0f;
+				}
 			}
 
 			vector <shared_ptr<Texture>> dsTextures;

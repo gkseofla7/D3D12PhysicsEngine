@@ -78,7 +78,7 @@ void MeshLoadHelper::LoadAllUnloadedModel()
 }
 bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
 {
-    // TODO. 메인 스레드에서만 실행중이라 아직은 동시 접근이 안됨
+    // NOTICE. 메인 스레드에서만 실행중이라 아직은 동시 접근이 안됨
 	string key = inPath + inName;
 	if (MeshMap.find(key) == MeshMap.end())
 	{

@@ -27,16 +27,16 @@ void RootSignature::CreateDefaultRootSignature()
 		rootParameters[0].InitAsDescriptorTable(static_cast<UINT>(sampleSize), &sampleRanges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 	// t10, t11, t12, t13
-	{// TODO. 현재 구조상 어쩔수없이 Volatile로 해주었지만 추후 구조 변경후 모두 None으로 변경 필요, 애초에 한번 올리면 바꿀필요없는 데이터
+	{
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
-		ranges[0].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[0].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11);
-		ranges[1].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[1].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12);
-		ranges[2].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[2].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 13);
-		ranges[3].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[3].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		rootParameters[1].InitAsDescriptorTable(4, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 	// 공용 데이터
@@ -82,7 +82,6 @@ void RootSignature::CreateDefaultRootSignature()
 		rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 
-	// TODO 임시로, 제거 필요
 	CD3DX12_DESCRIPTOR_RANGE1 shadowMapRange;
 	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS_COUNT, 15); // Start from t15
 	rootParameters[6].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);
@@ -161,16 +160,16 @@ void RootSignature::CreateShadowRootSignature()
 		rootParameters[0].InitAsDescriptorTable(static_cast<UINT>(sampleSize), &sampleRanges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 	// t10, t11, t12, t13
-	{// TODO. 현재 구조상 어쩔수없이 Volatile로 해주었지만 추후 구조 변경후 모두 None으로 변경 필요, 애초에 한번 올리면 바꿀필요없는 데이터
+	{
 		CD3DX12_DESCRIPTOR_RANGE1 ranges[4];
 		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10);
-		ranges[0].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[0].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 11);
-		ranges[1].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[1].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		ranges[2].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 12);
-		ranges[2].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[2].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		ranges[3].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 13);
-		ranges[3].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		ranges[3].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		rootParameters[1].InitAsDescriptorTable(4, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 	// 공용 데이터
@@ -216,7 +215,6 @@ void RootSignature::CreateShadowRootSignature()
 		rootParameters[5].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
 	}
 
-	// TODO 임시로, 제거 필요
 	CD3DX12_DESCRIPTOR_RANGE1 shadowMapRange;
 	shadowMapRange.Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, MAX_LIGHTS_COUNT, 15); // Start from t15
 	rootParameters[6].InitAsDescriptorTable(1, &shadowMapRange, D3D12_SHADER_VISIBILITY_ALL);

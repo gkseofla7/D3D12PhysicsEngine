@@ -75,7 +75,6 @@ void GraphicsDescriptorHeap::SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_R
 }
 void GraphicsDescriptorHeap::ClearSRV(SRV_REGISTER reg)
 {
-	// TODO. 항상 빈 텍스처라도 셋팅을 해두기, 더 좋은 방법 없을까..
 	D3D12_CPU_DESCRIPTOR_HANDLE srvHandle = GEngine->GetDefaultTexture()->GetSRVHandle();
 	SetSRV(srvHandle, reg);
 }
