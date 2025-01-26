@@ -13,7 +13,7 @@ https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
   - 기존 구현에서는 GPU가 프레임을 렌더링할 때 CPU가 대기 상태에 놓이는 비효율적인 구조였습니다.
   - 새 구현에서는 프레임별 리소스를 분리하여 다중 버퍼링(Multi-buffering) 방식으로 전환했습니다.
   - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상되었습니다.
-# 비동기 리소스 로
+# 비동기 리소스 로딩
 - Mesh와 Animation 데이터를 비동기적으로 로드:
     - MeshLoadHelper 클래스가 Mesh 로드를 담당.
     - AnimHelper 클래스가 Animation 로드를 담당.
