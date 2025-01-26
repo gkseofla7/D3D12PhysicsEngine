@@ -30,17 +30,6 @@
 *.exe
 *.out
 *.app
-*.fbx
-*.ipch
-*.pdb
-*.png
-*.dds
-*.db
-*.iobj
-*.ilk
-*.tlog
-*.cso
-*.log
-*.ipdb
-*.vsidx
 
+!Examples/x64/
+!Examples/.vs/
