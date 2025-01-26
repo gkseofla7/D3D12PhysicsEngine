@@ -22,6 +22,7 @@ class Texture;
 class Samplers;
 class DModel;
 class DSkinnedMeshModel;
+class Actor;
 class Wizard;
 template <typename T_CONSTS> class ConstantBuffer;
 struct GlobalConstants;
@@ -34,22 +35,8 @@ public:
 	Engine(){}
 	~Engine();
 	void Init(const WindowInfo& info);
-
-	bool InitMainWindow();
-	bool InitGUI();
-	void InitGraphics();
-	void InitPSO();
-	void InitGlobalBuffer();
-	void InitCubemaps(wstring basePath, wstring envFilename,
-		wstring specularFilename, wstring irradianceFilename,
-		wstring brdfFilename);
-	virtual bool InitScene();
-
 	void Update(float dt);
-	void UpdateLights(float dt);
-
-	float GetAspectRatio() const;
-
+	void Render();
 public:
 	const WindowInfo& GetWindow() { return m_window; }
 	shared_ptr<Device> GetDevice() { return m_device; }
@@ -60,17 +47,10 @@ public:
 	shared_ptr<Shader> GetShader() { return m_shader; }
 	shared_ptr<Samplers> GetSamples() { return m_samplers; }
 
-	shared_ptr<RenderTargetGroup> GetRTGroup(RENDER_TARGET_GROUP_TYPE type) { return m_rtGroups[static_cast<uint8>(type)]; }
+	shared_ptr<RenderTargetGroup> GetRTGroup(RENDER_TARGET_GROUP_TYPE type);
 
 public:
-	void Render();
-	void RenderOpaqueObjects();
-	void RenderShadowMaps();
-	void PostRender();
-
-	void RenderBegin();
-	void RenderEnd();
-
+	float GetAspectRatio() const;
 	void SetMainViewport();
 	void ResizeWindow(int32 width, int32 height);
 	
@@ -80,10 +60,32 @@ public:
 	shared_ptr<Texture> GetDefaultTexture() { return m_emptyTex; }
 
 	void CommintGlobalData();
+protected:
+	virtual bool InitScene();
+
 private:
-	void UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
+	bool InitMainWindow();
+	bool InitGUI();
+	void InitGraphics();
+	void InitPSO();
+	void InitGlobalBuffer();
+	void InitCubemaps(wstring basePath, wstring envFilename,
+		wstring specularFilename, wstring irradianceFilename,
+		wstring brdfFilename);
+	void SetGlobalConstantsCpu(const float& dt, const Vector3& eyeWorld,
 		const Matrix& viewRow,
 		const Matrix& projRow, const Matrix& refl);
+	void UpdateLightsCpu(float dt);
+	void UpdateGlobalConstants(float dt);
+
+	void RenderBegin();
+	void RenderEnd();
+	void PostRender();
+	void RenderOpaqueObjects();
+	void RenderShadowMaps();
+
+
+
 
 	//void CreateConstantBuffer(CBV_REGISTER reg, uint32 bufferSize, uint32 count);
 	void CreateRenderTargetGroups();
@@ -114,7 +116,7 @@ private:
 
 	PSOType m_psoType;
 public:
-	array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT> m_rtGroups;
+	array<array<shared_ptr<RenderTargetGroup>, RENDER_TARGET_GROUP_COUNT>, SWAP_CHAIN_BUFFER_COUNT> m_rtGroups;
 
 	shared_ptr<ConstantBuffer<GlobalConstants>> m_globalConstsBuffer;
 	shared_ptr<ConstantBuffer<GlobalConstants>> m_shadowGlobalConstsBuffer[MAX_LIGHTS_COUNT];
@@ -151,6 +153,9 @@ public:
 	shared_ptr<DModel> m_screenSquare;
 	shared_ptr<DModel> m_ground;
 	shared_ptr<Wizard> m_wizard;
+
+	vector<shared_ptr<DModel>> m_modelList;
+	vector<shared_ptr<Actor>> m_actorList;
 	// EDaerimGTA
 };
 }

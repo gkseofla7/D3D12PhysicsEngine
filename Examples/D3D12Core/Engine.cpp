@@ -67,14 +67,7 @@ void Engine::Init(const WindowInfo& info)
 
 	InitMainWindow();
 	InitGraphics();
-	InitGlobalBuffer();
-	CreateRenderTargetGroups();
-
-	ResizeWindow(info.width, info.height);
-	m_camera.SetAspectRatio(this->GetAspectRatio()); 
-	 
 	InitGUI();
-	
 	InitScene();
 }
 int Engine::Run()
@@ -174,9 +167,9 @@ bool Engine::InitGUI() {
 
 	// Setup Platform/Renderer backends
 	if (!ImGui_ImplDX12_Init(DEVICE.Get(), SWAP_CHAIN_BUFFER_COUNT, DXGI_FORMAT_R8G8B8A8_UNORM,
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap().Get(),
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(),
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetShaderResourceHeap()->GetGPUDescriptorHandleForHeapStart())) 
+		GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetShaderResourceHeap().Get(),
+		GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(),
+		GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetShaderResourceHeap()->GetGPUDescriptorHandleForHeapStart()))
 	{
 		return false;
 	}
@@ -202,7 +195,7 @@ void Engine::InitGraphics()
 	m_graphicsCmdQueue->SetSwapChain(m_swapChain);
 
 	m_graphicsDescHeap = std::make_shared< GraphicsDescriptorHeap>();
-	m_graphicsDescHeap->Init(256);// 흠.. Frame 개수만큼만 넣어도 되지않을까 싶긴한데
+	m_graphicsDescHeap->Init(256);
 
 	m_shader = std::make_shared<Shader>();
 	m_shader->Init();
@@ -216,8 +209,8 @@ void Engine::InitGraphics()
 	m_graphicsPipelineState = std::make_shared< GraphicsPipelineState>();
 	m_graphicsPipelineState->Init();
 
-
 	InitPSO();
+	InitGlobalBuffer();
 }
 
 void Engine::InitPSO()
@@ -263,6 +256,8 @@ void Engine::InitGlobalBuffer()
 	m_emptyTex = make_shared<Texture>();
 	m_emptyTex->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_NONE);
+
+	CreateRenderTargetGroups();
 }
 
 void Engine::InitCubemaps(wstring basePath, wstring envFilename,
@@ -329,6 +324,7 @@ bool Engine::InitScene()
 	{
 		string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
 		m_skybox = std::make_shared<DModel>(meshKey);
+		m_modelList.push_back(m_skybox);
 	}
 	{
 		auto mesh = GeometryGenerator::MakeSquare(5.0, { 10.0f, 10.0f });
@@ -359,15 +355,16 @@ bool Engine::InitScene()
 		m_screenSquare = make_shared<DModel>(meshKey);
 	}
 
+	m_camera.SetAspectRatio(this->GetAspectRatio());
 
 	return true;
 }
 
 void Engine::Update(float dt)
 {
-	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
-
 	MeshLoadHelper::LoadAllUnloadedModel();
+
+	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 
@@ -375,26 +372,143 @@ void Engine::Update(float dt)
 	m_skybox->Tick(dt);
 	m_screenSquare->Tick(dt);
 	m_ground->Tick(dt);
-	// 반사 행렬 추가
-	const Vector3 eyeWorld = m_camera.GetEyePos();
-	const Matrix reflectRow; //Matrix::CreateReflection(m_mirrorPlane);
-	const Matrix viewRow = m_camera.GetViewRow();
-	const Matrix projRow = m_camera.GetProjRow();
-	UpdateGlobalConstants(dt, eyeWorld, viewRow, projRow, reflectRow);
-	UpdateLights(dt);
 
-	m_globalConstsBuffer->Upload();
-	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
-	{
-		m_shadowGlobalConstsBuffer[i]->Upload();
-	}
+	UpdateGlobalConstants(dt);
 }
 
-void Engine::UpdateLights(float dt)
+void Engine::Render()
+{
+	RenderBegin();
+	
+	RenderShadowMaps();
+
+	RenderOpaqueObjects();
+
+	PostRender();
+	RenderEnd(); 
+}
+
+void Engine::RenderOpaqueObjects()
+{
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, 0);
+
+	m_skyboxGraphicsPSO->UploadGraphicsPSO();
+	m_skybox->Render();
+
+	m_skinnedGraphicsPSO->UploadGraphicsPSO();
+	m_wizard->Render();
+
+	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	m_ground->Render();
+}
+
+void Engine::RenderShadowMaps()
+{
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
+	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
+	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+	{
+		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
+		{
+			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
+			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView(i);
+			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
+
+			// Render Skinned
+			m_shadowSkinnedGraphicsPSO->UploadGraphicsPSO();
+			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
+			m_wizard->Render();
+			// Render Default
+			m_shadowGraphicsPSO->UploadGraphicsPSO();
+			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
+			m_ground->Render();
+		}
+	}
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
+	GetGraphicsDescHeap()->SetGlobalSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
+}
+
+void Engine::PostRender() 
+{
+	m_postEffectGraphicsPSO->UploadGraphicsPSO();
+	int8 backIndex = m_swapChain->GetBackBufferIndex();
+	ResolveMSAATexture(GRAPHICS_CMD_LIST.Get(), GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->GetRTTexture(0)->GetTex2D().Get()
+		, GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(0)->GetTex2D().Get(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(0);
+	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, 0);
+
+	
+	GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(0)->GetSRVHandle()
+		, SRV_REGISTER::t0);
+	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
+	GEngine->GetGraphicsDescHeap()->CommitTableForSampling();
+
+	m_screenSquare->Render();
+}
+
+void Engine::RenderBegin()
+{
+	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+
+	m_graphicsCmdQueue->RenderBegin();
+}
+
+void Engine::RenderEnd()
+{
+	SetMainViewport();
+	m_graphicsCmdQueue->RenderEnd();
+}
+ 
+void Engine::SetMainViewport()
+{
+	D3D12_VIEWPORT viewport = {};
+	viewport.TopLeftX = 0.0f;
+	viewport.TopLeftY = 0.0f;
+	viewport.Width = m_window.width;
+	viewport.Height = m_window.height;
+	viewport.MinDepth = 0.0f;
+	viewport.MaxDepth = 1.0f;
+
+	GRAPHICS_CMD_LIST->RSSetViewports(1, &viewport);
+}
+
+void Engine::ResizeWindow(int32 width, int32 height)
+{
+	m_window.width = width;
+	m_window.height = height;
+
+	RECT rect = { 0, 0, width, height };
+	::AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false);
+	::SetWindowPos(m_window.hwnd, 0, 100, 100, width, height, 0);
+}
+
+// 여러 물체들이 공통적으료 사용하는 Const 업데이트
+void Engine::SetGlobalConstantsCpu(const float& dt, const Vector3& eyeWorld,
+	const Matrix& viewRow,
+	const Matrix& projRow, const Matrix& refl) 
+{
+	GlobalConstants& globalCpuData = m_globalConstsBuffer->GetCpu();
+	globalCpuData.globalTime += dt;
+	globalCpuData.eyeWorld = eyeWorld;
+	globalCpuData.view = viewRow.Transpose();
+	globalCpuData.proj = projRow.Transpose();
+	globalCpuData.invProj = projRow.Invert().Transpose();
+	globalCpuData.viewProj = (viewRow * projRow).Transpose();
+	globalCpuData.invView = viewRow.Invert().Transpose();
+
+	// 그림자 렌더링에 사용
+	globalCpuData.invViewProj = globalCpuData.viewProj.Invert();
+}
+
+void Engine::UpdateLightsCpu(float dt)
 {
 	// 회전하는 lights[1] 업데이트
 	static Vector3 lightDev = Vector3(1.0f, 0.0f, 0.0f);
-	if (m_lightRotate) 
+	if (m_lightRotate)
 	{
 		lightDev = Vector3::Transform(lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
 	}
@@ -453,134 +567,23 @@ void Engine::UpdateLights(float dt)
 
 		}
 	}
-
-}
-void Engine::Render()
-{
-	RenderBegin();
-	
-	RenderShadowMaps();
-
-	RenderOpaqueObjects();
-
-	PostRender();
-	RenderEnd(); 
 }
 
-void Engine::RenderOpaqueObjects()
+void Engine::UpdateGlobalConstants(float dt)
 {
-	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, BACKBUFFER_INDEX);
+	// 반사 행렬 추가
+	const Vector3 eyeWorld = m_camera.GetEyePos();
+	const Matrix reflectRow; //Matrix::CreateReflection(m_mirrorPlane);
+	const Matrix viewRow = m_camera.GetViewRow();
+	const Matrix projRow = m_camera.GetProjRow();
+	SetGlobalConstantsCpu(dt, eyeWorld, viewRow, projRow, reflectRow);
+	UpdateLightsCpu(dt);
 
-	m_skyboxGraphicsPSO->UploadGraphicsPSO();
-	m_skybox->Render();
-
-	m_skinnedGraphicsPSO->UploadGraphicsPSO();
-	m_wizard->Render();
-
-	m_defaultGraphicsPSO->UploadGraphicsPSO();
-	m_ground->Render();
-}
-
-void Engine::RenderShadowMaps()
-{
-	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
-	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
+	m_globalConstsBuffer->Upload();
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 	{
-		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
-		{
-			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
-			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView(i);
-			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
-
-			// Render Skinned
-			m_shadowSkinnedGraphicsPSO->UploadGraphicsPSO();
-			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
-			m_wizard->Render();
-			// Render Default
-			m_shadowGraphicsPSO->UploadGraphicsPSO();
-			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
-			m_ground->Render();
-		}
+		m_shadowGlobalConstsBuffer[i]->Upload();
 	}
-	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
-	GetGraphicsDescHeap()->SetGlobalSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
-}
-
-void Engine::PostRender() 
-{
-	m_postEffectGraphicsPSO->UploadGraphicsPSO();
-	int8 backIndex = m_swapChain->GetBackBufferIndex();
-	ResolveMSAATexture(GRAPHICS_CMD_LIST.Get(), GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->GetRTTexture(backIndex)->GetTex2D().Get()
-		, GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetTex2D().Get(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-
-	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->ClearRenderTargetView(backIndex);
-	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->OMSetRenderTargets(1, backIndex);
-
-	
-	GetGraphicsDescHeap()->SetSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::RESOLVE)->GetRTTexture(backIndex)->GetSRVHandle()
-		, SRV_REGISTER::t0);
-	GRAPHICS_CMD_LIST->SetGraphicsRootDescriptorTable(0, m_samplers->GetDescHeap()->GetGPUDescriptorHandleForHeapStart());
-	GEngine->GetGraphicsDescHeap()->CommitTableForSampling();
-
-	m_screenSquare->Render();
-}
-
-void Engine::RenderBegin()
-{
-	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
-
-	m_graphicsCmdQueue->RenderBegin();
-}
-
-void Engine::RenderEnd()
-{
-	SetMainViewport();
-	m_graphicsCmdQueue->RenderEnd();
-}
- 
-void Engine::SetMainViewport()
-{
-	D3D12_VIEWPORT viewport = {};
-	viewport.TopLeftX = 0.0f;
-	viewport.TopLeftY = 0.0f;
-	viewport.Width = m_window.width;
-	viewport.Height = m_window.height;
-	viewport.MinDepth = 0.0f;
-	viewport.MaxDepth = 1.0f;
-
-	GRAPHICS_CMD_LIST->RSSetViewports(1, &viewport);
-}
-
-void Engine::ResizeWindow(int32 width, int32 height)
-{
-	m_window.width = width;
-	m_window.height = height;
-
-	RECT rect = { 0, 0, width, height };
-	::AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, false);
-	::SetWindowPos(m_window.hwnd, 0, 100, 100, width, height, 0);
-}
-
-// 여러 물체들이 공통적으료 사용하는 Const 업데이트
-void Engine::UpdateGlobalConstants(const float& dt, const Vector3& eyeWorld,
-	const Matrix& viewRow,
-	const Matrix& projRow, const Matrix& refl) 
-{
-	GlobalConstants& globalCpuData = m_globalConstsBuffer->GetCpu();
-	globalCpuData.globalTime += dt;
-	globalCpuData.eyeWorld = eyeWorld;
-	globalCpuData.view = viewRow.Transpose();
-	globalCpuData.proj = projRow.Transpose();
-	globalCpuData.invProj = projRow.Invert().Transpose();
-	globalCpuData.viewProj = (viewRow * projRow).Transpose();
-	globalCpuData.invView = viewRow.Invert().Transpose();
-
-	// 그림자 렌더링에 사용
-	globalCpuData.invViewProj = globalCpuData.viewProj.Invert();
 }
 
 void Engine::CommintGlobalData()
@@ -596,33 +599,35 @@ void Engine::CreateRenderTargetGroups()
 {
 	// SwapChain Group
 	{
-		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
-		vector< shared_ptr<Texture>> dsTextures;
 		for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
 		{
+			RenderTarget renderTarget;
 			ComPtr<ID3D12Resource> resource;
 			m_swapChain->GetSwapChain()->GetBuffer(i, IID_PPV_ARGS(&resource));
-			rtVec[i].target = std::make_shared<Texture>();
-			rtVec[i].target->CreateFromResource(resource);
-
+			renderTarget.target = std::make_shared<Texture>();
+			renderTarget.target->CreateFromResource(resource);
+			vector<RenderTarget> rtVec;
+			rtVec.push_back(renderTarget);
 			resource->SetName(L"SwapChainTexture"); 
 
 			shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
 			CD3DX12_RESOURCE_DESC rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, m_window.width, m_window.height);
 			dsTexture->Create(rscDesc,CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
+
+			vector< shared_ptr<Texture>> dsTextures;
 			dsTextures.push_back(dsTexture);
+
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)] = std::make_shared<RenderTargetGroup>();
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTextures);
 		}
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->Create(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN, rtVec, dsTextures);
 	}
 
 	if (CheckMultisampleQualityLevels(DEVICE, DXGI_FORMAT_R16G16B16A16_FLOAT, 4))
 	{
 		m_numQualityLevels = 1;
 	}
-
-	D3D12_RESOURCE_DESC backBufferDepthDesc = m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)]->GetDSTexture(0)->GetTex2D()->GetDesc();
+	D3D12_RESOURCE_DESC backBufferDepthDesc = GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetDSTexture(0)->GetTex2D()->GetDesc();
 	{
 		// DepthStencilView
 		D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
@@ -658,71 +663,86 @@ void Engine::CreateRenderTargetGroups()
 			desc.SampleDesc.Count = 1;
 			desc.SampleDesc.Quality = 0;
 		}
-		vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
-		vector <shared_ptr<Texture>> dsTextures;
+
 		for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
 		{
-			rtVec[i].target = std::make_shared<Texture>();
-			rtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			RenderTarget renderTarget;
+			renderTarget.target = std::make_shared<Texture>();
+			renderTarget.target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-			rtVec[i].target->GetTex2D()->SetName(L"FloatBufferTexture");
+			renderTarget.target->GetTex2D()->SetName(L"FloatBufferTexture");
+			vector<RenderTarget> rtVec;
+			rtVec.push_back(renderTarget);
+
 			shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
 			dsMultiSamplingTexture->Create(depthDesc,
 				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+			vector <shared_ptr<Texture>> dsTextures;
 			dsTextures.push_back(dsMultiSamplingTexture);
-		}
 
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsTextures);
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)] = std::make_shared<RenderTargetGroup>();
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::FLOAT)]->Create(RENDER_TARGET_GROUP_TYPE::FLOAT, rtVec, dsTextures);
+		}
 
 		// FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
 		desc.SampleDesc.Count = 1;
 		desc.SampleDesc.Quality = 0;
 
-		vector<RenderTarget> resolveRtVec(SWAP_CHAIN_BUFFER_COUNT);
+
 		for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
 		{
-			resolveRtVec[i].target = std::make_shared<Texture>();
-			resolveRtVec[i].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+			RenderTarget renderTarget;
+			renderTarget.target = std::make_shared<Texture>();
+			renderTarget.target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
 				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
-			resolveRtVec[i].target->GetTex2D()->SetName(L"ResolveTexture");
+			renderTarget.target->GetTex2D()->SetName(L"ResolveTexture");
+			vector<RenderTarget> resolveRtVec;
+			resolveRtVec.push_back(renderTarget);
+
+			shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
+			dsMultiSamplingTexture->Create(depthDesc,
+				CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+			vector <shared_ptr<Texture>> dsTextures;
+			dsTextures.push_back(dsMultiSamplingTexture);
+
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)] = std::make_shared<RenderTargetGroup>();
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, resolveRtVec, dsTextures);
 		}
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)] = std::make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::RESOLVE)]->Create(RENDER_TARGET_GROUP_TYPE::RESOLVE, resolveRtVec, dsTextures);
 	}
 	 
 	// Shadow
 	{
-		D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
-
-		vector<RenderTarget> rtVec(MAX_LIGHTS_COUNT);
-
-		for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+		for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
 		{
+			D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
 
-			rtVec[i].target = std::make_shared<Texture>();
-			CD3DX12_RESOURCE_DESC rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 1280, 1280);
-			rtVec[i].target->Create(rscDesc,CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
-				Vector4(1.0f, 1.0f, 1.0f, 1.0f)); 
-			rtVec[i].clearColor[0] = 1.0f;
-			rtVec[i].clearColor[1] = 1.0f;
-			rtVec[i].clearColor[2] = 1.0f;
-			rtVec[i].clearColor[3] = 1.0f;
+			vector<RenderTarget> rtVec(MAX_LIGHTS_COUNT);
+			for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
+			{
+				rtVec[i].target = std::make_shared<Texture>();
+				CD3DX12_RESOURCE_DESC rscDesc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT, 1280, 1280);
+				rtVec[i].target->Create(rscDesc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+					D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+					Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+				rtVec[i].clearColor[0] = 1.0f;
+				rtVec[i].clearColor[1] = 1.0f;
+				rtVec[i].clearColor[2] = 1.0f;
+				rtVec[i].clearColor[3] = 1.0f;
+			}
+
+			vector <shared_ptr<Texture>> dsTextures;
+			shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
+			depthDesc.Width = 1280;
+			depthDesc.Height = 1280;
+			dsTexture->Create(depthDesc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+				D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+			dsTextures.push_back(dsTexture);
+
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = make_shared<RenderTargetGroup>();
+			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
 		}
-
-
-		vector <shared_ptr<Texture>> dsTextures;
-		shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
-		depthDesc.Width = 1280;
-		depthDesc.Height = 1280;
-		dsTexture->Create(depthDesc,CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-		dsTextures.push_back(dsTexture);
-
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = make_shared<RenderTargetGroup>();
-		m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
 	}
 	//{
 	//	const int shadowWidth = 1280;
@@ -901,6 +921,11 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	}
 
 	return ::DefWindowProc(hwnd, msg, wParam, lParam);
+}
+
+shared_ptr<RenderTargetGroup> Engine::GetRTGroup(RENDER_TARGET_GROUP_TYPE type)
+{
+	return m_rtGroups[BACKBUFFER_INDEX][static_cast<uint8>(type)]; 
 }
 
 float Engine::GetAspectRatio() const
