@@ -4,9 +4,7 @@ https://github.com/user-attachments/assets/0dd9a327-22c1-4db6-9243-89e9853470e1
 
 
 https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
-# 프로젝트 개요
-이 프로젝트는 홍정모 그래픽스 새싹 코스 Part 4에서 제공된 Direct3D 11 기반 예제 코드를 Direct3D 12로 마이그레이션한 프로젝트입니다. 추가로 
-# D3D12과 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
+# D3D12와 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
 # D3D12로 벡엔드 변경
 - 홍정모 그래픽스 새싹 코스 Part 4에서 제공된 Direct3D 11 기반 예제 코드를 Direct3D 12로 마이그레이션하였습니다.
 - 중첩 렌더링 지원
