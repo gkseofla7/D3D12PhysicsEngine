@@ -1,5 +1,5 @@
 #include "Actor2.h"
-#include "../Camera.h"
+#include "Legacy/Camera.h"
 #include "MeshLoadHelper2.h"
 #include "GameDef2.h"
 #include "ActorStateFactory2.h" 
