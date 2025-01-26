@@ -8,23 +8,22 @@ https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
 # D3D12로 벡엔드 변경
 - 홍정모 그래픽스 새싹 코스 Part 4에서 제공된 Direct3D 11 기반 예제 코드를 Direct3D 12로 마이그레이션하였습니다.
 - 중첩 렌더링 지원
-  - 기존 구현에서는 GPU가 프레임을 렌더링할 때 CPU가 대기 상태에 놓이는 비효율적인 구조였습니다.
-  - 새 구현에서는 프레임별 리소스를 분리하여 다중 버퍼링(Multi-buffering) 방식으로 전환했습니다.
-  - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상되었습니다.
+  - 기존 구현에서는 GPU가 프레임을 렌더링할 때 CPU가 대기 상태에 놓이는 비효율적인 구조
+  - 새 구현에서는 프레임별 리소스를 분리하여 다중 버퍼링(Multi-buffering) 방식으로 전환
+  - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상
 # 비동기 리소스 로딩
 - Mesh와 Animation 데이터를 비동기적으로 로드:
     - MeshLoadHelper 클래스가 Mesh 로드를 담당.
     - AnimHelper 클래스가 Animation 로드를 담당.
 - Thread Pool을 활용
 - Command List Pool 개발
-- gpu commandList Pool 개발
-    - 리소스 로딩 스레드가 GPU 메모리 업로드 시, Resource CommandList Pool에서 명령 리스트(Command List)를 가져와 GPU 요청 처리.
+  - 리소스 로딩 스레드가 GPU 메모리 업로드 시, Resource CommandList Pool에서 명령 리스트(Command List)를 가져와 GPU 요청 처리.
 # 메모리 최적화
 - 동일한 애니메이션 데이터를 사용하는 여러 객체는 CPU 메모리에서 데이터를 공유
 - 각 객체는 GPU 메모리에서 개별적인 애니메이션 정보(예: Bone Weight, Local To World Matrix)를 복사하여 사용.
 # Bullet3 물리 엔진 연동
-- physX를 사용하지 않은 이유는 내부 코드를 볼 수 없다고 들어 모든 코드를 들여댜볼 수 있는 bullet3를 사용하였다.
-- 현재 bullet3로 콜리전 체크해서 FireBall에 경우 Collision 발생시 FireBall를 제거하는 식으로 사용하였다.
+- physX를 사용하지 않은 이유는 내부 코드를 볼 수 없다고 들어 모든 코드를 들여댜볼 수 있는 bullet3를 사용
+- 현재 bullet3로 콜리전 체크해서 FireBall에 경우 Collision 발생시 FireBall를 제거하는 식으로 사용
 # Actor State 시스템(ActorState.h)
 - 애니메이션 연동
   - 액터의 상태(State)에 따라 자동으로 애니메이션을 실행하도록 구현.
