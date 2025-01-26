@@ -3,6 +3,7 @@
 #include "Engine.h"
 #include "../ThreadPool.h"
 #include <shared_mutex>
+#include <mutex>
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
 // Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만
@@ -22,6 +23,8 @@ struct ImageInfo
     int height = 0;
     std::vector<uint8_t> image;
     DXGI_FORMAT pixelFormat;
+
+    std::mutex imageMutex;
 };
 class Resource;
 
@@ -114,7 +117,8 @@ private:
     static void LoadTextureImpl(const std::wstring path, const bool usSRGB);
     static void LoadTextureNotUsingScratchImage(const std::wstring path, const bool usSRGB);
 private:
-    static std::unordered_map<std::string, ImageInfo> imageMap;
+    static std::mutex s_imageMapMutex;
+    static std::unordered_map<std::string, std::unique_ptr<ImageInfo>> imageMap;
     static std::unordered_map<std::wstring, ResourceInfo> s_resourceMap;
 
 };

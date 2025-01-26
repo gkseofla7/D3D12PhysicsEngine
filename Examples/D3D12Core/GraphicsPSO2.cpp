@@ -19,6 +19,6 @@ void GraphicsPSO::UploadGraphicsPSO()
 	GRAPHICS_CMD_LIST->SetPipelineState(m_pipelineState.Get());
 
 	GEngine->SetPSOType(m_psoType);
-	GEngine->CommintGlobalData();
+	GEngine->CommitGlobalData();
 }
 } // namespace dengine

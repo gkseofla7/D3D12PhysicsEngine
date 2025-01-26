@@ -4,9 +4,6 @@
 #include "Engine.h"
 #include "Samplers2.h"
 
-// ************************
-// GraphicsCommandQueue
-// ************************
 namespace dengine {
 GraphicsCommandQueue::~GraphicsCommandQueue()
 {
@@ -28,8 +25,8 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device)
 		m_cmdList[i]->Close();
 	}
 
-
-	for (int i = 0; i < 5; i++)
+	const int resourceThreadCount = 5;
+	for (int i = 0; i < resourceThreadCount; i++)
 	{
 		ResourceCommandList ResCommandList;
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
@@ -48,10 +45,13 @@ ComPtr<ID3D12GraphicsCommandList> GraphicsCommandQueue::GetCurrentGraphicsCmdLis
 }
 void GraphicsCommandQueue::WaitSync()
 {
-	static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
-
 	uint64 fenceValue = Fence();
+	WaitSync(fenceValue);
+}
 
+void GraphicsCommandQueue::WaitSync(uint64 fenceValue)
+{
+	static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	// Wait until the GPU has completed commands up to this fence point.
 	if (m_fence->GetCompletedValue() < m_fenceValue)
 	{
@@ -141,18 +141,24 @@ void GraphicsCommandQueue::RenderEnd()
 
 void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList)
 {
-	// TODO. Excute 하는 시점에 경계조건이어야되지않나 싶은데..
-	// Fence값이 보장안되다보니
+	// CommandList는 여러 스레드가 동시에 접근 못함
 	rscCommandList.m_resCmdList->Close();
 
+	// TODO, ExcuteCommandList랑 Fence()를 Atomic하게 호출하는게 좋을듯 보이긴한다.
+	// ExcuteCommandList와 Fence 사이에 다른 스레드 함수가 호출하게 되면
+	// 스레드가 Pool로 들어가는 시점이 늦어지는 이슈
 	ID3D12CommandList* cmdListArr[] = { rscCommandList.m_resCmdList.Get() };
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
+	uint64 fenceValue = Fence();
 
-	WaitSync();
+	WaitSync(fenceValue);
 
 	rscCommandList.m_resCmdAlloc->Reset();
 	rscCommandList.m_resCmdList->Reset(rscCommandList.m_resCmdAlloc.Get(), nullptr);
-	m_resCmdLists.push(rscCommandList);
+	{
+		std::unique_lock<std::mutex> lock(m_rscMutex);
+		m_resCmdLists.push(rscCommandList);
+	}
 	m_rscCv.notify_one();
 }
 
@@ -165,9 +171,7 @@ ResourceCommandList GraphicsCommandQueue::GetResourceCmdList()
 
 		ResourceCommandList rcsCommandList = m_resCmdLists.front();
 		m_resCmdLists.pop();
-		lock.unlock();
 		return rcsCommandList;
 	}
 }
-
 }

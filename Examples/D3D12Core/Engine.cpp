@@ -262,11 +262,27 @@ void Engine::InitGlobalBuffer()
 
 void Engine::InitCubemaps(wstring basePath, wstring envFilename,
 	wstring specularFilename, wstring irradianceFilename,
-	wstring brdfFilename) {
-	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
+	wstring brdfFilename) 
+{
+	m_envTex->RegisterOnLoadCallback([this]() {
+		this->GetGraphicsDescHeap()->SetGlobalSRVForAllFrame(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
+		});
 	m_envTex->LoadTexture((basePath + envFilename).c_str(), true);
+
+	m_irradianceTex->RegisterOnLoadCallback([this]() {
+		this->GetGraphicsDescHeap()->SetGlobalSRVForAllFrame(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
+		});
 	m_irradianceTex->LoadTexture((basePath + irradianceFilename).c_str(), true);
+
+	m_specularTex->RegisterOnLoadCallback([this]() {
+		this->GetGraphicsDescHeap()->SetGlobalSRVForAllFrame(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
+		});
 	m_specularTex->LoadTexture((basePath + specularFilename).c_str(), true);
+
+	// BRDF LookUp Table은 CubeMap이 아니라 2D 텍스춰 입니다.
+	m_brdfTex->RegisterOnLoadCallback([this]() {
+		this->GetGraphicsDescHeap()->SetGlobalSRVForAllFrame(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
+		});
 	m_brdfTex->LoadTexture((basePath + brdfFilename).c_str(), false);
 }
 
@@ -410,7 +426,6 @@ void Engine::RenderShadowMaps()
 	{
 		if (globalConstsCPU.lights[i].type & LIGHT_SHADOW)
 		{
-			//TODO. 원래는 프레임마다 만들어줘야돼서 수정 필요
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->ClearRenderTargetView(i);
 			GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->OMSetRenderTargets(1, i);
 
@@ -449,11 +464,6 @@ void Engine::PostRender()
 
 void Engine::RenderBegin()
 {
-	GetGraphicsDescHeap()->SetGlobalSRV(m_envTex->GetSRVHandle(), SRV_REGISTER::t10);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_irradianceTex->GetSRVHandle(), SRV_REGISTER::t11);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_specularTex->GetSRVHandle(), SRV_REGISTER::t12);
-	GetGraphicsDescHeap()->SetGlobalSRV(m_brdfTex->GetSRVHandle(), SRV_REGISTER::t13);
-
 	m_graphicsCmdQueue->RenderBegin();
 }
 
@@ -586,7 +596,7 @@ void Engine::UpdateGlobalConstants(float dt)
 	}
 }
 
-void Engine::CommintGlobalData()
+void Engine::CommitGlobalData()
 {
 	// b0
 	GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_globalConstsBuffer->GetGpuVirtualAddress(0));
@@ -744,43 +754,6 @@ void Engine::CreateRenderTargetGroups()
 			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
 		}
 	}
-	//{
-	//	const int shadowWidth = 1280;
-	//	const int shadowHeight = 1280;
-
-	//	
-	//	D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
-	//	if (m_numQualityLevels)
-	//	{
-	//		depthDesc.SampleDesc.Count = 4;
-	//		depthDesc.SampleDesc.Quality = m_numQualityLevels - 1;
-	//	}
-	//	else
-	//	{
-	//		depthDesc.SampleDesc.Count = 1;
-	//		depthDesc.SampleDesc.Quality = 0;
-	//	}
-	//	// TODO. typeless로 해야될지 다시 확인
-	//	depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
-	//	depthDesc.Width = shadowWidth;
-	//	depthDesc.Height = shadowHeight;
-	//	depthDesc.MipLevels = 1;
-
-	//	vector <shared_ptr<Texture>> dsTextures;
-	//	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
-	//	{
-	//		shared_ptr<Texture> dsMultiSamplingTexture = std::make_shared<Texture>();
-	//		dsMultiSamplingTexture->Create(depthDesc,
-	//			CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-	//			D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
-
-	//		dsTextures.push_back(dsMultiSamplingTexture);
-	//	}
-
-	//	vector<RenderTarget> rtVec;
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = std::make_shared<RenderTargetGroup>();
-	//	m_rtGroups[static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
-	//}
 }
 
 void Engine::OnMouseMove(int mouseX, int mouseY) {

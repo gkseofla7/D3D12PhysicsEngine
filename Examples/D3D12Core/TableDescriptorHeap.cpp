@@ -44,6 +44,18 @@ void GraphicsDescriptorHeap::SetGlobalSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle,
 	DEVICE->CopyDescriptors(1, &destHandle, &destRange, 1, &srcHandle, &srcRange, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
 }
 
+void GraphicsDescriptorHeap::SetGlobalSRVForAllFrame(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count)
+{
+	for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
+	{
+		D3D12_CPU_DESCRIPTOR_HANDLE destHandle = GetGlobalCPUHandle(reg, i);
+		uint32 destRange = count;
+		uint32 srcRange = count;
+
+		DEVICE->CopyDescriptors(1, &destHandle, &destRange, 1, &srcHandle, &srcRange, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+	}
+}
+
 void GraphicsDescriptorHeap::SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg)
 {
 	D3D12_CPU_DESCRIPTOR_HANDLE destHandle = GetCPUHandle(reg);
@@ -133,10 +145,20 @@ D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(SRV_REGIS
 	return GetGlobalCPUHandle(static_cast<uint8>(reg));
 }
 
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(SRV_REGISTER reg, int frameIndex)
+{
+	return GetGlobalCPUHandle(static_cast<uint8>(reg), frameIndex);
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(uint8 reg)
 {
+	return GetGlobalCPUHandle(reg, BACKBUFFER_INDEX);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GraphicsDescriptorHeap::GetGlobalCPUHandle(uint8 reg, int frameIndex)
+{
 	assert(reg >= 0);
-	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_descHeap[BACKBUFFER_INDEX]->GetCPUDescriptorHandleForHeapStart();
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = m_descHeap[frameIndex]->GetCPUDescriptorHandleForHeapStart();
 	handle.ptr += (reg)*m_handleSize;
 	return handle;
 }

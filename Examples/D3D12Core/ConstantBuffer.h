@@ -214,7 +214,7 @@ private:
     {
         D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
         cbvDesc.NumDescriptors = m_elementCount;
-        cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;// TODO.
+        cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
         DEVICE->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&m_cbvHeap));
 

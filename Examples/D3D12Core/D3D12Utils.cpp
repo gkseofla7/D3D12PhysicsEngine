@@ -28,7 +28,8 @@
 namespace dengine {
 using namespace std;
 using namespace DirectX;
-unordered_map<string, ImageInfo> D3D12Utils::imageMap;
+std::mutex D3D12Utils::s_imageMapMutex;
+unordered_map<string, std::unique_ptr<ImageInfo>> D3D12Utils::imageMap;
 unordered_map<std::wstring, ResourceInfo> D3D12Utils::s_resourceMap;
 void CheckResult(HRESULT hr, ID3DBlob* errorBlob) {
     if (FAILED(hr)) {
@@ -291,10 +292,8 @@ void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
     rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
 
     GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
-    // 해상도를 낮춰가며 밉맵 생성
+    // 해상도를 낮춰가며 밉맵 생성 필요하다면 추가 필요
    // context->GenerateMips(srv.Get());
-    // TODO. MipMap 생성 필요
-
 }
 
 
@@ -302,18 +301,23 @@ void D3D12Utils::LoadMetallicRoughnessTexture(
     ComPtr<ID3D12Device> device, const std::string metallicFilename,
     const std::string roughnessFilename, ComPtr<ID3D12Resource>& texture)
 {
-    std::cout << "CreateMetallicRoughnessTextureImpl" << std::endl;
-    string filename = metallicFilename + '_' + roughnessFilename;
-    if (imageMap.find(filename) == imageMap.end())
+    if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
+        return;
+    }
+    const string filename = metallicFilename + '_' + roughnessFilename;
     {
-        imageMap[filename] = ImageInfo();
-        // GLTF 방식은 이미 합쳐져 있음
-        if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
-            return;
+        std::unique_lock<std::mutex> lock(s_imageMapMutex);
+        if (imageMap.find(filename) == imageMap.end())
+        {
+            imageMap[filename] = make_unique<ImageInfo>();
         }
-        else {
-            // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
+    }
 
+    {
+        std::unique_lock<std::mutex> lock(imageMap[filename]->imageMutex);
+        if (imageMap[filename]->image.size() == 0)
+        {
+            // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
             // ReadImage()를 활용하기 위해서 두 이미지들을 각각 4채널로 변환 후 다시
             // 3채널로 합치는 방식으로 구현
             int mWidth = 0, mHeight = 0;
@@ -336,22 +340,22 @@ void D3D12Utils::LoadMetallicRoughnessTexture(
                 assert(mWidth == rWidth);
                 assert(mHeight == rHeight);
             }
-            imageMap[filename].width = mWidth;
-            imageMap[filename].width = mHeight;
+            imageMap[filename]->width = mWidth;
+            imageMap[filename]->width = mHeight;
 
-            imageMap[filename].image.resize(size_t(mWidth * mHeight) * 4);
-            fill(imageMap[filename].image.begin(), imageMap[filename].image.end(), 0);
+            imageMap[filename]->image.resize(size_t(mWidth * mHeight) * 4);
+            fill(imageMap[filename]->image.begin(), imageMap[filename]->image.end(), 0);
 
             for (size_t i = 0; i < size_t(mWidth * mHeight); i++) {
                 if (rImage.size())
-                    imageMap[filename].image[4 * i + 1] = rImage[4 * i]; // Green = Roughness
+                    imageMap[filename]->image[4 * i + 1] = rImage[4 * i]; // Green = Roughness
                 if (mImage.size())
-                    imageMap[filename].image[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
+                    imageMap[filename]->image[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
             }
         }
-        CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image,
-            DXGI_FORMAT_R8G8B8A8_UNORM, texture);
     }
+    CreateTextureHelper(device, imageMap[filename]->width, imageMap[filename]->height, imageMap[filename]->image,
+        DXGI_FORMAT_R8G8B8A8_UNORM, texture);
 }
 
 void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
@@ -517,9 +521,9 @@ void D3D12Utils::LoadTextureImpl(const std::wstring path, const bool usSRGB)
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
     rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
 
-    // TODO. cpu 스레드가 gpu를 기다려야되는 문제.. 수정 필요
+    //  cpu 리소스 스레드가 gpu를 기다려야되는 문제..
+    // -> WaitForSingleObject함수를 통해 Cpu Sleep으로 대기하기때문에 스레드 수를 좀더 늘려서 해결하는게 나을듯 보인다
     GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
-
     {
         std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
         s_resourceMap[path].resource = texture;
@@ -534,7 +538,6 @@ void D3D12Utils::LoadTextureImpl(const std::wstring path, const bool usSRGB)
             }
             resTex->CreateFromResource(texture);
         }
-
         s_resourceMap[path].pendingResources.clear();
     }
 }
@@ -634,18 +637,29 @@ void D3D12Utils::LoadTextureNotUsingScratchImage(const std::wstring path, const 
 void D3D12Utils::LoadAlbedoOpacityTexture(ComPtr<ID3D12Device> device, const std::string albedoFilename,
     const std::string opacityFilename, const bool usSRGB, ComPtr<ID3D12Resource>& texture)
 {
-    string filename = albedoFilename + '_' + opacityFilename;
-    if (imageMap.find(filename) == imageMap.end())
-    {// TODO. 여러 스레드 동시에 들어올경우 이슈 발생
-        imageMap[filename] = ImageInfo();
-        int width = 0, height = 0;
-        std::vector<uint8_t> image;
-        imageMap[filename].pixelFormat =
-            usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
-
-        ReadImage(albedoFilename, opacityFilename, imageMap[filename].image, imageMap[filename].width, imageMap[filename].height);
+    const string filename = albedoFilename + '_' + opacityFilename;
+    {
+        std::unique_lock<std::mutex> lock(s_imageMapMutex);
+        if (imageMap.find(filename) == imageMap.end())
+        {
+            imageMap[filename] = make_unique<ImageInfo>();
+        }
     }
-    CreateTextureHelper(device, imageMap[filename].width, imageMap[filename].height, imageMap[filename].image, imageMap[filename].pixelFormat,
+
+    {
+        // 같은 텍스처에 대해선 모든 스레드가 로딩중일때 대기하도록 한다.
+        std::unique_lock<std::mutex> lock(imageMap[filename]->imageMutex);
+        if (imageMap[filename]->image.size() == 0)
+        {
+            int width = 0, height = 0;
+            std::vector<uint8_t> image;
+            imageMap[filename]->pixelFormat =
+                usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+
+            ReadImage(albedoFilename, opacityFilename, imageMap[filename]->image, imageMap[filename]->width, imageMap[filename]->height);
+        }
+    }
+    CreateTextureHelper(device, imageMap[filename]->width, imageMap[filename]->height, imageMap[filename]->image, imageMap[filename]->pixelFormat,
         texture);
 }
 

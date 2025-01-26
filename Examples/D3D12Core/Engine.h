@@ -59,7 +59,7 @@ public:
 
 	shared_ptr<Texture> GetDefaultTexture() { return m_emptyTex; }
 
-	void CommintGlobalData();
+	void CommitGlobalData();
 protected:
 	virtual bool InitScene();
 

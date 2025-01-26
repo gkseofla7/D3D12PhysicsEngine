@@ -11,6 +11,7 @@ public:
 	void Clear();
 	void SetGlobalCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg);
 	void SetGlobalSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count = 1);
+	void SetGlobalSRVForAllFrame(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count = 1);
 	void SetCBV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, CBV_REGISTER reg);
 	void SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count = 1);
 	void ClearSRV(SRV_REGISTER reg);
@@ -29,6 +30,8 @@ public:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetGlobalCPUHandle(CBV_REGISTER reg);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetGlobalCPUHandle(SRV_REGISTER reg);
 
+	D3D12_CPU_DESCRIPTOR_HANDLE GetGlobalCPUHandle(SRV_REGISTER reg, int frameIndex);
+
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(CBV_REGISTER reg);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(SRV_REGISTER reg);
 
@@ -37,7 +40,7 @@ public:
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE GetCPUHandle(uint8 reg);
 	D3D12_CPU_DESCRIPTOR_HANDLE GetGlobalCPUHandle(uint8 reg);
-
+	D3D12_CPU_DESCRIPTOR_HANDLE GetGlobalCPUHandle(uint8 reg, int frameIndex);
 
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGPUHandle(uint8 reg);
 	D3D12_GPU_DESCRIPTOR_HANDLE GetGlobalGPUHandle(uint8 reg);

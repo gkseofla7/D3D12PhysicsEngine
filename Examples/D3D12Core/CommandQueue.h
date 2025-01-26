@@ -17,6 +17,7 @@ public:
 
 	void Init(ComPtr<ID3D12Device> device);
 	void WaitSync();
+	void WaitSync(uint64 fenceValue);
 	void WaitFrameSync(int frameIndex);
 	void FenceFrame(int index);
 	uint64 Fence();
