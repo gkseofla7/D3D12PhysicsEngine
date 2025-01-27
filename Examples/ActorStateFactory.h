@@ -1,6 +1,6 @@
 #pragma once
 #include <memory>
-#include "Legacy/GameDef.h"
+#include "GameDef.h"
 namespace hlab {
 	class ActorState;
 	class Actor;

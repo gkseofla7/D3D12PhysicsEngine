@@ -5,7 +5,7 @@
 #include <mutex>
 #include "DModel2.h"
 #include <directxtk/SimpleMath.h>
-#include "../GameDef.h"
+#include "GameDef.h"
 
 namespace dengine {
 using namespace std;

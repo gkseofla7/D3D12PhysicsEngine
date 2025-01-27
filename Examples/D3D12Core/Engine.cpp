@@ -810,7 +810,7 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			//	std::cout << "Resize SwapChain to " << m_window.width << " "
 			//		<< m_window.height << std::endl;
 
-			//	// ViewPort 관련 Reset
+			//	// ViewPort 관련 Reset 
 			//	// TODO. 제대로 날리고 있는지 확인 필요
 			//	m_swapChain->Init(m_window, DEVICE, m_device->GetDXGI(), m_graphicsCmdQueue->GetCmdQueue());
 			//	vector<RenderTarget> rtVec(SWAP_CHAIN_BUFFER_COUNT);
