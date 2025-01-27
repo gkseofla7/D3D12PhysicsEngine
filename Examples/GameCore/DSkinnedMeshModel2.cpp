@@ -22,12 +22,27 @@ void DSkinnedMeshModel::InitMeshBuffers(const MeshData& meshData,
     D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
         newMesh->indexBuffer, newMesh->indexBufferView);
 }
+void DSkinnedMeshModel::Tick(float dt)
+{
+    DModel::Tick(dt);
 
+
+}
 void DSkinnedMeshModel::Render()
 {
     m_boneTransforms->PushGraphicsData(SRV_REGISTER::t9);
     DModel::Render();
 };
+
+void DSkinnedMeshModel::UploadBuffers()
+{
+    DModel::UploadBuffers();
+    if (m_initializeMesh == false)
+    {
+        return;
+    }
+    m_boneTransforms->Upload();
+}
 
 void DSkinnedMeshModel::IntegrateRootTransformToWorldTransform()
 {
@@ -39,7 +54,6 @@ void DSkinnedMeshModel::IntegrateRootTransformToWorldTransform()
     temp.x = 0.0;
     temp.z = 0.0;
     m_accumulatedRootTransform.Translation(temp);
-    UpdateConstantBuffers();
 }
 
 

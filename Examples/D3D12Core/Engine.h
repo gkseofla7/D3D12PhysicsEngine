@@ -156,6 +156,8 @@ public:
 
 	vector<shared_ptr<DModel>> m_modelList;
 	vector<shared_ptr<Actor>> m_actorList;
+
+	shared_ptr<Actor> m_activateActor;
 	// EDaerimGTA
 };
 }

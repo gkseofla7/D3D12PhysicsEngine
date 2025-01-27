@@ -162,7 +162,7 @@ extern std::unique_ptr<class Engine> GEngine;
 
 inline void ThrowIfFailed(HRESULT hr) {
 	if (FAILED(hr)) {
-		throw std::exception();
+		throw std::exception(); 
 	}
 }
 }

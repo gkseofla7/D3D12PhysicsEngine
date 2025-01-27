@@ -187,9 +187,10 @@ struct AnimationData
             InBoneTransform * defaultTransform;
     }
 
-     bool GetBoneTransform(int actorId ,string clipId, int frame, Matrix& InRootTransform, vector<Matrix>&  OutBoneTransform, bool bInit, int type = 0) {
-         //TODO 제거
+     bool GetBoneTransform(int actorId ,string clipId, int frame, Matrix& OutRootTransform, vector<Matrix>&  OutBoneTransform, bool bInit, int type = 0)
+     {
         auto& clip = clipMaps[clipId];
+
 
         for (int boneId = 0; boneId < boneTransforms.size(); boneId++) {
             // 1일때 상체
@@ -212,7 +213,7 @@ struct AnimationData
             const int parentIdx = boneParents[boneId];
             const Matrix parentMatrix = parentIdx >= 0
                 ? OutBoneTransform[parentIdx]
-                : InRootTransform;
+                : OutRootTransform;
 
             auto key = keys.size() > 0
                 ? keys[frame % keys.size()]
@@ -225,14 +226,15 @@ struct AnimationData
                 }
                 if (frame != 0) 
                 {
-                    InRootTransform =
+                    OutRootTransform =
                         Matrix::CreateTranslation(key.pos - actorRootPrevPosMap[actorId]) *
-                        InRootTransform;
+                        OutRootTransform;
                 }
                 else {
-                    auto temp = InRootTransform.Translation();
+                    auto temp = OutRootTransform.Translation();
                     temp.y = key.pos.y; // 높이 방향만 첫 프레임으로 보정
-                    InRootTransform.Translation(temp);
+                    OutRootTransform.Translation(temp);
+
                 }
 
                 actorRootPrevPosMap[actorId] = key.pos;

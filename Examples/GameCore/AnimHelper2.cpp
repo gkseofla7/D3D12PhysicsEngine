@@ -125,7 +125,8 @@ bool AnimHelper::UpdateAnimation(Actor* InActor, string inState, int frame, int 
 		std::shared_lock<std::shared_mutex> lock(m_animDatas[modelId].mtx);
 		vector<Matrix> boneTransform;
 		boneTransform.resize(m_animDatas[modelId].AniData.boneTransforms.size());
-		m_animDatas[modelId].AniData.GetBoneTransform(InActor->GetObjectId(), inState, frame, skinnedMeshModel->GetAccumulatedRootTransform(), boneTransform, bInit, type);
+		Matrix& rootTransformRef = skinnedMeshModel->GetAccumulatedRootTransform();
+		m_animDatas[modelId].AniData.GetBoneTransform(InActor->GetObjectId(), inState, frame, rootTransformRef, boneTransform, bInit, type);
 
 		for (int i = 0; i < skinnedMeshModel->m_boneTransforms->GetCpu().size(); i++) {
 			skinnedMeshModel->m_boneTransforms->GetCpu()[i] =
@@ -135,7 +136,6 @@ bool AnimHelper::UpdateAnimation(Actor* InActor, string inState, int frame, int 
 				skinnedMeshModel->SetAccumulatedRootTransformToLocal(m_animDatas[modelId].AniData.GetAnimationTransform(i, boneTransform[i]));
 			}
 		}
-		skinnedMeshModel->m_boneTransforms->Upload();
 	}
 
 	return true;

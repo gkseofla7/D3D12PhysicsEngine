@@ -18,7 +18,7 @@ using DirectX::SimpleMath::Vector3;
 // __declspec(align(256)) : DX12에서는 256 align (예습)
 
 // 주로 Vertex/Geometry 쉐이더에서 사용
-__declspec(align(256)) struct MeshConstants2
+__declspec(align(256)) struct MeshConstants
 {
     Matrix world;
     Matrix worldIT;
@@ -30,7 +30,7 @@ __declspec(align(256)) struct MeshConstants2
 };
 
 // 주로 Pixel 쉐이더에서 사용
-__declspec(align(256)) struct MaterialConstants2
+__declspec(align(256)) struct MaterialConstants
 {
 
     Vector3 albedoFactor = Vector3(1.0f);

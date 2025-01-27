@@ -61,7 +61,7 @@ void Actor::Tick(float dt)
         DaerimsEngineBase::GetInstance().RegisterPhysMap(dynamic, shared_from_this());
         m_physicsBody = dynamic;
     }
-
+     */
 
     Vector3 deltaPos = m_velocity * Vector3(0., 0., -dt);
     if (m_externalForce > 0.0f)
@@ -72,7 +72,7 @@ void Actor::Tick(float dt)
         //m_externalForce = m_externalForce - m_externalForce / m_externalForce.Length() * 0.1f;
     }
     UpdatePosition(deltaPos);
-    */
+
 
     UpdateState();
 

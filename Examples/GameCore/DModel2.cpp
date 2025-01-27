@@ -56,7 +56,7 @@ void DModel::Initialize(const string& meshKey)
     m_meshConsts.Init(CBV_REGISTER::b1, SWAP_CHAIN_BUFFER_COUNT);
     m_materialConsts.Init(CBV_REGISTER::b2, SWAP_CHAIN_BUFFER_COUNT);
 }
-void DModel::UpdateConstantBuffers() 
+void DModel::UploadBuffers()
 {
     if (m_initializeMesh == false)
     {
@@ -77,7 +77,7 @@ void DModel::Tick(float dt)
             return;
         }
     }
-    UpdateConstantBuffers();
+    UploadBuffers();
 }
 void DModel::UpdatePosition(const Vector3& inDelta) 
 {
@@ -202,6 +202,11 @@ void DModel::UpdateWorldRow(const Matrix& worldRow) {
     m_meshConsts.GetCpu().world = worldRow.Transpose();
     m_meshConsts.GetCpu().worldIT = m_worldITRow.Transpose();
     m_meshConsts.GetCpu().worldInv = m_meshConsts.GetCpu().world.Invert();
+}
+
+void DModel::SetMaterialConstants(const MaterialConstants& inMeshConstants)
+{
+    m_materialConsts.GetCpu() = inMeshConstants;
 }
 
 bool DModel::LoadMesh()

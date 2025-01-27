@@ -327,15 +327,19 @@ bool Engine::InitScene()
 		std::string characterName = "character.fbx";
 		Vector3 center(0.5f, 0.1f, 1.0f);
 		shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
-		wizardModel->m_materialConsts.GetCpu().albedoFactor = Vector3(1.0f);
-		wizardModel->m_materialConsts.GetCpu().roughnessFactor = 0.8f;
-		wizardModel->m_materialConsts.GetCpu().metallicFactor = 0.0f;
+		MaterialConstants materialConsts;
+		materialConsts.albedoFactor = Vector3(1.0f);
+		materialConsts.roughnessFactor = 0.8f;
+		materialConsts.metallicFactor = 0.0f;
+		wizardModel->SetMaterialConstants(materialConsts);
 		wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
 			Matrix::CreateTranslation(center));
 		wizardModel->SetScale(0.2f);
 
 		m_wizard = make_shared<Wizard>(wizardModel);
 		m_wizard->Initialize(wizardModel);
+
+		m_activateActor = m_wizard;
 	}
 	{
 		string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
@@ -357,10 +361,12 @@ bool Engine::InitScene()
 		MeshLoadHelper::LoadModel(meshKey, meshDataList);
 
 		m_ground = make_shared<DModel>(meshKey);
-		m_ground->m_materialConsts.GetCpu().albedoFactor = Vector3(0.2f);
-		m_ground->m_materialConsts.GetCpu().emissionFactor = Vector3(0.0f);
-		m_ground->m_materialConsts.GetCpu().metallicFactor = 0.5f;
-		m_ground->m_materialConsts.GetCpu().roughnessFactor = 0.3f;
+		MaterialConstants materialConsts;
+		materialConsts.albedoFactor = Vector3(0.2f);
+		materialConsts.emissionFactor = Vector3(0.2f);
+		materialConsts.roughnessFactor = 0.3f;
+		materialConsts.metallicFactor = 0.5f;
+		m_ground->SetMaterialConstants(materialConsts);
 
 		Vector3 position = Vector3(0.0f, 0.0f, 0.0f);
 		m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
@@ -769,7 +775,7 @@ void Engine::OnMouseMove(int mouseX, int mouseY) {
 	// 마우스 커서의 위치를 NDC로 변환
 	// 마우스 커서는 좌측 상단 (0, 0), 우측 하단(width-1, height-1)
 	// NDC는 좌측 하단이 (-1, -1), 우측 상단(1, 1)
-	m_mouseNdcX = mouseX * 2.0f / m_window.windowed - 1.0f;
+	m_mouseNdcX = mouseX * 2.0f / m_window.width - 1.0f;
 	m_mouseNdcY = -mouseY * 2.0f / m_window.height + 1.0f;
 
 	// 커서가 화면 밖으로 나갔을 경우 범위 조절
@@ -861,13 +867,13 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		m_rightButton = false;
 		break;
 	case WM_KEYDOWN:
-		//if (m_activateActor != nullptr)
-		//{
-		//	if (m_activateActor->MsgProc(wParam, true))
-		//	{
-		//		return true;
-		//	}
-		//}
+		if (m_activateActor != nullptr)
+		{
+			if (m_activateActor->MsgProc(wParam, true))
+			{
+				return true;
+			}
+		}
 		m_keyPressed[wParam] = true;
 		//if (wParam == VK_ESCAPE) { // ESC키 종료
 		//	DestroyWindow(hwnd);
@@ -877,13 +883,13 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		//}
 		break;
 	case WM_KEYUP:
-		//if (m_activateActor != nullptr)
-		//{
-		//	if (m_activateActor->MsgProc(wParam, false))
-		//	{
-		//		return true;
-		//	}
-		//}
+		if (m_activateActor != nullptr)
+		{
+			if (m_activateActor->MsgProc(wParam, false))
+			{
+				return true;
+			}
+		}
 		if (wParam == 'F') { // f키 일인칭 시점
 			m_camera.m_useFirstPersonView = !m_camera.m_useFirstPersonView;
 		}

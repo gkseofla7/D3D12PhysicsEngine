@@ -97,13 +97,13 @@ bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
 	}
     return MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loaded;
 }
-bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants2& InConstants)
+bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
 {
     string key = inPath + inName;
     return GetMaterial(key, inName, InConstants);
 }
 
-bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants2& InConstants)
+bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
 {
     if (MeshMap.find(InMeshKey) == MeshMap.end())
     {

@@ -23,8 +23,7 @@ public:
     void Initialize(const string& meshKey);
     virtual void InitMeshBuffers(const MeshData& meshData,
         shared_ptr<DMesh>& newMesh);
-    void Tick(float dt);
-    void UpdateConstantBuffers();
+    virtual void Tick(float dt);
     virtual void UpdatePosition(const Vector3& inDelta);
     void SetWorldPosition(const Vector3& InPos);
     virtual void UpdateRotation(const Matrix& inDelta);
@@ -40,6 +39,7 @@ public:
     virtual void UpdateAnimation(string clipId, int frame, int type = 0);
     void UpdateWorldRow(const Matrix& worldRow);
 
+    void SetMaterialConstants(const MaterialConstants& inMeshConstants);
 
     void SetScale(float InScale) { m_scale = InScale; }
 
@@ -50,6 +50,8 @@ public:
 
     int GetMaxFrame() { return m_maxFrame; }
     void SetMaxFrame(int maxFrame) { m_maxFrame = maxFrame; }
+protected:
+    virtual void UploadBuffers();
 private:
     bool LoadMesh();
 public:
@@ -62,9 +64,6 @@ public:
     bool m_isPickable = false; // 마우스로 선택/조작 가능 여부
 
     vector<DMesh>* m_meshes;
-
-    ConstantBuffer<MeshConstants2> m_meshConsts;
-    ConstantBuffer<MaterialConstants2> m_materialConsts;
 
     DirectX::BoundingBox m_boundingBox;
     DirectX::BoundingSphere m_boundingSphere;
@@ -88,6 +87,9 @@ private:
 
     int m_modelId = -1;
     int m_maxFrame = 0;
+
+    ConstantBuffer<MeshConstants> m_meshConsts;
+    ConstantBuffer<MaterialConstants> m_materialConsts;
 };
 
 } // namespace dengine

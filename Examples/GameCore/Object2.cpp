@@ -42,6 +42,10 @@ void Object::UpdateWorldRow(const Matrix & worldRow)
 }
 void Object::UpdatePosition(const Vector3 & inDelta)
 {
+    if (inDelta.Length() == 0.0)
+    {
+        return;
+    }
     m_model->UpdatePosition(inDelta);
 }
 

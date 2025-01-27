@@ -19,7 +19,7 @@ void Wizard::Initialize(shared_ptr<DModel> inModel)
     Actor::Initialize(inModel);
     m_model->SetModelId(1);
 
-	//InitBoundingKey();
+	InitBoundingKey();
     InitAnimPath();
 }
  
@@ -63,24 +63,24 @@ void Wizard::InitAnimPath()
     AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EActorStateType::Idle).data(), "FightingIdleOnMichelle2.fbx");
     LoadAnimAsync(magic_enum::enum_name(EActorStateType::Idle).data());
     // Attack
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::Attack).data(), "Fireball.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::Attack).data());
-    //// Move
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data());
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateWalk).data(), "Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalk).data());
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data());
-    //// Jumping
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data(), "Jumping.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data());
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EJumpStateType::JumpStateRunning).data(), "Jump.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateRunning).data());
-    //
-    //// ¾²·¯Áü
-    //AnimHelper::GetInstance().AddAnimStateToAnim(m_model->m_modelId, magic_enum::enum_name(EActorStateType::FlyAway).data(), "Stunned.fbx");
-    //LoadAnimAsync(magic_enum::enum_name(EActorStateType::FlyAway).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EActorStateType::Attack).data(), "Fireball.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EActorStateType::Attack).data());
+    // Move
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data(), "Female Start Walking.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateIdleToWalk).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EMoveStateType::MoveStateWalk).data(), "Walking.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalk).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data(), "Female Stop Walking.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EMoveStateType::MoveStateWalkToIdle).data());
+    // Jumping
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data(), "Jumping.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateInPlace).data());
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EJumpStateType::JumpStateRunning).data(), "Jump.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EJumpStateType::JumpStateRunning).data());
+    
+    // ¾²·¯Áü
+    AnimHelper::GetInstance().AddAnimStateToAnim(m_model->GetModelId(), magic_enum::enum_name(EActorStateType::FlyAway).data(), "Stunned.fbx");
+    LoadAnimAsync(magic_enum::enum_name(EActorStateType::FlyAway).data());
 }
 
 void Wizard::LoadAnimAsync(string inState)

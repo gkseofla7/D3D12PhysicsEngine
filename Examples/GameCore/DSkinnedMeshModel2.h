@@ -11,7 +11,7 @@ public:
     DSkinnedMeshModel(const string& basePath,
         const string& filename);
     virtual void InitMeshBuffers(const MeshData& meshData, shared_ptr<DMesh>& newMesh) override;
-
+    virtual void Tick(float dt) override;
     virtual void Render() override;
 
     Matrix& GetAccumulatedRootTransform() { return m_accumulatedRootTransform; }
@@ -21,12 +21,14 @@ public:
     void SetAccumulatedRootTransformToLocal(const Matrix& InAccumulatedRootTransformToLocal) { m_accumulatedRootTransformToLocal = InAccumulatedRootTransformToLocal; }
 
     void IntegrateRootTransformToWorldTransform();
+protected:
+    virtual void UploadBuffers() override;
 public:
-    // ConstantBuffer<SkinnedConsts> m_skinnedConsts;
     shared_ptr<StructuredBuffer<Matrix>> m_boneTransforms;
 private:
     Matrix m_accumulatedRootTransform;
     Matrix m_accumulatedRootTransformToLocal;
+
 };
 
 } // namespace dengine
