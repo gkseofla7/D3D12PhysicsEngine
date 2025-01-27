@@ -1,7 +1,7 @@
 #pragma once
 
-#include "D3D11Utils.h"
-#include "StructuredBuffer.h"
+#include "Legacy/D3D11Utils.h"
+#include "Legacy/StructuredBuffer.h"
 #include "Timer.h"
 
 namespace hlab {

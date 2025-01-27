@@ -1,7 +1,7 @@
 #include "Scene.h"
-#include "Engine.h"
-#include "SwapChain.h"
-#include "ConstantBuffer.h"
+#include "D3D12Core/Engine.h"
+#include "D3D12Core/SwapChain.h"
+#include "D3D12Core/ConstantBuffer.h"
 
 namespace dengine {
 

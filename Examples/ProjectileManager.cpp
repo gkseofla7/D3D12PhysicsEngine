@@ -1,8 +1,8 @@
 #include "ProjectileManager.h"
-#include "AppBase.h"
+#include "Legacy/AppBase.h"
 #include "Projectile.h"
 
-#include "DaerimsEngineBase.h"
+#include "Legacy/DaerimsEngineBase.h"
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletDynamics/Dynamics/btRigidBody.h"
 #include "bullet/BulletDynamics/btBulletDynamicsCommon.h"

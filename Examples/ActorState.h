@@ -1,5 +1,5 @@
 #pragma once
-#include "GameDef.h"
+#include "Legacy/GameDef.h"
 #include <memory>
 #include <map>
 #include <functional> 

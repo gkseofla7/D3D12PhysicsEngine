@@ -1,8 +1,8 @@
 #include "Texture.h"
-#include "Engine.h"
-#include "CommandQueue.h"
-#include "Device.h"
-#include "D3D12Utils.h"
+#include "D3D12Core/Engine.h"
+#include "D3D12Core/CommandQueue.h"
+#include "D3D12Core/Device.h"
+#include "D3D12Core/D3D12Utils.h"
 //#include "Engine.h"
 namespace dengine {
 Texture::Texture()

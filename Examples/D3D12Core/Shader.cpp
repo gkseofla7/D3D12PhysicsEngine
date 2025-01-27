@@ -16,22 +16,22 @@ Shader::~Shader()
 void Shader::Init()
 {
 	// Vertex Shader
-	D3D12Utils::CreateVertexShader(DEVICE, L"BasicVS.hlsl", m_basicVS);
-	D3D12Utils::CreateVertexShader(DEVICE, L"BasicVS.hlsl", m_skinnedVS,
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/BasicVS.hlsl", m_basicVS);
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/BasicVS.hlsl", m_skinnedVS,
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
-	D3D12Utils::CreateVertexShader(DEVICE, L"SkyboxVS.hlsl", m_skyboxVS);
-	D3D12Utils::CreateVertexShader(DEVICE, L"SamplingVS.hlsl", m_samplingVS);
-	D3D12Utils::CreateVertexShader(DEVICE, L"DepthOnlyVS.hlsl", m_depthOnlyVS);
-	D3D12Utils::CreateVertexShader(DEVICE, L"DepthOnlyVS.hlsl", m_depthOnlySkinnedVS,
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/SkyboxVS.hlsl", m_skyboxVS);
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/SamplingVS.hlsl", m_samplingVS);
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/DepthOnlyVS.hlsl", m_depthOnlyVS);
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/DepthOnlyVS.hlsl", m_depthOnlySkinnedVS,
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
 
 
 	// Pixel Shader
-	D3D12Utils::CreatePixelShader(DEVICE, L"BasicPS.hlsl", m_basicPS);
-	D3D12Utils::CreatePixelShader(DEVICE, L"SkyboxPS.hlsl", m_skyboxPS);
-	D3D12Utils::CreatePixelShader(DEVICE, L"SamplingPS.hlsl", m_samplingPS);
-	D3D12Utils::CreatePixelShader(DEVICE, L"PostEffectsPS.hlsl", m_postEffectsPS);
-	D3D12Utils::CreatePixelShader(DEVICE, L"DepthOnlyPS.hlsl", m_depthOnlyPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/BasicPS.hlsl", m_basicPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/SkyboxPS.hlsl", m_skyboxPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/SamplingPS.hlsl", m_samplingPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/PostEffectsPS.hlsl", m_postEffectsPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/DepthOnlyPS.hlsl", m_depthOnlyPS);
 }
 
 

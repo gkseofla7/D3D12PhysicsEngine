@@ -1,6 +1,6 @@
 #pragma once
-#include "BillboardModel.h"
-#include "DaerimsEngineBase.h"
+#include "Legacy/BillboardModel.h"
+#include "Legacy/DaerimsEngineBase.h"
 namespace hlab {
 class AppBase;
 class ProjectileManager

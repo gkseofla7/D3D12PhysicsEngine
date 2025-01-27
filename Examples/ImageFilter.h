@@ -1,8 +1,8 @@
 #pragma once
 
-#include "D3D11Utils.h"
-#include "GeometryGenerator.h"
-#include "Mesh.h"
+#include "Legacy/D3D11Utils.h"
+#include "Legacy/GeometryGenerator.h"
+#include "Legacy/Mesh.h"
 
 namespace hlab {
 

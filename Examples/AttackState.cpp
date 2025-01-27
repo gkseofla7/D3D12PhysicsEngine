@@ -1,5 +1,5 @@
 #include "AttackState.h"
-#include "Actor.h"
+#include "Legacy/Actor.h"
 
 namespace hlab {
 

@@ -1,9 +1,9 @@
 #include "Projectile.h"
-#include "BillboardModel.h"
-#include "DModel.h"
-#include "GameUtility.h"
+#include "Legacy/BillboardModel.h"
+#include "Legacy/DModel.h"
+#include "Legacy/GameUtility.h"
 
-#include "DaerimsEngineBase.h"
+#include "Legacy/DaerimsEngineBase.h"
 #include "bullet/BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "bullet/btBulletDynamicsCommon.h" 
 

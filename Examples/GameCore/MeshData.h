@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "../D3D12Core/Vertex.h"
+#include "Vertex.h"
 
 namespace dengine {
 

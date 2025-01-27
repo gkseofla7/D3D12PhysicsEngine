@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Model.h"
-#include "Object.h"
+#include "Legacy/Model.h"
+#include "Legacy/Object.h"
 #include <memory>
 class btRigidBody;
 namespace hlab {

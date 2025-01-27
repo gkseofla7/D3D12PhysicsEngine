@@ -1,7 +1,7 @@
 #include "MoveState.h"
-#include "Actor.h"
-#include "AnimHelper.h"
-#include "DSkinnedMeshModel.h"
+#include "Legacy/Actor.h"
+#include "Legacy/AnimHelper.h"
+#include "Legacy/DSkinnedMeshModel.h"
 #include "magic_enum.hpp"
 namespace hlab {
 

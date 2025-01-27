@@ -2,7 +2,7 @@
 #include "ActorState.h"
 #include "IdleState.h"
 #include "AttackState.h"
-#include "Actor.h"
+#include "Legacy/Actor.h"
 #include "MoveState.h"
 #include "JumpState.h"
 #include "FlyAwayState.h"

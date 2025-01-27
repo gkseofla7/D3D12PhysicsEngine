@@ -1,5 +1,5 @@
 #include "IdleState.h"
-#include "Actor.h"
+#include "Legacy/Actor.h"
 namespace hlab {
 
 	IdleState::IdleState(std::weak_ptr<Actor> InActor)

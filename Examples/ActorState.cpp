@@ -1,8 +1,8 @@
 #include "ActorState.h"
-#include "DModel.h"
-#include "AnimHelper.h"
-#include "DSkinnedMeshModel.h"
-#include "Actor.h"
+#include "Legacy/DModel.h"
+#include "Legacy/AnimHelper.h"
+#include "Legacy/DSkinnedMeshModel.h"
+#include "Legacy/Actor.h"
 #include "magic_enum.hpp"
 
 namespace hlab {

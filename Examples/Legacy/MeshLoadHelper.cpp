@@ -3,7 +3,7 @@
 
 #include "GeometryGenerator.h"
 #include "ConstantBuffers.h"
-#include "ThreadPool.h"
+#include "GameCore/ThreadPool.h"
 #include <filesystem>
 
 namespace hlab {

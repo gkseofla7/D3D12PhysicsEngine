@@ -12,7 +12,7 @@
 
 #include "AnimationClip.h"
 #include "MeshData.h"
-#include "D3D12Core/Vertex.h"
+#include "Vertex.h"
 
 namespace dengine {
 

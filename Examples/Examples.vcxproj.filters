@@ -5,9 +5,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{c1747f1e-74c3-4eb4-adb9-3c1c631770e2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Examples">
       <UniqueIdentifier>{055b646d-b150-48ec-9294-31de6d343ac7}</UniqueIdentifier>
     </Filter>
@@ -23,76 +20,27 @@
     <Filter Include="Examples\DaerimsProject">
       <UniqueIdentifier>{13bc5708-4b99-4bec-b271-f3995a1045e2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="D3D12Core">
+      <UniqueIdentifier>{23672c42-11f3-4abc-a3d2-74a8f19f880a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="GameCore">
+      <UniqueIdentifier>{416d6bc0-90f1-466a-941a-ba62eb371dd9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Legacy">
+      <UniqueIdentifier>{5f4ec501-e369-4930-859c-5987c2c4f249}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="D3D12Core\Shaders">
+      <UniqueIdentifier>{12bfb319-036d-46f2-ac94-fbe522d4589b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="AppBase.cpp" />
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="D3D11Utils.cpp" />
-    <ClCompile Include="GeometryGenerator.cpp" />
-    <ClCompile Include="GraphicsCommon.cpp" />
-    <ClCompile Include="GraphicsPSO.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="PostProcess.cpp" />
-    <ClCompile Include="ExampleApp.cpp">
-      <Filter>Examples</Filter>
-    </ClCompile>
-    <ClCompile Include="Example_TEMPLATE.cpp">
-      <Filter>Examples</Filter>
-    </ClCompile>
     <ClCompile Include="BitonicSort.cpp" />
     <ClCompile Include="FluidSimulationCPU.cpp">
       <Filter>Simulation</Filter>
     </ClCompile>
-    <ClCompile Include="SphSimulation.cpp">
-      <Filter>Simulation</Filter>
-    </ClCompile>
-    <ClCompile Include="StableFluids.cpp">
-      <Filter>Simulation</Filter>
-    </ClCompile>
-    <ClCompile Include="UniformGrid.cpp">
-      <Filter>Simulation</Filter>
-    </ClCompile>
     <ClCompile Include="Noise.cpp" />
-    <ClCompile Include="Model.cpp">
-      <Filter>Models</Filter>
-    </ClCompile>
-    <ClCompile Include="BillboardModel.cpp">
-      <Filter>Models</Filter>
-    </ClCompile>
-    <ClCompile Include="DaerimGTA.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="Actor.cpp">
-      <Filter>Actors</Filter>
-    </ClCompile>
-    <ClCompile Include="SkeletalMeshActor.cpp">
-      <Filter>Actors</Filter>
-    </ClCompile>
-    <ClCompile Include="Wizard.cpp">
-      <Filter>Actors</Filter>
-    </ClCompile>
-    <ClCompile Include="DaerimsEngineBase.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="AnimHelper.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelLoader.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="MeshLoadHelper.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="ThreadPool.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="DModel.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="DSkinnedMeshModel.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
     <ClCompile Include="IdleState.cpp" />
     <ClCompile Include="AttackState.cpp" />
     <ClCompile Include="ActorState.cpp">
@@ -105,63 +53,196 @@
       <Filter>Examples\DaerimsProject</Filter>
     </ClCompile>
     <ClCompile Include="FlyAwayState.cpp" />
-    <ClCompile Include="Object.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="ProjectileManager.cpp" />
     <ClCompile Include="JumpState.cpp" />
+    <ClCompile Include="D3D12Core\RenderTargetGroup.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\RootSignature.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\SwapChain.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\TableDescriptorHeap.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\CommandQueue.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\ConstantBuffer.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\Device.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\InstancingBuffer.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\EnginePch.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\Engine.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\Shader.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\GraphicsPipelineState.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\D3D12Utils.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\GraphicsPSO2.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\Samplers2.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\StructuredBuffer2.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\DaerimGame.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\DModel2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\DSkinnedMeshModel2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\AnimHelper2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\Actor2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\ActorState2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\ActorStateFactory2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\GeometryGenerator2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\MeshLoadHelper2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\ModelLoader2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\Object2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\Wizard2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\IdleState2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\GraphicsCommon.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\GraphicsPSO.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\MeshLoadHelper.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\Model.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\ModelLoader.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\Object.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\SkeletalMeshActor.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\Wizard.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\Actor.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\AnimHelper.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\AppBase.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\BillboardModel.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\Camera.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\D3D11Utils.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\DaerimGTA.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\DaerimsEngineBase.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\DModel.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\DSkinnedMeshModel.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\GeometryGenerator.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\Scene.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\Resource.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="D3D12Core\Texture.cpp">
+      <Filter>D3D12Core</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\ThreadPool.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\ExampleApp.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\Example_TEMPLATE.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\SphSimulation.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\StableFluids.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\UniformGrid.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\PostProcess.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AppBase.h" />
-    <ClInclude Include="ConstantBuffers.h" />
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="D3D11Utils.h" />
-    <ClInclude Include="GeometryGenerator.h" />
-    <ClInclude Include="GraphicsCommon.h" />
-    <ClInclude Include="GraphicsPSO.h" />
     <ClInclude Include="ImageFilter.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="MeshData.h" />
     <ClInclude Include="ModelInstance.h" />
-    <ClInclude Include="PostProcess.h" />
-    <ClInclude Include="Vertex.h" />
-    <ClInclude Include="ExampleApp.h">
-      <Filter>Examples</Filter>
-    </ClInclude>
     <ClInclude Include="ComputePSO.h" />
-    <ClInclude Include="Example_TEMPLATE.h">
-      <Filter>Examples</Filter>
-    </ClInclude>
     <ClInclude Include="Timer.h" />
     <ClInclude Include="BitonicSort.h" />
-    <ClInclude Include="Texture2D.h" />
-    <ClInclude Include="Texture3D.h" />
     <ClInclude Include="FluidSimulationCPU.h">
       <Filter>Simulation</Filter>
     </ClInclude>
-    <ClInclude Include="SphSimulation.h">
-      <Filter>Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="StableFluids.h">
-      <Filter>Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="UniformGrid.h">
-      <Filter>Simulation</Filter>
-    </ClInclude>
-    <ClInclude Include="SphKernels.h">
-      <Filter>Simulation</Filter>
-    </ClInclude>
     <ClInclude Include="Noise.h" />
-    <ClInclude Include="StructuredBuffer.h" />
-    <ClInclude Include="Buffers.h" />
     <ClInclude Include="MarchingCubes.h" />
-    <ClInclude Include="AnimationClip.h" />
-    <ClInclude Include="Model.h">
-      <Filter>Models</Filter>
-    </ClInclude>
     <ClInclude Include="GrassModel.h">
-      <Filter>Models</Filter>
-    </ClInclude>
-    <ClInclude Include="SkinnedMeshModel.h">
       <Filter>Models</Filter>
     </ClInclude>
     <ClInclude Include="OceanModel.h">
@@ -170,58 +251,16 @@
     <ClInclude Include="RigidBodyActor.h">
       <Filter>Actors</Filter>
     </ClInclude>
-    <ClInclude Include="SkeletalMeshActor.h">
-      <Filter>Actors</Filter>
-    </ClInclude>
     <ClInclude Include="FireballActor.h">
       <Filter>Actors</Filter>
     </ClInclude>
-    <ClInclude Include="Actor.h">
-      <Filter>Actors</Filter>
-    </ClInclude>
-    <ClInclude Include="BillboardModel.h">
-      <Filter>Models</Filter>
-    </ClInclude>
-    <ClInclude Include="DaerimGTA.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
     <ClInclude Include="Delegate.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="Wizard.h">
-      <Filter>Actors</Filter>
-    </ClInclude>
-    <ClInclude Include="DaerimsEngineBase.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="AnimHelper.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="ModelLoader.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshLoadHelper.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadPool.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="DModel.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="DSkinnedMeshModel.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="ThreadPool.hpp">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
     <ClInclude Include="TypeDef.h">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
     <ClInclude Include="AnimStateDef.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="GameDef.h">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
     <ClInclude Include="IdleState.h" />
@@ -236,108 +275,327 @@
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
     <ClInclude Include="FlyAwayState.h" />
-    <ClInclude Include="Object.h" />
-    <ClInclude Include="GameUtility.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
     <ClInclude Include="ProjectileManager.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="JumpState.h" />
+    <ClInclude Include="D3D12Core\RenderTargetGroup.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\RootSignature.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\SwapChain.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\TableDescriptorHeap.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\CommandQueue.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\ConstantBuffer.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\Device.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\InstancingBuffer.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\EnginePch.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\Engine.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\Shader.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\GraphicsPipelineState.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\D3D12Utils.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\GraphicsPSO2.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\Samplers2.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\StructuredBuffer2.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\DaerimGame.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\DModel2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\DSkinnedMeshModel2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\AnimHelper2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\AnimationClip.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\ActorStateFactory2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\Actor2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\ActorState2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\GameDef2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\GeometryGenerator2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\Mesh2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\MeshLoadHelper2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\ModelLoader2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\Object2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\Wizard2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\IdleState2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\GraphicsCommon.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\GraphicsPSO.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Mesh.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\MeshLoadHelper.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Model.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\ModelLoader.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Object.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\SkeletalMeshActor.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\SkinnedMeshModel.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\StructuredBuffer.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Texture2D.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Texture3D.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Wizard.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Actor.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\AnimationClip.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\AnimHelper.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\AppBase.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\BillboardModel.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Buffers.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Camera.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\ConstantBuffers.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\D3D11Utils.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\DaerimGTA.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\DaerimsEngineBase.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\DModel.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\DSkinnedMeshModel.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\GeometryGenerator.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\Vertex.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\Scene.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\MeshData.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\Resource.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="D3D12Core\Texture.h">
+      <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\ThreadPool.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\ThreadPool.hpp">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\Example_TEMPLATE.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\ExampleApp.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\GameDef.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\GameUtility.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\SphSimulation.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\StableFluids.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\UniformGrid.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\SphKernels.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\PostProcess.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <None Include="Common.hlsli">
-      <Filter>Shaders</Filter>
-    </None>
     <None Include="example_class_maker.py">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="DiskSamples.hlsli">
-      <Filter>Shaders</Filter>
+    <None Include="packages.config" />
+    <None Include="D3D12Core\Shaders\Common.hlsli">
+      <Filter>D3D12Core\Shaders</Filter>
     </None>
-    <None Include="TileableNoise.hlsli">
-      <Filter>Shaders</Filter>
+    <None Include="D3D12Core\Shaders\DiskSamples.hlsli">
+      <Filter>D3D12Core\Shaders</Filter>
     </None>
-    <None Include="Quaternion.hlsli">
-      <Filter>Shaders</Filter>
+    <None Include="D3D12Core\Shaders\Quaternion.hlsli">
+      <Filter>D3D12Core\Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="BasicPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BasicVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BloomDownPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BloomUpPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="CombinePS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyboxPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SkyboxVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="NormalGS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="NormalPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="NormalVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SamplingPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="SamplingVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="DepthOnlyPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="DepthOnlyVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="PostEffectsPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BitonicSortCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="VolumeSmokePS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="CloudLightingCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="CloudDensityCS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="ColorPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="FireballPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BillboardGS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="BillboardVS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="VolumetricFirePS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
-    <FxCompile Include="GameExplosionPS.hlsl">
-      <Filter>Shaders</Filter>
-    </FxCompile>
     <FxCompile Include="Ex1408_BitonicSortCS.hlsl" />
+    <FxCompile Include="D3D12Core\Shaders\BillboardVS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\BitonicSortCS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\BloomDownPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\BloomUpPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\CloudDensityCS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\CloudLightingCS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\ColorPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\CombinePS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\DepthOnlyPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\DepthOnlyVS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\FireballPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\GameExplosionPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\NormalGS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\NormalPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\NormalVS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\PostEffectsPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\SamplingPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\SamplingVS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\SkyboxPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\SkyboxVS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\VolumeSmokePS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\VolumetricFirePS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\BasicPS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\BasicVS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="D3D12Core\Shaders\BillboardGS.hlsl">
+      <Filter>D3D12Core\Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

@@ -1,6 +1,6 @@
 #include "AnimHelper2.h"
 #include <future>
-#include "../ThreadPool.h"
+#include "ThreadPool.h"
 #include "DSkinnedMeshModel2.h"
 #include "../D3D12Core/StructuredBuffer2.h"
 #include "Actor2.h"

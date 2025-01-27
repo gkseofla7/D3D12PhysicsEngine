@@ -3,7 +3,7 @@
 #include "../D3D12Core/Device.h"
 #include "../D3D12Core/D3D12Utils.h"
 #include "GeometryGenerator2.h"
-#include "../ThreadPool.h"
+#include "ThreadPool.h"
 #include <filesystem>
 #include "Mesh2.h"
 #include <locale>

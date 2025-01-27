@@ -1,6 +1,6 @@
 #include <future>
 
-#include "ThreadPool.h"
+#include "GameCore/ThreadPool.h"
 #include "AnimHelper.h"
 #include "DSkinnedMeshModel.h"
 #include "Actor.h"

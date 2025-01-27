@@ -1,7 +1,7 @@
 ﻿#pragma once
 
-#include "AppBase.h"
-#include "Model.h"
+#include "Legacy/AppBase.h"
+#include "Legacy/Model.h"
 
 namespace hlab {
 

@@ -1,8 +1,8 @@
 #include "JumpState.h"
-#include "Actor.h"
-#include "AnimHelper.h"
+#include "Legacy/Actor.h"
+#include "Legacy/AnimHelper.h"
 #include "magic_enum.hpp"
-#include "DSkinnedMeshModel.h"
+#include "Legacy/DSkinnedMeshModel.h"
 namespace hlab {
 
 	JumpState::JumpState(std::weak_ptr<Actor> InActor)

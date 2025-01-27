@@ -1,7 +1,7 @@
 #pragma once
 #include "EnginePch.h"
 #include "Engine.h"
-#include "../ThreadPool.h"
+#include "GameCore/ThreadPool.h"
 #include <shared_mutex>
 #include <mutex>
 // AppBase와 ExampleApp을 정리하기 위해
