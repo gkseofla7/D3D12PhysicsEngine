@@ -33,10 +33,15 @@ void Samplers::Init()
     sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampDesc.BorderColor[0] = 1.0f;// 100.0f; // Å« Z°ª
-    sampDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;
+    sampDesc.Filter = D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT;//D3D12_FILTER_COMPARISON_MIN_MAG_MIP_POINT
     sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_LESS_EQUAL;
     m_sampDescs.push_back(sampDesc);
     // s4, pointWarpSS
+    sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
     m_sampDescs.push_back(sampDesc);
     // s5, linearMirrorSS

@@ -50,7 +50,7 @@ bool CheckMultisampleQualityLevels(ComPtr<ID3D12Device> device, DXGI_FORMAT form
     }
 }
 
-LRESULT WINAPI WndProc2(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return GEngine->MsgProc(hWnd, msg, wParam, lParam);
 }
 Engine::~Engine()
@@ -73,7 +73,7 @@ void Engine::Init(const WindowInfo& info)
 int Engine::Run()
 {
 #ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -114,7 +114,7 @@ bool Engine::InitMainWindow()
 {
 	WNDCLASSEX wc = { sizeof(WNDCLASSEX),
 					 CS_CLASSDC,
-					 WndProc2,
+					 WndProc,
 					 0L,
 					 0L,
 					 GetModuleHandle(NULL),
@@ -321,11 +321,12 @@ bool Engine::InitScene()
 	InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
-
+	for(int i = 0; i< 1; i++)
 	{
 		std::string path = "../Assets/Characters/Mixamo/";
 		std::string characterName = "character.fbx";
 		Vector3 center(0.5f, 0.1f, 1.0f);
+		center.x -= i * 0.1f;
 		shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
 		MaterialConstants materialConsts;
 		materialConsts.albedoFactor = Vector3(1.0f);
@@ -336,11 +337,12 @@ bool Engine::InitScene()
 			Matrix::CreateTranslation(center));
 		wizardModel->SetScale(0.2f);
 
-		m_wizard = make_shared<Wizard>(wizardModel);
-		m_wizard->Initialize(wizardModel);
-
+		shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
+		wizard->Initialize(wizardModel);
+		m_actorList.push_back(wizard);
 		m_activateActor = m_wizard;
 	}
+
 	{
 		string meshKey = MeshLoadHelper::LoadBoxMesh(40.0f, true);
 		m_skybox = std::make_shared<DModel>(meshKey);
@@ -390,7 +392,12 @@ void Engine::Update(float dt)
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 
-	m_wizard->Tick(dt);
+	//m_wizard->Tick(dt);
+	for (shared_ptr<Actor> actor : m_actorList)
+	{
+		actor->Tick(dt);
+	}
+	
 	m_skybox->Tick(dt);
 	m_screenSquare->Tick(dt);
 	m_ground->Tick(dt);
@@ -418,7 +425,11 @@ void Engine::RenderOpaqueObjects()
 	m_skybox->Render();
 
 	m_skinnedGraphicsPSO->UploadGraphicsPSO();
-	m_wizard->Render();
+	//m_wizard->Render();
+	for (shared_ptr<Actor> actor : m_actorList)
+	{
+		actor->Render();
+	}
 
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
 	m_ground->Render();
@@ -438,7 +449,11 @@ void Engine::RenderShadowMaps()
 			// Render Skinned
 			m_shadowSkinnedGraphicsPSO->UploadGraphicsPSO();
 			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));
-			m_wizard->Render();
+			//m_wizard->Render();
+			for (shared_ptr<Actor> actor : m_actorList)
+			{
+				actor->Render();
+			}
 			// Render Default
 			m_shadowGraphicsPSO->UploadGraphicsPSO();
 			GRAPHICS_CMD_LIST->SetGraphicsRootConstantBufferView(2, m_shadowGlobalConstsBuffer[i]->GetGpuVirtualAddress(0));

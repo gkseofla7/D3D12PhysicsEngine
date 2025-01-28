@@ -9,7 +9,7 @@
 #include <execution>
 #include <iostream>
 
-#include "UniformGrid.h"
+#include "Legacy/UniformGrid.h"
 
 namespace hlab {
 

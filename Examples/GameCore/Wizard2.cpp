@@ -4,7 +4,7 @@
 #include "ActorState2.h"
 //#include "ProjectileManager.h"
 #include "DSkinnedMeshModel2.h"
-//#include "MoveState.h"
+#include "MoveState2.h"
 #include "magic_enum.hpp"
 
 namespace dengine {
@@ -188,8 +188,8 @@ void Wizard::RotateLeft(bool InOn)
     bLeft = InOn;
     if (m_actorState->GetStateType() == EActorStateType::Move)
     {
-        //std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
-        //derivedPtr->RotateLeft(InOn);
+        std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
+        derivedPtr->RotateLeft(InOn);
     }
 }
 void Wizard::RotateRight(bool InOn)
@@ -197,8 +197,8 @@ void Wizard::RotateRight(bool InOn)
     bRight = InOn;
     if (m_actorState->GetStateType() == EActorStateType::Move)
     {
-        //std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
-        //derivedPtr->RotateRight(InOn);
+        std::shared_ptr<MoveState> derivedPtr = std::dynamic_pointer_cast<MoveState>(m_actorState);
+        derivedPtr->RotateRight(InOn);
     }
 }
 
