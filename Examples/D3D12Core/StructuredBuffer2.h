@@ -7,8 +7,10 @@ template <typename T_ELEMENT>
 class StructuredBuffer
 {
 public:
-	void Init()
+	void Init(SRV_REGISTER inRegister)
 	{ 
+		m_reg = inRegister;
+
 		m_elementSize = sizeof(T_ELEMENT);
 		m_elementCount = m_cpu.size();
 		m_structuredCount = SWAP_CHAIN_BUFFER_COUNT;
@@ -128,7 +130,7 @@ public:
 		m_resourceState = D3D12_RESOURCE_STATE_COMMON;
 	}
 
-	void PushGraphicsData(SRV_REGISTER reg)
+	void PushGraphicsData()
 	{
 		if (m_init == false)
 		{
@@ -136,7 +138,7 @@ public:
 		}
 		D3D12_CPU_DESCRIPTOR_HANDLE handle = m_srvHeapBegin;
 		handle.ptr += m_structuredIndex * m_handleSize;
-		GEngine->GetGraphicsDescHeap()->SetSRV(handle, reg);
+		GEngine->GetGraphicsDescHeap()->SetSRV(handle, m_reg);
 	}
 
 	vector<T_ELEMENT>& GetCpu() { return m_cpu; }
@@ -170,6 +172,8 @@ private:
 	D3D12_CPU_DESCRIPTOR_HANDLE _uavHeapBegin = {};
 
 	uint64					m_handleSize = 0;
+
+	SRV_REGISTER			m_reg = {};
 
 	bool m_init = false;
 };

@@ -73,9 +73,7 @@ void Actor::Tick(float dt)
     }
     UpdatePosition(deltaPos);
 
-
     UpdateState();
-
 }
 
 //Camera ฐüทร

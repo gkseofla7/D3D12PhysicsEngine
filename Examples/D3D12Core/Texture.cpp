@@ -126,6 +126,12 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 	}
 }
 
+void Texture::PushGraphicsData()
+{
+	GEngine->GetGraphicsDescHeap()->SetSRV(GetSRVHandle(), m_reg);
+}
+
+
 D3D12_CPU_DESCRIPTOR_HANDLE Texture::GetSRVHandle()
 {
 	if (IsLoaded())

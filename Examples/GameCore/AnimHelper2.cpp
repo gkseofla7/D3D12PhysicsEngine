@@ -94,7 +94,7 @@ bool AnimHelper::LoadAnimation(DSkinnedMeshModel* inModel, string inState, bool&
 		// 주의: 모든 keys() 개수가 동일하지 않을 수도 있습니다.
 		for (int i = 0; i < animBlock.AniData.clipMaps[inState].keys.size(); i++)
 			inModel->m_boneTransforms->GetCpu()[i] = Matrix();
-		inModel->m_boneTransforms->Init(); // GPU Buffer 사이즈 재할당
+		inModel->m_boneTransforms->Init(SRV_REGISTER::t9); // GPU Buffer 사이즈 재할당
 	}
 	return true;
 }

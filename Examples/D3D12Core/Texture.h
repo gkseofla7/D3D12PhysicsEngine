@@ -16,6 +16,10 @@ public:
 		D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());
 
 	void CreateFromResource(ComPtr<ID3D12Resource> tex2D);
+
+	void SetRegister(SRV_REGISTER inReg) { m_reg = inReg; }
+
+	void PushGraphicsData();
 public:
 	ComPtr<ID3D12Resource> GetTex2D() { return m_tex2D; }
 	ComPtr<ID3D12DescriptorHeap> GetSRV() { return m_srvHeap; }
@@ -43,6 +47,8 @@ private:
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_srvHeapBegin = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE		m_uavHeapBegin = {};
+
+	SRV_REGISTER					m_reg = {};
 };
 
 

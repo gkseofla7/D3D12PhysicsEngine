@@ -73,7 +73,7 @@ void Engine::Init(const WindowInfo& info)
 int Engine::Run()
 {
 #ifdef _DEBUG
-	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -435,6 +435,18 @@ void Engine::RenderOpaqueObjects()
 	m_ground->Render();
 }
 
+void Engine::RenderDeferred()
+{
+	// Deferred OMSet
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->OMSetRenderTargets();
+
+	//shared_ptr<Camera> mainCamera = _cameras[0];
+	//mainCamera->SortGameObject();
+	//mainCamera->Render_Deferred();
+
+	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::G_BUFFER)->WaitTargetToResource();
+}
+
 void Engine::RenderShadowMaps()
 {
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
@@ -628,6 +640,8 @@ void Engine::CommitGlobalData()
 
 void Engine::CreateRenderTargetGroups()
 {
+	// TODO. 몇몇 Depth Stencil Texture에 경우 공유 가능할듯 싶다.
+	// 어차피 순차적으로 하나씩 그리기때문에, 추후 하나로 공유하고 테스트 해보도록한다.
 	// SwapChain Group
 	{
 		for (uint32 i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
@@ -779,6 +793,45 @@ void Engine::CreateRenderTargetGroups()
 			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)] = make_shared<RenderTargetGroup>();
 			m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::SHADOW)]->Create(RENDER_TARGET_GROUP_TYPE::SHADOW, rtVec, dsTextures);
 		}
+	}
+
+	// G_BUFFER
+	{
+		//D3D12_RESOURCE_DESC desc;
+		//desc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+		//desc.Width = m_window.width;
+		//desc.Height = m_window.height;
+		//desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+		//D3D12_RESOURCE_DESC depthDesc = backBufferDepthDesc;
+		//for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
+		//{
+		//	vector<RenderTarget> rtVec(RENDER_TARGET_G_BUFFER_GROUP_MEMBER_COUNT);
+
+		//	rtVec[0].target = std::make_shared<Texture>();
+		//	rtVec[0].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+		//	rtVec[0].target->GetTex2D()->SetName(L"PositionTarget");
+
+		//	rtVec[1].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+		//	rtVec[1].target->GetTex2D()->SetName(L"NormalTarget");
+
+		//	rtVec[2].target->Create(desc, CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
+		//	rtVec[2].target->GetTex2D()->SetName(L"DiffuseTarget");
+
+		//	shared_ptr<Texture> dsTexture = std::make_shared<Texture>();
+		//	dsTexture->Create(depthDesc,
+		//		CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+		//		D3D12_HEAP_FLAG_NONE, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL, Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+
+		//	vector <shared_ptr<Texture>> dsTextures;
+		//	dsTextures.push_back(dsTexture);
+
+		//	m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::G_BUFFER)] = make_shared<RenderTargetGroup>();
+		//	m_rtGroups[i][static_cast<uint8>(RENDER_TARGET_GROUP_TYPE::G_BUFFER)]->Create(RENDER_TARGET_GROUP_TYPE::G_BUFFER, rtVec, dsTextures);
+		//}
 	}
 }
 

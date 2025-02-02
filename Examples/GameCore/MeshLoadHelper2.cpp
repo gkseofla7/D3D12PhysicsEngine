@@ -200,12 +200,14 @@ void MeshLoadHelper::LoadModel(const string& key)
                     tex2D->SetName(L"albedoTexture");
                     newMesh.albedoTexture = std::make_shared<Texture>();
                     newMesh.albedoTexture->CreateFromResource(tex2D);
+                    newMesh.albedoTexture->SetRegister(SRV_REGISTER::t1);
                 }
                 else 
                 {
                     newMesh.albedoTexture = std::make_shared<Texture>();
                     wstring path = string_to_wstring(meshData.albedoTextureFilename);
                     newMesh.albedoTexture->LoadTexture(path, false, true, false);
+                    newMesh.albedoTexture->SetRegister(SRV_REGISTER::t1);
                 }
                 meshBlock.useAlbedoMap = true;
             }
@@ -223,6 +225,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 newMesh.emissiveTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.emissiveTextureFilename);
                 newMesh.emissiveTexture->LoadTexture(path, false, true, false);
+                newMesh.emissiveTexture->SetRegister(SRV_REGISTER::t5);
                 meshBlock.useEmissiveMap = true;
             }
             else 
@@ -238,6 +241,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 newMesh.normalTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.normalTextureFilename);
                 newMesh.normalTexture->LoadTexture(path, false, true, false);
+                newMesh.normalTexture->SetRegister(SRV_REGISTER::t2);
                 meshBlock.useNormalMap = true;
             }
             else {
@@ -252,6 +256,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 newMesh.heightTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.heightTextureFilename);
                 newMesh.heightTexture->LoadTexture(path, false, true, false);
+                newMesh.heightTexture->SetRegister(SRV_REGISTER::t0);
                 meshBlock.useHeightMap = true;
             }
             else {
@@ -266,6 +271,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 newMesh.aoTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.aoTextureFilename);
                 newMesh.aoTexture->LoadTexture(path, false, false, false);
+                newMesh.aoTexture->SetRegister(SRV_REGISTER::t3);
                 meshBlock.useAOMap = true;
             }
             else {
@@ -286,7 +292,8 @@ void MeshLoadHelper::LoadModel(const string& key)
                 {
                     newMesh.metallicRoughnessTexture = std::make_shared<Texture>();
                     wstring path = string_to_wstring(meshData.metallicTextureFilename);
-                    newMesh.aoTexture->LoadTexture(path, false, false, false);
+                    newMesh.metallicRoughnessTexture->LoadTexture(path, false, false, false);
+                    newMesh.metallicRoughnessTexture->SetRegister(SRV_REGISTER::t4);
                 }
                 else
                 {
@@ -297,6 +304,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                     tex2D->SetName(L"metallicRoughnessTexture");
                     newMesh.metallicRoughnessTexture = std::make_shared<Texture>();
                     newMesh.metallicRoughnessTexture->CreateFromResource(tex2D);
+                    newMesh.metallicRoughnessTexture->SetRegister(SRV_REGISTER::t4);
                 }
             }
             else {

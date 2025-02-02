@@ -30,7 +30,8 @@ void DSkinnedMeshModel::Tick(float dt)
 }
 void DSkinnedMeshModel::Render()
 {
-    m_boneTransforms->PushGraphicsData(SRV_REGISTER::t9);
+    m_boneTransforms->PushGraphicsData();
+    GEngine->GetGraphicsDescHeap()->SetGraphicsRootDescriptorTable(5, SRV_REGISTER::t9);
     DModel::Render();
 };
 

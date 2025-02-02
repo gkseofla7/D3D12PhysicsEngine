@@ -129,49 +129,56 @@ void DModel::Render()
     }
     if (m_isVisible) 
     {
-        
-        for (auto& mesh : *m_meshes) 
+        if (GEngine->GetPSOType() == PSOType::DEFAULT
+            || GEngine->GetPSOType() == PSOType::SHADOW)
         {
+            m_meshConsts.PushGraphicsData();
+            m_materialConsts.PushGraphicsData();
+            GEngine->GetGraphicsDescHeap()->SetGraphicsRootDescriptorTable(3, CBV_REGISTER::b1);
+        }
+        
+        for (auto& mesh : *m_meshes)
+        {
+            for (int i = int(SRV_REGISTER::t0); i <= int(SRV_REGISTER::t5); i++)
+            {
+                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER(i));
+            }
+
             if (GEngine->GetPSOType() == PSOType::DEFAULT
                     || GEngine->GetPSOType() == PSOType::SHADOW)
             {
-                m_meshConsts.PushGraphicsData();
-                m_materialConsts.PushGraphicsData();
-
-                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t0);
-                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t1);
-                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t2);
-                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t3);
-                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t4);
-                GEngine->GetGraphicsDescHeap()->ClearSRV(SRV_REGISTER::t5);
-
                 if (mesh.heightTexture != nullptr)
                 {
-                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.heightTexture->GetSRVHandle(), SRV_REGISTER::t0);
+                    mesh.heightTexture->PushGraphicsData();
                 }
+
                 if (mesh.albedoTexture != nullptr)
                 {
-                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.albedoTexture->GetSRVHandle(), SRV_REGISTER::t1);
+                    mesh.albedoTexture->PushGraphicsData();
                 }
+
                 if (mesh.normalTexture != nullptr)
                 {
-                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.normalTexture->GetSRVHandle(), SRV_REGISTER::t2);
+                    mesh.normalTexture->PushGraphicsData();
                 }
+
                 if (mesh.aoTexture != nullptr)
                 {
-                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.aoTexture->GetSRVHandle(), SRV_REGISTER::t3);
+                    mesh.aoTexture->PushGraphicsData();
                 }
+
                 if (mesh.metallicRoughnessTexture != nullptr)
                 {
-                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.metallicRoughnessTexture->GetSRVHandle(), SRV_REGISTER::t4);
+                    mesh.metallicRoughnessTexture->PushGraphicsData();
                 }
+
                 if (mesh.emissiveTexture != nullptr)
                 {
-                    GEngine->GetGraphicsDescHeap()->SetSRV(mesh.emissiveTexture->GetSRVHandle(), SRV_REGISTER::t5);
+                    mesh.emissiveTexture->PushGraphicsData();
                 }
-                GEngine->GetGraphicsDescHeap()->CommitTable();
+                GEngine->GetGraphicsDescHeap()->SetGraphicsRootDescriptorTable(4, SRV_REGISTER::t0);
             }
-            
+            GEngine->GetGraphicsDescHeap()->CommitTable();
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
             GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);

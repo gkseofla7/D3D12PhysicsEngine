@@ -16,8 +16,10 @@ public:
 	void SetSRV(D3D12_CPU_DESCRIPTOR_HANDLE srcHandle, SRV_REGISTER reg, int count = 1);
 	void ClearSRV(SRV_REGISTER reg);
 
-
+	void SetGraphicsRootDescriptorTable(int inRootParameterIndex, CBV_REGISTER inRegister);
+	void SetGraphicsRootDescriptorTable(int inRootParameterIndex, SRV_REGISTER inRegister);
 	void CommitTable();
+
 	void CommitTableForSampling();
 	void CommitGlobalTable();
 

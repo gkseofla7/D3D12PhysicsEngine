@@ -81,6 +81,7 @@ private:
 	void RenderBegin();
 	void RenderEnd();
 	void PostRender();
+	void RenderDeferred();
 	void RenderOpaqueObjects();
 	void RenderShadowMaps();
 
