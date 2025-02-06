@@ -148,6 +148,7 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
       <AdditionalOptions>/D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS %(AdditionalOptions)</AdditionalOptions>
+      <AdditionalIncludeDirectories>C:\Users\DaerimHan\vcpkg\vcpkg\installed\x64-windows\include\bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -161,9 +162,6 @@
     </FxCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="ActorState.cpp" />
-    <ClCompile Include="ActorStateFactory.cpp" />
-    <ClCompile Include="AttackState.cpp" />
     <ClCompile Include="BitonicSort.cpp" />
     <ClCompile Include="D3D12Core\CommandQueue.cpp" />
     <ClCompile Include="D3D12Core\ConstantBuffer.cpp" />
@@ -184,28 +182,33 @@
     <ClCompile Include="D3D12Core\TableDescriptorHeap.cpp" />
     <ClCompile Include="D3D12Core\Texture.cpp" />
     <ClCompile Include="FluidSimulationCPU.cpp" />
-    <ClCompile Include="FlyAwayState.cpp" />
     <ClCompile Include="GameCore\Actor2.cpp" />
     <ClCompile Include="GameCore\ActorState2.cpp" />
     <ClCompile Include="GameCore\ActorStateFactory2.cpp" />
     <ClCompile Include="GameCore\AnimHelper2.cpp" />
+    <ClCompile Include="GameCore\AttackState2.cpp" />
     <ClCompile Include="GameCore\DaerimGame.cpp" />
     <ClCompile Include="GameCore\DModel2.cpp" />
     <ClCompile Include="GameCore\DSkinnedMeshModel2.cpp" />
+    <ClCompile Include="GameCore\FlyAwayState2.cpp" />
     <ClCompile Include="GameCore\GeometryGenerator2.cpp" />
     <ClCompile Include="GameCore\IdleState2.cpp" />
+    <ClCompile Include="GameCore\JumpState2.cpp" />
     <ClCompile Include="GameCore\MeshLoadHelper2.cpp" />
     <ClCompile Include="GameCore\ModelLoader2.cpp" />
+    <ClCompile Include="GameCore\MoveState2.cpp" />
     <ClCompile Include="GameCore\Object2.cpp" />
+    <ClCompile Include="GameCore\PhysicsCore.cpp" />
     <ClCompile Include="GameCore\Scene.cpp" />
     <ClCompile Include="GameCore\ThreadPool.cpp" />
     <ClCompile Include="GameCore\Wizard2.cpp" />
-    <ClCompile Include="IdleState.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
-    <ClCompile Include="JumpState.cpp" />
     <ClCompile Include="Legacy\Actor.cpp" />
+    <ClCompile Include="Legacy\ActorState.cpp" />
+    <ClCompile Include="Legacy\ActorStateFactory.cpp" />
     <ClCompile Include="Legacy\AnimHelper.cpp" />
     <ClCompile Include="Legacy\AppBase.cpp" />
+    <ClCompile Include="Legacy\AttackState.cpp" />
     <ClCompile Include="Legacy\BillboardModel.cpp" />
     <ClCompile Include="Legacy\Camera.cpp" />
     <ClCompile Include="Legacy\D3D11Utils.cpp" />
@@ -215,12 +218,16 @@
     <ClCompile Include="Legacy\DSkinnedMeshModel.cpp" />
     <ClCompile Include="Legacy\ExampleApp.cpp" />
     <ClCompile Include="Legacy\Example_TEMPLATE.cpp" />
+    <ClCompile Include="Legacy\FlyAwayState.cpp" />
     <ClCompile Include="Legacy\GeometryGenerator.cpp" />
     <ClCompile Include="Legacy\GraphicsCommon.cpp" />
     <ClCompile Include="Legacy\GraphicsPSO.cpp" />
+    <ClCompile Include="Legacy\IdleState.cpp" />
+    <ClCompile Include="Legacy\JumpState.cpp" />
     <ClCompile Include="Legacy\MeshLoadHelper.cpp" />
     <ClCompile Include="Legacy\Model.cpp" />
     <ClCompile Include="Legacy\ModelLoader.cpp" />
+    <ClCompile Include="Legacy\MoveState.cpp" />
     <ClCompile Include="Legacy\Object.cpp" />
     <ClCompile Include="Legacy\PostProcess.cpp" />
     <ClCompile Include="Legacy\SkeletalMeshActor.cpp" />
@@ -229,16 +236,12 @@
     <ClCompile Include="Legacy\UniformGrid.cpp" />
     <ClCompile Include="Legacy\Wizard.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="MoveState.cpp" />
     <ClCompile Include="Noise.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="ProjectileManager.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ActorState.h" />
     <ClInclude Include="AnimStateDef.h" />
-    <ClInclude Include="ActorStateFactory.h" />
-    <ClInclude Include="AttackState.h" />
     <ClInclude Include="BitonicSort.h" />
     <ClInclude Include="ComputePSO.h" />
     <ClInclude Include="D3D12Core\CommandQueue.h" />
@@ -262,35 +265,41 @@
     <ClInclude Include="Delegate.h" />
     <ClInclude Include="FireballActor.h" />
     <ClInclude Include="FluidSimulationCPU.h" />
-    <ClInclude Include="FlyAwayState.h" />
     <ClInclude Include="GameCore\Actor2.h" />
     <ClInclude Include="GameCore\ActorState2.h" />
     <ClInclude Include="GameCore\ActorStateFactory2.h" />
     <ClInclude Include="GameCore\AnimationClip.h" />
     <ClInclude Include="GameCore\AnimHelper2.h" />
+    <ClInclude Include="GameCore\AttackState2.h" />
     <ClInclude Include="GameCore\DaerimGame.h" />
     <ClInclude Include="GameCore\DModel2.h" />
     <ClInclude Include="GameCore\DSkinnedMeshModel2.h" />
+    <ClInclude Include="GameCore\FlyAwayState2.h" />
     <ClInclude Include="GameCore\GameDef2.h" />
     <ClInclude Include="GameCore\GeometryGenerator2.h" />
     <ClInclude Include="GameCore\IdleState2.h" />
+    <ClInclude Include="GameCore\JumpState2.h" />
     <ClInclude Include="GameCore\Mesh2.h" />
     <ClInclude Include="GameCore\MeshData.h" />
     <ClInclude Include="GameCore\MeshLoadHelper2.h" />
     <ClInclude Include="GameCore\ModelLoader2.h" />
+    <ClInclude Include="GameCore\MoveState2.h" />
     <ClInclude Include="GameCore\Object2.h" />
+    <ClInclude Include="GameCore\PhysicsCore.h" />
     <ClInclude Include="GameCore\Scene.h" />
     <ClInclude Include="GameCore\ThreadPool.h" />
     <ClInclude Include="GameCore\ThreadPool.hpp" />
     <ClInclude Include="GameCore\Vertex.h" />
     <ClInclude Include="GameCore\Wizard2.h" />
+    <ClInclude Include="GameDef.h" />
     <ClInclude Include="GrassModel.h" />
-    <ClInclude Include="IdleState.h" />
-    <ClInclude Include="JumpState.h" />
     <ClInclude Include="Legacy\Actor.h" />
+    <ClInclude Include="Legacy\ActorState.h" />
+    <ClInclude Include="Legacy\ActorStateFactory.h" />
     <ClInclude Include="Legacy\AnimationClip.h" />
     <ClInclude Include="Legacy\AnimHelper.h" />
     <ClInclude Include="Legacy\AppBase.h" />
+    <ClInclude Include="Legacy\AttackState.h" />
     <ClInclude Include="Legacy\BillboardModel.h" />
     <ClInclude Include="Legacy\Buffers.h" />
     <ClInclude Include="Legacy\Camera.h" />
@@ -302,15 +311,18 @@
     <ClInclude Include="Legacy\DSkinnedMeshModel.h" />
     <ClInclude Include="Legacy\ExampleApp.h" />
     <ClInclude Include="Legacy\Example_TEMPLATE.h" />
-    <ClInclude Include="Legacy\GameDef.h" />
+    <ClInclude Include="Legacy\FlyAwayState.h" />
     <ClInclude Include="Legacy\GameUtility.h" />
     <ClInclude Include="Legacy\GeometryGenerator.h" />
     <ClInclude Include="Legacy\GraphicsCommon.h" />
     <ClInclude Include="Legacy\GraphicsPSO.h" />
+    <ClInclude Include="Legacy\IdleState.h" />
+    <ClInclude Include="Legacy\JumpState.h" />
     <ClInclude Include="Legacy\Mesh.h" />
     <ClInclude Include="Legacy\MeshLoadHelper.h" />
     <ClInclude Include="Legacy\Model.h" />
     <ClInclude Include="Legacy\ModelLoader.h" />
+    <ClInclude Include="Legacy\MoveState.h" />
     <ClInclude Include="Legacy\Object.h" />
     <ClInclude Include="Legacy\PostProcess.h" />
     <ClInclude Include="Legacy\SkeletalMeshActor.h" />
@@ -323,7 +335,6 @@
     <ClInclude Include="Legacy\Texture3D.h" />
     <ClInclude Include="Legacy\UniformGrid.h" />
     <ClInclude Include="Legacy\Wizard.h" />
-    <ClInclude Include="MoveState.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="ProjectileManager.h" />
     <ClInclude Include="RigidBodyActor.h" />
@@ -439,10 +450,6 @@
     <FxCompile Include="D3D12Core\Shaders\VolumetricFirePS.hlsl">
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Pixel</ShaderType>
       <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Pixel</ShaderType>
-    </FxCompile>
-    <FxCompile Include="Ex1408_BitonicSortCS.hlsl">
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Compute</ShaderType>
-      <ShaderType Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Compute</ShaderType>
     </FxCompile>
     <None Include="example_class_maker.py" />
     <None Include="packages.config" />

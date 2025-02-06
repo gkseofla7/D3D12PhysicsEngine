@@ -41,21 +41,8 @@
       <Filter>Simulation</Filter>
     </ClCompile>
     <ClCompile Include="Noise.cpp" />
-    <ClCompile Include="IdleState.cpp" />
-    <ClCompile Include="AttackState.cpp" />
-    <ClCompile Include="ActorState.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="ActorStateFactory.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="MoveState.cpp">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClCompile>
-    <ClCompile Include="FlyAwayState.cpp" />
     <ClCompile Include="Projectile.cpp" />
     <ClCompile Include="ProjectileManager.cpp" />
-    <ClCompile Include="JumpState.cpp" />
     <ClCompile Include="D3D12Core\RenderTargetGroup.cpp">
       <Filter>D3D12Core</Filter>
     </ClCompile>
@@ -230,6 +217,42 @@
     <ClCompile Include="Legacy\PostProcess.cpp">
       <Filter>Legacy</Filter>
     </ClCompile>
+    <ClCompile Include="GameCore\FlyAwayState2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\JumpState2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\MoveState2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\AttackState2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\IdleState.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\JumpState.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\MoveState.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\ActorState.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\ActorStateFactory.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\AttackState.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="Legacy\FlyAwayState.cpp">
+      <Filter>Legacy</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\PhysicsCore.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImageFilter.h" />
@@ -263,21 +286,8 @@
     <ClInclude Include="AnimStateDef.h">
       <Filter>Examples\DaerimsProject</Filter>
     </ClInclude>
-    <ClInclude Include="IdleState.h" />
-    <ClInclude Include="AttackState.h" />
-    <ClInclude Include="ActorState.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="ActorStateFactory.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="MoveState.h">
-      <Filter>Examples\DaerimsProject</Filter>
-    </ClInclude>
-    <ClInclude Include="FlyAwayState.h" />
     <ClInclude Include="ProjectileManager.h" />
     <ClInclude Include="Projectile.h" />
-    <ClInclude Include="JumpState.h" />
     <ClInclude Include="D3D12Core\RenderTargetGroup.h">
       <Filter>D3D12Core</Filter>
     </ClInclude>
@@ -482,9 +492,6 @@
     <ClInclude Include="Legacy\ExampleApp.h">
       <Filter>Legacy</Filter>
     </ClInclude>
-    <ClInclude Include="Legacy\GameDef.h">
-      <Filter>Legacy</Filter>
-    </ClInclude>
     <ClInclude Include="Legacy\GameUtility.h">
       <Filter>Legacy</Filter>
     </ClInclude>
@@ -502,6 +509,43 @@
     </ClInclude>
     <ClInclude Include="Legacy\PostProcess.h">
       <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="GameDef.h" />
+    <ClInclude Include="GameCore\FlyAwayState2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\JumpState2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\MoveState2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\AttackState2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\IdleState.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\JumpState.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\MoveState.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\ActorState.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\ActorStateFactory.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\AttackState.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="Legacy\FlyAwayState.h">
+      <Filter>Legacy</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\PhysicsCore.h">
+      <Filter>GameCore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -521,7 +565,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <FxCompile Include="Ex1408_BitonicSortCS.hlsl" />
     <FxCompile Include="D3D12Core\Shaders\BillboardVS.hlsl">
       <Filter>D3D12Core\Shaders</Filter>
     </FxCompile>
