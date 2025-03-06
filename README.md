@@ -22,8 +22,8 @@ https://github.com/user-attachments/assets/fdc8105b-ccfd-490a-adb7-9cc72e77898a
   - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상
 # 비동기 리소스 로딩
 - Mesh와 Animation 데이터를 비동기 로드:
-    - MeshLoadHelper 클래스가 Mesh 로드를 담당.
-    - AnimHelper 클래스가 Animation 로드를 담당.
+    - MeshLoadHelper 클래스(MeshLoadHelper2.h)가 Mesh 로드를 담당.
+    - AnimHelper 클래스(AnimHelper2.h)가 Animation 로드를 담당.
 - Thread Pool을 활용
 - Command List Pool 개발
   - 리소스 로딩 스레드가 GPU 메모리 업로드 시, Resource CommandList Pool에서 명령 리스트(Command List)를 가져와 GPU 요청 처리.
