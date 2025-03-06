@@ -24,6 +24,7 @@ class DModel;
 class DSkinnedMeshModel;
 class Actor;
 class Wizard;
+class Object;
 template <typename T_CONSTS> class ConstantBuffer;
 struct GlobalConstants;
 
@@ -33,9 +34,9 @@ public:
 	int Run();
 	LRESULT MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 	Engine(){}
-	~Engine();
+	virtual ~Engine();
 	void Init(const WindowInfo& info);
-	void Update(float dt);
+	virtual void Update(float dt);
 	void Render();
 public:
 	const WindowInfo& GetWindow() { return m_window; }
@@ -157,6 +158,7 @@ public:
 
 	vector<shared_ptr<DModel>> m_modelList;
 	vector<shared_ptr<Actor>> m_actorList;
+	vector<shared_ptr<Object>> m_objectList;
 
 	shared_ptr<Actor> m_activateActor;
 	// EDaerimGTA

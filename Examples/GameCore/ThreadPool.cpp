@@ -31,12 +31,10 @@ namespace hlab {
                 return;
             }
 
-            // 맨 앞의 job 을 뺀다.
             std::function<void()> job = std::move(jobs_.front());
             jobs_.pop();
             lock.unlock();
 
-            // 해당 job 을 수행한다 :)
             job();
         }
     }

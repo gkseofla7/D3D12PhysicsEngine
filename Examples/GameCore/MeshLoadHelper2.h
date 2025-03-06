@@ -38,7 +38,7 @@ struct MeshBlock
 class MeshLoadHelper
 {
 public:
-	static void LoadAllUnloadedModel();
+	static void LoadAllGpuUnloadedModel();
 	static bool GetMesh( const string& inPath, const string& inName, vector<DMesh>*& OutMesh);
 	static bool GetMesh(const string& InKey, vector<DMesh>*& OutMesh);
 	static bool GetBoundingMesh(const string& inPath, const string& inName, 
@@ -47,18 +47,20 @@ public:
 	static bool GetBoundingMesh(const string& InMeshKey,
 		DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
 		shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh);
-
-	static bool LoadModelData(const string& inPath, const string& inName);
-	static void LoadModel(const string& key);
+	static bool LoadModel(const string& inPath, const string& inName);
+	
 	static void LoadModel(const string& InKey, vector<dengine::MeshData> MeshDatas);
 	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants);
 	static bool GetMaterial(const string& InMeshKey, MaterialConstants& InConstants);
 	static string LoadBoxMesh(float InHalfExtent, bool bIndicesReverse = false);
 	static string LoadSquareMesh(const float scale = 1.0f,
 		const Vector2 texScale = Vector2(1.0f));
+private:
+	static bool LoadModelCpuData(const string& inPath, const string& inName);
+	static void LoadModelGpuData(const string& key);
 public:
-	static map<string, MeshBlock> MeshMap;
-	static std::mutex m_mtx;
+	static map<string, MeshBlock> s_meshMap;
+	static std::mutex s_meshMapGuard;
 };
 
 }

@@ -386,7 +386,7 @@ bool Engine::InitScene()
 
 void Engine::Update(float dt)
 {
-	MeshLoadHelper::LoadAllUnloadedModel();
+	MeshLoadHelper::LoadAllGpuUnloadedModel();
 
 	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
 
@@ -396,6 +396,10 @@ void Engine::Update(float dt)
 	for (shared_ptr<Actor> actor : m_actorList)
 	{
 		actor->Tick(dt);
+	}
+	for (shared_ptr<Object> object: m_objectList)
+	{
+		object->Tick(dt);
 	}
 	
 	m_skybox->Tick(dt);
@@ -432,6 +436,10 @@ void Engine::RenderOpaqueObjects()
 	}
 
 	m_defaultGraphicsPSO->UploadGraphicsPSO();
+	for (shared_ptr<Object> object : m_objectList)
+	{
+		object->Render();
+	}
 	m_ground->Render();
 }
 

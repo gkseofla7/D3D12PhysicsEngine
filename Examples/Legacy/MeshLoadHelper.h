@@ -39,7 +39,7 @@ struct MeshBlock
 class MeshLoadHelper
 {
 public:
-	static void LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
+	static void LoadAllGpuUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context);
 	static bool GetMesh( const string& inPath, const string& inName, vector<Mesh>*& OutMesh);
 	static bool GetMesh(const string& InKey, vector<Mesh>*& OutMesh);
 	static bool GetBoundingMesh(const string& inPath, const string& inName, 
@@ -49,7 +49,7 @@ public:
 		DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
 		shared_ptr<Mesh>& outSphereMesh, shared_ptr<Mesh>& outBoxMesh);
 
-	static bool LoadModelData(const string& inPath, const string& inName);
+	static bool LoadModel(const string& inPath, const string& inName);
 	static void LoadModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context,const string& key);
 	static bool GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants);
 	static bool GetMaterial(const string& InMeshKey, MaterialConstants& InConstants);

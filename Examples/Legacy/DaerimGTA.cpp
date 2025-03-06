@@ -170,7 +170,7 @@ void DaerimGTA::Update(float dt) {
 
     AppBase::Update(dt);
      
-    MeshLoadHelper::LoadAllUnloadedModel(m_device, m_context);
+    MeshLoadHelper::LoadAllGpuUnloadedModel(m_device, m_context);
     //m_wizardActor->Update(m_device,m_context,dt);
    
     // 이하 물리엔진 관련

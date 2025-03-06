@@ -10,8 +10,8 @@
 #include <codecvt>
 namespace dengine {
 using namespace DirectX;
-map<string, MeshBlock> MeshLoadHelper::MeshMap;
-std::mutex MeshLoadHelper::m_mtx;
+map<string, MeshBlock> MeshLoadHelper::s_meshMap;
+std::mutex MeshLoadHelper::s_meshMapGuard;
 std::wstring string_to_wstring(const std::string& str) {
     std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
     return converter.from_bytes(str);
@@ -62,40 +62,24 @@ AnimationData ReadAnimationFromFile2(string path, string name)
 	return ani;
 }
 
-void MeshLoadHelper::LoadAllUnloadedModel()
+void MeshLoadHelper::LoadAllGpuUnloadedModel()
 {
-    for (auto& Pair : MeshMap)
+    for (auto& Pair : s_meshMap)
     {
         MeshBlock& mBloock = Pair.second;
         if (mBloock.MeshDataLoadType == hlab::ELoadType::Loading && mBloock.Loader._Is_ready() == true)
         {
             hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
             auto func = [&Pair]() {
-                return LoadModel(Pair.first); };
+                return LoadModelGpuData(Pair.first); };
             tPool.EnqueueJob(func);
         } 
     }
 }
-bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
-{
-    // NOTICE. 메인 스레드에서만 실행중이라 아직은 동시 접근이 안됨
-	string key = inPath + inName;
-	if (MeshMap.find(key) == MeshMap.end())
-	{
-		MeshMap[key] = MeshBlock();
-         
-        MeshBlock& meshBlocks = MeshMap[key];
-        meshBlocks.PathName = inPath;
-        meshBlocks.FileName = inName;
 
-        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-        auto func = [&meshBlocks]() {
-            return CreateMeshData(meshBlocks); };
-		MeshMap[key].Loader = tPool.EnqueueJob(func);
-		MeshMap[key].MeshDataLoadType = hlab::ELoadType::Loading;
-		return false;
-	}
-    return MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loaded;
+bool MeshLoadHelper::LoadModel(const string& inPath, const string& inName)
+{
+    return LoadModelCpuData(inPath, inName);
 }
 bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
 {
@@ -105,66 +89,188 @@ bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, Mat
 
 bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
 {
-    if (MeshMap.find(InMeshKey) == MeshMap.end())
+    if (s_meshMap.find(InMeshKey) == s_meshMap.end())
     {
         return false;
     }
-    if (MeshMap[InMeshKey].MeshDataLoadType != hlab::ELoadType::Loaded)
+    if (s_meshMap[InMeshKey].MeshDataLoadType != hlab::ELoadType::Loaded)
     {
         return false;
     }
-    InConstants.useAlbedoMap = MeshMap[InMeshKey].useAlbedoMap;
-    InConstants.useAOMap = MeshMap[InMeshKey].useAOMap;
-    InConstants.useEmissiveMap = MeshMap[InMeshKey].useEmissiveMap;
-    InConstants.useMetallicMap = MeshMap[InMeshKey].useMetalicMap;
-    InConstants.useNormalMap = MeshMap[InMeshKey].useNormalMap;
-    InConstants.useRoughnessMap = MeshMap[InMeshKey].useRoughnessMap;
+    InConstants.useAlbedoMap = s_meshMap[InMeshKey].useAlbedoMap;
+    InConstants.useAOMap = s_meshMap[InMeshKey].useAOMap;
+    InConstants.useEmissiveMap = s_meshMap[InMeshKey].useEmissiveMap;
+    InConstants.useMetallicMap = s_meshMap[InMeshKey].useMetalicMap;
+    InConstants.useNormalMap = s_meshMap[InMeshKey].useNormalMap;
+    InConstants.useRoughnessMap = s_meshMap[InMeshKey].useRoughnessMap;
     return true;
 }
-void MeshLoadHelper::LoadModel(const string& key)
+
+void MeshLoadHelper::LoadModel(const string& InKey, vector<dengine::MeshData> MeshDatas)
+{
+    if (s_meshMap.find(InKey) != s_meshMap.end())
+    {
+        return;
+    }
+    std::vector<MeshData>& meshDatas = s_meshMap[InKey].MeshDatas;
+    meshDatas = MeshDatas;
+    s_meshMap[InKey].MeshDataLoadType = hlab::ELoadType::Loaded;
+    LoadModelGpuData(InKey);
+}
+
+bool MeshLoadHelper::GetMesh(const string& inPath, const string& inName, vector<DMesh>*& OutMesh)
+{
+    string key = inPath + inName;
+    return GetMesh(key, OutMesh);
+}
+
+bool MeshLoadHelper::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
+{
+    if (s_meshMap.find(InKey) == s_meshMap.end())
+    {
+        return false;
+    }
+    if (s_meshMap[InKey].MeshLoadType != hlab::ELoadType::Loaded)
+    {
+        return false;
+    }
+    OutMesh = &(s_meshMap[InKey].Meshes);
+    return true;
+}
+
+bool MeshLoadHelper::GetBoundingMesh(const string& inPath, const string& inName, 
+    DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
+    shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
+{
+    string key = inPath + inName;
+    return GetBoundingMesh(key, outSphere, outBox, outSphereMesh, outBoxMesh);
+}
+bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
+    DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
+    shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
+{
+    if (s_meshMap.find(InMeshKey) == s_meshMap.end())
+    {
+        return false;
+    }
+    if (s_meshMap[InMeshKey].MeshLoadType != hlab::ELoadType::Loaded)
+    {
+        return false;
+    }
+
+    outBox = s_meshMap[InMeshKey].boundingBox;
+    outBoxMesh = s_meshMap[InMeshKey].boundingBoxMesh;
+    outSphere = s_meshMap[InMeshKey].boundingSphere;
+    outSphereMesh = s_meshMap[InMeshKey].boundingSphereMesh;
+
+    return true;
+}
+string MeshLoadHelper::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
+{
+    string Key = "Box"  + std::to_string(InHalfExtent);
+    if (s_meshMap.find(Key) == s_meshMap.end())
+    {
+        std::vector<MeshData>& meshDatas = s_meshMap[Key].MeshDatas;
+        meshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
+        if (bIndicesReverse)
+        {
+            std::reverse(meshDatas[0].indices.begin(), meshDatas[0].indices.end());
+        }
+        s_meshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
+
+        auto func = [Key]() {
+            return LoadModelGpuData(Key); };
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+       tPool.EnqueueJob(func);
+    }
+    return Key;
+}
+
+string MeshLoadHelper::LoadSquareMesh(const float scale, const Vector2 texScale)
+{
+    // TODO. texScale도 키로
+    string Key = "Square" + std::to_string(scale);
+    if (s_meshMap.find(Key) == s_meshMap.end())
+    {
+        std::vector<MeshData>& meshDatas = s_meshMap[Key].MeshDatas;
+        meshDatas = { GeometryGenerator::MakeSquare(scale, texScale) };
+        s_meshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
+
+        auto func = [Key]() {
+            return LoadModelGpuData(Key); };
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+        tPool.EnqueueJob(func);
+    }
+    return Key;
+}
+
+bool MeshLoadHelper::LoadModelCpuData(const string& inPath, const string& inName)
+{
+    // NOTICE. 메인 스레드에서만 실행중이라 아직은 동시 접근이 안됨
+    string key = inPath + inName;
+    if (s_meshMap.find(key) == s_meshMap.end())
+    {
+        s_meshMap[key] = MeshBlock();
+
+        MeshBlock& meshBlocks = s_meshMap[key];
+        meshBlocks.PathName = inPath;
+        meshBlocks.FileName = inName;
+
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+        auto func = [&meshBlocks]() {
+            return CreateMeshData(meshBlocks); };
+        s_meshMap[key].Loader = tPool.EnqueueJob(func);
+        s_meshMap[key].MeshDataLoadType = hlab::ELoadType::Loading;
+        return false;
+    }
+    return s_meshMap[key].MeshDataLoadType == hlab::ELoadType::Loaded;
+}
+
+
+void MeshLoadHelper::LoadModelGpuData(const string& key)
 {
     {
-        std::lock_guard<std::mutex> lock(MeshLoadHelper::m_mtx);
+        std::lock_guard<std::mutex> lock(MeshLoadHelper::s_meshMapGuard);
 
-        // MeshData 로드 안됨
-        if (MeshMap.find(key) == MeshMap.end()
-            || MeshMap[key].MeshDataLoadType == hlab::ELoadType::NotLoaded)
+        // cpu 데이터 로드 안됨
+        if (s_meshMap.find(key) == s_meshMap.end()
+            || s_meshMap[key].MeshDataLoadType == hlab::ELoadType::NotLoaded)
         {
             return;
         }
 
-        // MeshData 로딩중
-        if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && MeshMap[key].Loader._Is_ready() == false)
+        // cpu 데이터 로딩중
+        if (s_meshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && s_meshMap[key].Loader._Is_ready() == false)
         {
             return;
         }
-        // 이미 모델 로딩중 or Loaded
-        if (MeshMap[key].MeshLoadType == hlab::ELoadType::Loading
-            || MeshMap[key].MeshLoadType == hlab::ELoadType::Loaded)
+        // 이미 gpu 데이터 로딩중 or Loaded
+        if (s_meshMap[key].MeshLoadType == hlab::ELoadType::Loading
+            || s_meshMap[key].MeshLoadType == hlab::ELoadType::Loaded)
         {
             return;
         }
-        MeshMap[key].MeshLoadType = hlab::ELoadType::Loading;
+        s_meshMap[key].MeshLoadType = hlab::ELoadType::Loading;
     }
 
-    std::vector<MeshData>& meshDatas = MeshMap[key].MeshDatas;
-    if (MeshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && MeshMap[key].Loader._Is_ready() == true)
+    std::vector<MeshData>& meshDatas = s_meshMap[key].MeshDatas;
+    if (s_meshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && s_meshMap[key].Loader._Is_ready() == true)
     {
-        meshDatas = MeshMap[key].Loader.get();
-        MeshMap[key].MeshDataLoadType = hlab::ELoadType::Loaded;
+        meshDatas = s_meshMap[key].Loader.get();
+        s_meshMap[key].MeshDataLoadType = hlab::ELoadType::Loaded;
     }
 
-    MeshBlock& meshBlock = MeshMap[key];
+    MeshBlock& meshBlock = s_meshMap[key];
     vector<DMesh>& meshes = meshBlock.Meshes;
     int index = 0;
-    for (const auto& meshData : meshDatas) { 
-        if (meshes.size()<= index)
+    for (const auto& meshData : meshDatas) {
+        if (meshes.size() <= index)
         {
             meshes.push_back(DMesh());
-            
+
         }
 
-        DMesh& newMesh = meshes[index]; 
+        DMesh& newMesh = meshes[index];
         if (meshData.skinnedVertices.size() > 0)
         {
             D3D12Utils::CreateVertexBuffer(DEVICE, meshData.skinnedVertices,
@@ -186,11 +292,11 @@ void MeshLoadHelper::LoadModel(const string& key)
                 newMesh.indexBuffer, newMesh.indexBufferView);
         }
 
-        if (!meshData.albedoTextureFilename.empty()) 
+        if (!meshData.albedoTextureFilename.empty())
         {
-            if (filesystem::exists(meshData.albedoTextureFilename)) 
+            if (filesystem::exists(meshData.albedoTextureFilename))
             {
-                if (!meshData.opacityTextureFilename.empty()) 
+                if (!meshData.opacityTextureFilename.empty())
                 {
                     ComPtr<ID3D12Resource> tex2D;
                     D3D12Utils::LoadAlbedoOpacityTexture(
@@ -202,7 +308,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                     newMesh.albedoTexture->CreateFromResource(tex2D);
                     newMesh.albedoTexture->SetRegister(SRV_REGISTER::t1);
                 }
-                else 
+                else
                 {
                     newMesh.albedoTexture = std::make_shared<Texture>();
                     wstring path = string_to_wstring(meshData.albedoTextureFilename);
@@ -211,16 +317,16 @@ void MeshLoadHelper::LoadModel(const string& key)
                 }
                 meshBlock.useAlbedoMap = true;
             }
-            else 
+            else
             {
                 cout << meshData.albedoTextureFilename
                     << " does not exists. Skip texture reading." << endl;
             }
         }
 
-        if (!meshData.emissiveTextureFilename.empty()) 
+        if (!meshData.emissiveTextureFilename.empty())
         {
-            if (filesystem::exists(meshData.emissiveTextureFilename)) 
+            if (filesystem::exists(meshData.emissiveTextureFilename))
             {
                 newMesh.emissiveTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.emissiveTextureFilename);
@@ -228,7 +334,7 @@ void MeshLoadHelper::LoadModel(const string& key)
                 newMesh.emissiveTexture->SetRegister(SRV_REGISTER::t5);
                 meshBlock.useEmissiveMap = true;
             }
-            else 
+            else
             {
                 cout << meshData.emissiveTextureFilename
                     << " does not exists. Skip texture reading." << endl;
@@ -236,7 +342,7 @@ void MeshLoadHelper::LoadModel(const string& key)
         }
 
         if (!meshData.normalTextureFilename.empty()) {
-            if (filesystem::exists(meshData.normalTextureFilename)) 
+            if (filesystem::exists(meshData.normalTextureFilename))
             {
                 newMesh.normalTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.normalTextureFilename);
@@ -251,7 +357,7 @@ void MeshLoadHelper::LoadModel(const string& key)
         }
 
         if (!meshData.heightTextureFilename.empty()) {
-            if (filesystem::exists(meshData.heightTextureFilename)) 
+            if (filesystem::exists(meshData.heightTextureFilename))
             {
                 newMesh.heightTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.heightTextureFilename);
@@ -264,9 +370,9 @@ void MeshLoadHelper::LoadModel(const string& key)
                     << " does not exists. Skip texture reading." << endl;
             }
         }
-         
+
         if (!meshData.aoTextureFilename.empty()) {
-            if (filesystem::exists(meshData.aoTextureFilename)) 
+            if (filesystem::exists(meshData.aoTextureFilename))
             {
                 newMesh.aoTexture = std::make_shared<Texture>();
                 wstring path = string_to_wstring(meshData.aoTextureFilename);
@@ -286,7 +392,7 @@ void MeshLoadHelper::LoadModel(const string& key)
             !meshData.roughnessTextureFilename.empty()) {
 
             if (filesystem::exists(meshData.metallicTextureFilename) &&
-                filesystem::exists(meshData.roughnessTextureFilename)) 
+                filesystem::exists(meshData.roughnessTextureFilename))
             {
                 if (meshData.metallicTextureFilename == meshData.roughnessTextureFilename)
                 {
@@ -371,104 +477,9 @@ void MeshLoadHelper::LoadModel(const string& key)
         D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
             meshBlock.boundingSphereMesh->indexBuffer, meshBlock.boundingSphereMesh->indexBufferView);
     }
-    MeshMap[key].MeshLoadType = hlab::ELoadType::Loaded;
+    s_meshMap[key].MeshLoadType = hlab::ELoadType::Loaded;
 }
 
-void MeshLoadHelper::LoadModel(const string& InKey, vector<dengine::MeshData> MeshDatas)
-{
-    if (MeshMap.find(InKey) != MeshMap.end())
-    {
-        return;
-    }
-    std::vector<MeshData>& meshDatas = MeshMap[InKey].MeshDatas;
-    meshDatas = MeshDatas;
-    MeshMap[InKey].MeshDataLoadType = hlab::ELoadType::Loaded;
-    LoadModel(InKey);
 }
 
-bool MeshLoadHelper::GetMesh(const string& inPath, const string& inName, vector<DMesh>*& OutMesh)
-{
-    string key = inPath + inName;
-    return GetMesh(key, OutMesh);
-}
 
-bool MeshLoadHelper::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
-{
-    if (MeshMap.find(InKey) == MeshMap.end())
-    {
-        return false;
-    }
-    if (MeshMap[InKey].MeshLoadType != hlab::ELoadType::Loaded)
-    {
-        return false;
-    }
-    OutMesh = &(MeshMap[InKey].Meshes);
-    return true;
-}
-
-bool MeshLoadHelper::GetBoundingMesh(const string& inPath, const string& inName, 
-    DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
-    shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
-{
-    string key = inPath + inName;
-    return GetBoundingMesh(key, outSphere, outBox, outSphereMesh, outBoxMesh);
-}
-bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
-    DirectX::BoundingSphere& outSphere, DirectX::BoundingBox& outBox,
-    shared_ptr<DMesh>& outSphereMesh, shared_ptr<DMesh>& outBoxMesh)
-{
-    if (MeshMap.find(InMeshKey) == MeshMap.end())
-    {
-        return false;
-    }
-    if (MeshMap[InMeshKey].MeshLoadType != hlab::ELoadType::Loaded)
-    {
-        return false;
-    }
-
-    outBox = MeshMap[InMeshKey].boundingBox;
-    outBoxMesh = MeshMap[InMeshKey].boundingBoxMesh;
-    outSphere = MeshMap[InMeshKey].boundingSphere;
-    outSphereMesh = MeshMap[InMeshKey].boundingSphereMesh;
-
-    return true;
-}
-string MeshLoadHelper::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
-{
-    string Key = "Box"  + std::to_string(InHalfExtent);
-    if (MeshMap.find(Key) == MeshMap.end())
-    {
-        std::vector<MeshData>& meshDatas = MeshMap[Key].MeshDatas;
-        meshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
-        if (bIndicesReverse)
-        {
-            std::reverse(meshDatas[0].indices.begin(), meshDatas[0].indices.end());
-        }
-        MeshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
-
-        auto func = [Key]() {
-            return LoadModel(Key); };
-        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-       tPool.EnqueueJob(func);
-    }
-    return Key;
-}
-
-string MeshLoadHelper::LoadSquareMesh(const float scale, const Vector2 texScale)
-{
-    // TODO. texScale도 키로
-    string Key = "Square" + std::to_string(scale);
-    if (MeshMap.find(Key) == MeshMap.end())
-    {
-        std::vector<MeshData>& meshDatas = MeshMap[Key].MeshDatas;
-        meshDatas = { GeometryGenerator::MakeSquare(scale, texScale) };
-        MeshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
-
-        auto func = [Key]() {
-            return LoadModel(Key); };
-        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-        tPool.EnqueueJob(func);
-    }
-    return Key;
-}
-}

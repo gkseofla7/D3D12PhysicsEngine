@@ -56,7 +56,7 @@ AnimationData ReadAnimationFromFile(string path, string name)
 	return ani;
 }
 
-void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
+void MeshLoadHelper::LoadAllGpuUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<ID3D11DeviceContext>& context)
 {
     for (auto& Pair : MeshMap)
     {
@@ -71,7 +71,7 @@ void MeshLoadHelper::LoadAllUnloadedModel(ComPtr<ID3D11Device>& device, ComPtr<I
         } 
     }
 }
-bool MeshLoadHelper::LoadModelData( const string& inPath, const string& inName)
+bool MeshLoadHelper::LoadModel( const string& inPath, const string& inName)
 {
 	string key = inPath + inName;
 	if (MeshMap.find(key) == MeshMap.end())

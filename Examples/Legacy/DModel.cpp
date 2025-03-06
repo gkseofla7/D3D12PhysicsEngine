@@ -47,7 +47,7 @@ namespace hlab {
         m_meshConsts.Initialize(device);
         m_materialConsts.Initialize(device);
 
-        if (MeshLoadHelper::LoadModelData(basePath, filename))
+        if (MeshLoadHelper::LoadModel(basePath, filename))
         {
             MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
         }

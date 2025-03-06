@@ -43,7 +43,7 @@ void DModel::Initialize(const std::string& basePath,
     m_meshConsts.Init(CBV_REGISTER::b1, SWAP_CHAIN_BUFFER_COUNT);
     m_materialConsts.Init(CBV_REGISTER::b2, SWAP_CHAIN_BUFFER_COUNT);
 
-    if (MeshLoadHelper::LoadModelData(basePath, filename))
+    if (MeshLoadHelper::LoadModel(basePath, filename))
     {
         MeshLoadHelper::GetMaterial(m_basePath, m_filename, m_materialConsts.GetCpu());
     }
@@ -111,15 +111,6 @@ void DModel::SetDirection(const Vector3& inDirection)
     float theta = acos(dir3.Dot(inDirection) / (dir3.Length() * inDirection.Length()));
     UpdateRotation(Matrix::CreateRotationY(theta));
 }
-//GraphicsPSO2& DModel::GetPSO() {
-//    return Graphics::defaultSolidPSO;
-//}
-
-//GraphicsPSO2& DModel::GetDepthOnlyPSO() { return Graphics::depthOnlyPSO; }
-//
-//GraphicsPSO2& DModel::GetReflectPSO(const bool wired) {
-//    return wired ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO;
-//}
  
 void DModel::Render()
 { 
@@ -222,7 +213,7 @@ bool DModel::LoadMesh()
     {
         return true;
     }
-    // TODO. UpdateConstantBuffers가 아닌 따로 Update 함수로 빼내는게 좋다
+
     if (m_meshKey.size() == 0)
     {
         m_meshKey = m_basePath + m_filename;

@@ -107,5 +107,4 @@ namespace hlab {
 
         return job_result_future;
     }
-}  // namespace ThreadPool
-//#include "ThreadPool.hpp"
+}

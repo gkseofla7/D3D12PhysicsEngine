@@ -31,9 +31,6 @@ public:
     void SetDirection(const Vector3& inDirection);
     Vector3 GetWorldPosition() { return m_worldRow.Translation(); }
     Vector3 GetDirection() { return m_direction; }
-    //virtual GraphicsPSO2& GetPSO();
-    //virtual GraphicsPSO2& GetDepthOnlyPSO();
-    //virtual GraphicsPSO2& GetReflectPSO(const bool wired);
 
     virtual void Render();
     virtual void UpdateAnimation(string clipId, int frame, int type = 0);
