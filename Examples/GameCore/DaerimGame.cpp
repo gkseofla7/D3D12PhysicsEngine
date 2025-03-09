@@ -4,6 +4,7 @@
 #include "bullet/btBulletCollisionCommon.h"
 #include "bullet/BulletCollision/btBulletCollisionCommon.h"
 #include "Object2.h"
+#include "nvtx3/nvToolsExt.h"
 namespace dengine {
 
 using namespace std;
@@ -49,6 +50,7 @@ void DaerimGame::InitPhysics(bool interactive)
 }
 
 void DaerimGame::Update(float dt) {
+    nvtxRangePushA("Update");
     Engine::Update(dt);
 
     // 물리엔진 관련
@@ -92,6 +94,7 @@ void DaerimGame::Update(float dt) {
             }
         }
     }
+    nvtxRangePop();
 }
 
 

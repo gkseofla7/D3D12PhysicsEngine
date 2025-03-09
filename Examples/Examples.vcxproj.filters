@@ -483,9 +483,6 @@
     <ClInclude Include="GameCore\ThreadPool.h">
       <Filter>GameCore</Filter>
     </ClInclude>
-    <ClInclude Include="GameCore\ThreadPool.hpp">
-      <Filter>GameCore</Filter>
-    </ClInclude>
     <ClInclude Include="Legacy\Example_TEMPLATE.h">
       <Filter>Legacy</Filter>
     </ClInclude>

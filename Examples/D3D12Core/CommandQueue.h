@@ -18,14 +18,15 @@ public:
 	void Init(ComPtr<ID3D12Device> device);
 	void WaitSync();
 	void WaitSync(uint64 fenceValue);
+	void WaitSyncGPU(uint64 fenceValue);
 	void WaitFrameSync(int frameIndex);
+	void WaitGPUResourceSync();
 	void FenceFrame(int index);
 	uint64 Fence();
 
 	void RenderBegin();
 	void RenderEnd();
-
-	void FlushResourceCommandQueue(ResourceCommandList& rscCommandList);
+	void FlushResourceCommandQueue(ResourceCommandList& rscCommandList, bool bBlocking = false);
 
 	void SetSwapChain(shared_ptr<SwapChain>	swapChain) { m_swapChain = swapChain; }
 
@@ -49,6 +50,8 @@ private:
 	HANDLE								m_fenceEvent = INVALID_HANDLE_VALUE;
 
 	std::mutex m_fenceMutex;
+
+	std::atomic<uint64> m_lastResUploadFenceValue = 0;
 
 	shared_ptr<SwapChain>		m_swapChain;
 };

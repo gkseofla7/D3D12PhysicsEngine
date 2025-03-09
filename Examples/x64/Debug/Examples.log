@@ -1,5 +1,4 @@
-﻿  ActorStateFactory.cpp
-  MoveState.cpp
-  Wizard.cpp
-C:\Users\DaerimHan\Desktop\GraphicsProject\d3d11DaerimPhysicsEngine\Examples\Wizard.cpp(228,61): warning C4305: '인수': 'double'에서 'float'(으)로 잘립니다.
+﻿  RootSignature.cpp
   Examples.vcxproj -> C:\Users\DaerimHan\Desktop\GraphicsProject\d3d11DaerimPhysicsEngine\Examples\x64\Debug\Examples.exe
+  'pwsh.exe'은(는) 내부 또는 외부 명령, 실행할 수 있는 프로그램, 또는
+  배치 파일이 아닙니다.

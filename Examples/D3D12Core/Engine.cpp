@@ -9,6 +9,9 @@
 #include "GraphicsPSO2.h"
 #include "Samplers2.h"
 #include "ConstantBuffer.h"
+#include <pix.h>
+#include "nvtx3/nvToolsExt.h"
+// 아래는 추후 다 제거 예정
 #include "../GameCore/DSkinnedMeshModel2.h"
 #include "../GameCore/MeshLoadHelper2.h"
 #include "../GameCore/GeometryGenerator2.h"
@@ -61,6 +64,7 @@ Engine::~Engine()
 
 	DestroyWindow(m_window.hwnd);
 }
+
 void Engine::Init(const WindowInfo& info)
 {
 	m_window = info;
@@ -70,6 +74,8 @@ void Engine::Init(const WindowInfo& info)
 	InitGUI();
 	InitScene();
 }
+
+
 int Engine::Run()
 {
 #ifdef _DEBUG
@@ -321,7 +327,7 @@ bool Engine::InitScene()
 	InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
-	for(int i = 0; i< 1; i++)
+	for(int i = 0; i< 30; i++)
 	{
 		std::string path = "../Assets/Characters/Mixamo/";
 		std::string characterName = "character.fbx";
@@ -388,15 +394,18 @@ void Engine::Update(float dt)
 {
 	MeshLoadHelper::LoadAllGpuUnloadedModel();
 
+	nvtxRangePushA("Wait BackBuffer Frame Ready");
 	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
+	nvtxRangePop();
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
-
 	//m_wizard->Tick(dt);
+	nvtxRangePushA("ActorTick");
 	for (shared_ptr<Actor> actor : m_actorList)
 	{
 		actor->Tick(dt);
 	}
+	nvtxRangePop();
 	for (shared_ptr<Object> object: m_objectList)
 	{
 		object->Tick(dt);
@@ -411,18 +420,18 @@ void Engine::Update(float dt)
 
 void Engine::Render()
 {
+
 	RenderBegin();
-	
 	RenderShadowMaps();
-
 	RenderOpaqueObjects();
-
 	PostRender();
 	RenderEnd(); 
+
 }
 
 void Engine::RenderOpaqueObjects()
 {
+	nvtxRangePushA("RenderOpaqueObjects");
 	GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->OMSetRenderTargets(1, 0);
 
 	m_skyboxGraphicsPSO->UploadGraphicsPSO();
@@ -441,6 +450,7 @@ void Engine::RenderOpaqueObjects()
 		object->Render();
 	}
 	m_ground->Render();
+	nvtxRangePop();
 }
 
 void Engine::RenderDeferred()
@@ -457,6 +467,7 @@ void Engine::RenderDeferred()
 
 void Engine::RenderShadowMaps()
 {
+	nvtxRangePushA("RenderShadowMap");
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitResourceToTarget();
 	const GlobalConstants& globalConstsCPU = m_globalConstsBuffer->GetCpu();
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
@@ -482,10 +493,12 @@ void Engine::RenderShadowMaps()
 	}
 	GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->WaitTargetToResource();
 	GetGraphicsDescHeap()->SetGlobalSRV(GetRTGroup(RENDER_TARGET_GROUP_TYPE::SHADOW)->GetShaderResourceHeap()->GetCPUDescriptorHandleForHeapStart(), SRV_REGISTER::t15, MAX_LIGHTS_COUNT);
+	nvtxRangePop();
 }
 
 void Engine::PostRender() 
 {
+	nvtxRangePushA("PostRender");
 	m_postEffectGraphicsPSO->UploadGraphicsPSO();
 	int8 backIndex = m_swapChain->GetBackBufferIndex();
 	ResolveMSAATexture(GRAPHICS_CMD_LIST.Get(), GetRTGroup(RENDER_TARGET_GROUP_TYPE::FLOAT)->GetRTTexture(0)->GetTex2D().Get()
@@ -501,17 +514,22 @@ void Engine::PostRender()
 	GEngine->GetGraphicsDescHeap()->CommitTableForSampling();
 
 	m_screenSquare->Render();
+	nvtxRangePop();
 }
 
 void Engine::RenderBegin()
 {
+	nvtxRangePushA("RenderBegin");
 	m_graphicsCmdQueue->RenderBegin();
+	nvtxRangePop();
 }
 
 void Engine::RenderEnd()
 {
+	nvtxRangePushA("RenderEnd");
 	SetMainViewport();
 	m_graphicsCmdQueue->RenderEnd();
+	nvtxRangePop();
 }
  
 void Engine::SetMainViewport()

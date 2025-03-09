@@ -291,7 +291,7 @@ void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
     rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
 
-    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
+    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList, true);
     // 해상도를 낮춰가며 밉맵 생성 필요하다면 추가 필요
    // context->GenerateMips(srv.Get());
 }
@@ -523,7 +523,7 @@ void D3D12Utils::LoadTextureImpl(const std::wstring path, const bool usSRGB)
 
     //  cpu 리소스 스레드가 gpu를 기다려야되는 문제..
     // -> WaitForSingleObject함수를 통해 Cpu Sleep으로 대기하기때문에 스레드 수를 좀더 늘려서 해결하는게 나을듯 보인다
-    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
+    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList, true);
     {
         std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
         s_resourceMap[path].resource = texture;
@@ -609,7 +609,7 @@ void D3D12Utils::LoadTextureNotUsingScratchImage(const std::wstring path, const 
         D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
     rscCommandList.m_resCmdList->ResourceBarrier(1, &resourceBarrier);
 
-    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
+    GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList, true);
 
     // 해상도를 낮춰가며 밉맵 생성
    // context->GenerateMips(srv.Get());

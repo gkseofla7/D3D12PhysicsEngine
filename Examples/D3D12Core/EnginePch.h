@@ -12,11 +12,10 @@
 #include <windows.h>
 #include <wrl/client.h> // ComPtr
 #include <unordered_map>
-#include <string>
 //#include "ThreadPool.h"
 #include <memory>
 #include <array>
-
+#include <comdef.h>  // _com_error를 사용하여 HRESULT 메시지 변환
 #include <filesystem>
 namespace fs = std::filesystem;
 
@@ -90,7 +89,7 @@ enum class RENDER_TARGET_GROUP_TYPE : uint8
 
 enum
 {
-	SWAP_CHAIN_BUFFER_COUNT = 2,
+	SWAP_CHAIN_BUFFER_COUNT = 3,
 	CBV_REGISTER_COUNT = CBV_REGISTER::END,
 	SRV_REGISTER_COUNT = static_cast<uint8>(SRV_REGISTER::END) - CBV_REGISTER_COUNT,
 	CBV_SRV_REGISTER_COUNT = CBV_REGISTER_COUNT + SRV_REGISTER_COUNT,
@@ -162,11 +161,21 @@ using DirectX::SimpleMath::Matrix;
 extern std::unique_ptr<class Engine> GEngine;
 
 
-inline void ThrowIfFailed(HRESULT hr) {
+//inline void ThrowIfFailed(HRESULT hr) {
+//	if (FAILED(hr)) {
+//		throw std::exception(); 
+//	}
+//}
+inline void ThrowIfFailed(HRESULT hr, const char* function = "", const char* file = "", int line = 0) {
 	if (FAILED(hr)) {
-		throw std::exception(); 
+
+		// HRESULT를 문자열로 변환
+		_com_error err(hr);
+		const TCHAR* errorMessage = err.ErrorMessage();
+		throw std::exception();
 	}
 }
+
 }
 /*
 		{

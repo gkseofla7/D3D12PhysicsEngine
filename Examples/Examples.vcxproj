@@ -122,7 +122,7 @@
       <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
       <DisableSpecificWarnings>4819</DisableSpecificWarnings>
       <AdditionalOptions>/D _SILENCE_ALL_CXX17_DEPRECATION_WARNINGS %(AdditionalOptions)</AdditionalOptions>
-      <AdditionalIncludeDirectories>C:\Users\DaerimHan\vcpkg\vcpkg\installed\x64-windows\include\bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v12.6\include;C:\Users\DaerimHan\vcpkg\vcpkg\installed\x64-windows\include\bullet;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -288,7 +288,6 @@
     <ClInclude Include="GameCore\PhysicsCore.h" />
     <ClInclude Include="GameCore\Scene.h" />
     <ClInclude Include="GameCore\ThreadPool.h" />
-    <ClInclude Include="GameCore\ThreadPool.hpp" />
     <ClInclude Include="GameCore\Vertex.h" />
     <ClInclude Include="GameCore\Wizard2.h" />
     <ClInclude Include="GameDef.h" />

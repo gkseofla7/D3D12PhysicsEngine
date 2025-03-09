@@ -2,6 +2,7 @@
 #include "EnginePch.h"
 #include "Engine.h"
 #include "CommandQueue.h"
+
 namespace dengine {
 template <typename T_ELEMENT>
 class StructuredBuffer
@@ -87,7 +88,6 @@ public:
 			return;
 		}
 		m_structuredIndex = (m_structuredIndex + 1) % m_structuredCount;
-		ComPtr<ID3D12Resource> readBuffer = nullptr;
 		UINT bufferSize = GetBufferSize();
 		D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
 		D3D12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -98,13 +98,13 @@ public:
 			&desc,
 			D3D12_RESOURCE_STATE_GENERIC_READ,
 			nullptr,
-			IID_PPV_ARGS(&readBuffer));
+			IID_PPV_ARGS(&(m_readBuffers[m_structuredIndex])));
 
 		uint8* dataBegin = nullptr;
 		D3D12_RANGE readRange{ 0, 0 };
-		readBuffer->Map(0, &readRange, reinterpret_cast<void**>(&dataBegin));
+		m_readBuffers[m_structuredIndex]->Map(0, &readRange, reinterpret_cast<void**>(&dataBegin));
 		memcpy(dataBegin, reinterpret_cast<void*>(&m_cpu[0]), bufferSize);
-		readBuffer->Unmap(0, nullptr);
+		m_readBuffers[m_structuredIndex]->Unmap(0, nullptr);
 
 		// Common -> Copy
 		ResourceCommandList rscCommandList = RESOURCE_CMD_LIST;
@@ -116,7 +116,7 @@ public:
 		}
 
 		uint64 structuredOffset = m_structuredIndex * m_elementCount*m_elementSize;
-		rscCommandList.m_resCmdList->CopyBufferRegion(m_buffer.Get(), structuredOffset, readBuffer.Get(), 0, bufferSize);
+		rscCommandList.m_resCmdList->CopyBufferRegion(m_buffer.Get(), structuredOffset, m_readBuffers[m_structuredIndex].Get(), 0, bufferSize);
 
 		// Copy -> Common
 		{
@@ -126,7 +126,6 @@ public:
 		}
 
 		GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
-
 		m_resourceState = D3D12_RESOURCE_STATE_COMMON;
 	}
 
@@ -167,6 +166,7 @@ private:
 	uint32						m_structuredIndex = 0;
 	D3D12_RESOURCE_STATES		m_resourceState = {};
 
+	std::array<ComPtr<ID3D12Resource>, SWAP_CHAIN_BUFFER_COUNT> m_readBuffers;
 private:
 	D3D12_CPU_DESCRIPTOR_HANDLE m_srvHeapBegin = {};
 	D3D12_CPU_DESCRIPTOR_HANDLE _uavHeapBegin = {};

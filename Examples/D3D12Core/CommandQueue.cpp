@@ -3,8 +3,10 @@
 #include "RenderTargetGroup.h"
 #include "Engine.h"
 #include "Samplers2.h"
-
+#include "Device.h"
+#include "nvtx3/nvToolsExt.h"
 namespace dengine {
+
 GraphicsCommandQueue::~GraphicsCommandQueue()
 {
 	::CloseHandle(m_fenceEvent);
@@ -15,7 +17,6 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device)
 	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
 	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_cmdQueue));
 	
 	for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
@@ -51,6 +52,7 @@ void GraphicsCommandQueue::WaitSync()
 
 void GraphicsCommandQueue::WaitSync(uint64 fenceValue)
 {
+	nvtxRangePushA("WaitSync");
 	static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 	// Wait until the GPU has completed commands up to this fence point.
 	if (m_fence->GetCompletedValue() < m_fenceValue)
@@ -61,10 +63,19 @@ void GraphicsCommandQueue::WaitSync(uint64 fenceValue)
 		// Wait until the GPU hits current fence event is fired.
 		::WaitForSingleObject(threadFenceEvent, INFINITE);
 	}
+	nvtxRangePop();
 }
+void GraphicsCommandQueue::WaitSyncGPU(uint64 fenceValue)
+{
+	if (m_cmdQueue && fenceValue > m_fence->GetCompletedValue())
+	{
+		m_cmdQueue->Wait(m_fence.Get(), fenceValue);
+	}
 
+}
 void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
 {
+	nvtxRangePushA("WaitFrameSync");
 	// Wait until the GPU has completed commands up to this fence point.
 	if (m_fence->GetCompletedValue() < m_lastFenceValue[frameIndex])
 	{
@@ -74,8 +85,12 @@ void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
 		// Wait until the GPU hits current fence event is fired.
 		::WaitForSingleObject(m_fenceEvent, INFINITE);
 	}
+	nvtxRangePop();
 }
-
+void GraphicsCommandQueue::WaitGPUResourceSync()
+{
+	WaitSyncGPU(m_lastResUploadFenceValue);
+}
 void GraphicsCommandQueue::FenceFrame(int index)
 {
 	m_lastFenceValue[index] = Fence();
@@ -96,6 +111,8 @@ uint64 GraphicsCommandQueue::Fence()
 
 void GraphicsCommandQueue::RenderBegin()
 {
+	WaitGPUResourceSync();
+
 	const int8 backIndex = BACKBUFFER_INDEX;
 
 	m_cmdAlloc[backIndex]->Reset();
@@ -117,29 +134,29 @@ void GraphicsCommandQueue::RenderBegin()
 
 void GraphicsCommandQueue::RenderEnd()
 {
-	int8 backIndex = m_swapChain->GetBackBufferIndex();
-
 	D3D12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
 		GEngine->GetRTGroup(RENDER_TARGET_GROUP_TYPE::SWAP_CHAIN)->GetRTTexture(0)->GetTex2D().Get(),
 		D3D12_RESOURCE_STATE_RENDER_TARGET, // 외주 결과물
 		D3D12_RESOURCE_STATE_PRESENT); // 화면 출력
 
-	m_cmdList[backIndex]->ResourceBarrier(1, &barrier);
-	m_cmdList[backIndex]->Close();
+	m_cmdList[BACKBUFFER_INDEX]->ResourceBarrier(1, &barrier);
+	m_cmdList[BACKBUFFER_INDEX]->Close();
 
-	// 커맨드 리스트 수행
-	ID3D12CommandList* cmdListArr[] = { m_cmdList[backIndex].Get()};
+	UINT64 completedValue = m_fence->GetCompletedValue();
+	UINT64 expectedValue = m_lastFenceValue[BACKBUFFER_INDEX];
+	
+	ID3D12CommandList* cmdListArr[] = { m_cmdList[BACKBUFFER_INDEX].Get()};
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
-
 	m_swapChain->Present();
-	FenceFrame(backIndex);
+	FenceFrame(BACKBUFFER_INDEX);
 	//WaitSync();
 
 	m_swapChain->SwapIndex();
 }
 
-void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList)
+void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList, bool bBlocking)
 {
+	nvtxRangePushA("FlushResourceCommandQueue");
 	// CommandList는 여러 스레드가 동시에 접근 못함
 	rscCommandList.m_resCmdList->Close();
 
@@ -148,29 +165,54 @@ void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCom
 	// 스레드가 Pool로 들어가는 시점이 늦어지는 이슈
 	ID3D12CommandList* cmdListArr[] = { rscCommandList.m_resCmdList.Get() };
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
+	
 	uint64 fenceValue = Fence();
-
-	WaitSync(fenceValue);
-
-	rscCommandList.m_resCmdAlloc->Reset();
-	rscCommandList.m_resCmdList->Reset(rscCommandList.m_resCmdAlloc.Get(), nullptr);
+	if (bBlocking)
 	{
-		std::unique_lock<std::mutex> lock(m_rscMutex);
-		m_resCmdLists.push(rscCommandList);
+		WaitSync(fenceValue);
+		rscCommandList.m_resCmdAlloc->Reset();
+		rscCommandList.m_resCmdList->Reset(rscCommandList.m_resCmdAlloc.Get(), nullptr);
+		{
+			std::unique_lock<std::mutex> lock(m_rscMutex);
+			m_resCmdLists.push(rscCommandList);
+		}
+		m_rscCv.notify_one();
 	}
-	m_rscCv.notify_one();
+	else
+	{
+		m_lastResUploadFenceValue = fenceValue;
+		std::thread([=]() {
+			static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+			m_fence->SetEventOnCompletion(fenceValue, threadFenceEvent);
+			// GPU가 특정 FenceValue에 도달할 때까지 대기
+			WaitForSingleObject(threadFenceEvent, INFINITE);
+
+			rscCommandList.m_resCmdAlloc->Reset();
+			rscCommandList.m_resCmdList->Reset(rscCommandList.m_resCmdAlloc.Get(), nullptr);
+			{
+				std::unique_lock<std::mutex> lock(m_rscMutex);
+				m_resCmdLists.push(rscCommandList);
+			}
+			m_rscCv.notify_one();
+			}).detach();
+	}
+	nvtxRangePop();
 }
 
 ResourceCommandList GraphicsCommandQueue::GetResourceCmdList()
 {
-	while (true) 
+	std::unique_lock<std::mutex> lock(m_rscMutex);
+	if (m_resCmdLists.empty())
 	{
-		std::unique_lock<std::mutex> lock(m_rscMutex);
-		m_rscCv.wait(lock, [this]() { return !m_resCmdLists.empty(); });
-
-		ResourceCommandList rcsCommandList = m_resCmdLists.front();
-		m_resCmdLists.pop();
-		return rcsCommandList;
+		ResourceCommandList ResCommandList;
+		DEVICE->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
+		DEVICE->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, ResCommandList.m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&ResCommandList.m_resCmdList));
+		m_resCmdLists.push(ResCommandList);
 	}
+	//m_rscCv.wait(lock, [this]() { return !m_resCmdLists.empty(); });
+
+	ResourceCommandList rcsCommandList = m_resCmdLists.front();
+	m_resCmdLists.pop();
+	return rcsCommandList;
 }
 }
