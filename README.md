@@ -21,7 +21,7 @@ https://github.com/user-attachments/assets/fdc8105b-ccfd-490a-adb7-9cc72e77898a
   - 새 구현에서는 프레임별 리소스를 분리하여 다중 버퍼링(Multi-buffering) 방식으로 전환
   - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상
 - 최대한 CPU가 GPU 작업으로 Blocking 되지 않도록 고려
-  - https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9
+  - [https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9](https://daerimustudypage.notion.site/1b09eb57b07e8044a0cde073f58fd3ab)
 # 비동기 리소스 로딩
 - Mesh와 Animation 데이터를 비동기 로드:
     - MeshLoadHelper 클래스(MeshLoadHelper2.h)가 Mesh 로드를 담당.
