@@ -87,6 +87,11 @@ void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
 	}
 	nvtxRangePop();
 }
+
+void GraphicsCommandQueue::WaitFrameSyncGPU(int frameIndex)
+{
+	WaitSyncGPU(m_lastFenceValue[frameIndex]);
+}
 void GraphicsCommandQueue::WaitGPUResourceSync()
 {
 	WaitSyncGPU(m_lastResUploadFenceValue);

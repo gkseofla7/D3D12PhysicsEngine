@@ -20,6 +20,7 @@ public:
 	void WaitSync(uint64 fenceValue);
 	void WaitSyncGPU(uint64 fenceValue);
 	void WaitFrameSync(int frameIndex);
+	void WaitFrameSyncGPU(int frameIndex);
 	void WaitGPUResourceSync();
 	void FenceFrame(int index);
 	uint64 Fence();

@@ -2,7 +2,7 @@
 #include "EnginePch.h"
 #include "Engine.h"
 #include "CommandQueue.h"
-
+#include "nvtx3/nvToolsExt.h"
 namespace dengine {
 template <typename T_ELEMENT>
 class StructuredBuffer
@@ -62,7 +62,7 @@ public:
 			}
 
 		}
-
+		InitializeUploadBuffers();
 		//// CBV
 		//{
 		//	D3D12_DESCRIPTOR_HEAP_DESC cbvDesc = {};
@@ -80,7 +80,23 @@ public:
 		//}
 		m_init = true;
 	}
+	void InitializeUploadBuffers()
+	{
+		D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(GetBufferSize(), D3D12_RESOURCE_FLAG_NONE);
+		D3D12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
 
+		for (int i = 0; i < m_structuredCount; ++i)
+		{
+			DEVICE->CreateCommittedResource(
+				&heapProperties,
+				D3D12_HEAP_FLAG_NONE,
+				&desc,
+				D3D12_RESOURCE_STATE_GENERIC_READ,
+				nullptr,
+				IID_PPV_ARGS(&m_readBuffers[i])
+			);
+		}
+	}
 	void Upload()
 	{
 		if (m_init == false)
@@ -88,18 +104,8 @@ public:
 			return;
 		}
 		m_structuredIndex = (m_structuredIndex + 1) % m_structuredCount;
-		UINT bufferSize = GetBufferSize();
-		D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize, D3D12_RESOURCE_FLAG_NONE);
-		D3D12_HEAP_PROPERTIES heapProperties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-
-		DEVICE->CreateCommittedResource(
-			&heapProperties,
-			D3D12_HEAP_FLAG_NONE,
-			&desc,
-			D3D12_RESOURCE_STATE_GENERIC_READ,
-			nullptr,
-			IID_PPV_ARGS(&(m_readBuffers[m_structuredIndex])));
-
+		
+		const UINT bufferSize = GetBufferSize();
 		uint8* dataBegin = nullptr;
 		D3D12_RANGE readRange{ 0, 0 };
 		m_readBuffers[m_structuredIndex]->Map(0, &readRange, reinterpret_cast<void**>(&dataBegin));

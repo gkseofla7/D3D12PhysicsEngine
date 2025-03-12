@@ -3,6 +3,7 @@
 #include "../D3D12Core/EnginePch.h"
 #include "../D3D12Core/Device.h"
 #include "../D3D12Core/D3D12Utils.h"
+#include "nvtx3/nvToolsExt.h"
 namespace dengine {
 using std::make_shared;
 DSkinnedMeshModel::DSkinnedMeshModel(const string& basePath, const string& filename)
@@ -42,7 +43,9 @@ void DSkinnedMeshModel::UploadBuffers()
     {
         return;
     }
+    nvtxRangePushA("m_boneTransformsUpload");
     m_boneTransforms->Upload();
+    nvtxRangePop();
 }
 
 void DSkinnedMeshModel::IntegrateRootTransformToWorldTransform()
