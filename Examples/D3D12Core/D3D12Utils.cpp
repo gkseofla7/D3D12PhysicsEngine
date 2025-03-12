@@ -57,7 +57,7 @@ void D3D12Utils::CreateVertexShader(
 
     UINT compileFlags = 0;
 #if defined(DEBUG) || defined(_DEBUG)
-    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+    //compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
     ComPtr<ID3DBlob> errorBlob;
@@ -75,7 +75,7 @@ void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device> device,
     ComPtr<ID3DBlob> errorBlob;
     UINT compileFlags = 0;
 #if defined(DEBUG) || defined(_DEBUG)
-    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+    //compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
     // 쉐이더의 시작점의 이름이 "main"인 함수로 지정

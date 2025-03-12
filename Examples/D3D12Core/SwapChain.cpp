@@ -1,4 +1,5 @@
 #include "SwapChain.h"
+#include "nvtx3/nvToolsExt.h"
 namespace dengine {
 void SwapChain::Init(const WindowInfo& info, ComPtr<ID3D12Device> device, ComPtr<IDXGIFactory> dxgi, ComPtr<ID3D12CommandQueue> cmdQueue)
 {
@@ -8,7 +9,9 @@ void SwapChain::Init(const WindowInfo& info, ComPtr<ID3D12Device> device, ComPtr
 void SwapChain::Present()
 {
 	// Present the frame.
+	nvtxRangePushA("Present");
 	m_swapChain->Present(1, 0);
+	nvtxRangePop();
 }
 
 void SwapChain::SwapIndex()

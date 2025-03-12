@@ -80,7 +80,7 @@ void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
 	if (m_fence->GetCompletedValue() < m_lastFenceValue[frameIndex])
 	{
 		// Fire event when GPU hits current fence.  
-		m_fence->SetEventOnCompletion(m_fenceValue, m_fenceEvent);
+		m_fence->SetEventOnCompletion(m_lastFenceValue[frameIndex], m_fenceEvent);
 
 		// Wait until the GPU hits current fence event is fired.
 		::WaitForSingleObject(m_fenceEvent, INFINITE);
@@ -144,9 +144,10 @@ void GraphicsCommandQueue::RenderEnd()
 
 	UINT64 completedValue = m_fence->GetCompletedValue();
 	UINT64 expectedValue = m_lastFenceValue[BACKBUFFER_INDEX];
-	
+	nvtxRangePushA("ExecuteCommandLists");
 	ID3D12CommandList* cmdListArr[] = { m_cmdList[BACKBUFFER_INDEX].Get()};
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
+	nvtxRangePop();
 	m_swapChain->Present();
 	FenceFrame(BACKBUFFER_INDEX);
 	//WaitSync();

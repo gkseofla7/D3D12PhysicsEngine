@@ -79,7 +79,7 @@ void Engine::Init(const WindowInfo& info)
 int Engine::Run()
 {
 #ifdef _DEBUG
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	//_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 	MSG msg = { 0 };
 	while (WM_QUIT != msg.message)
@@ -312,7 +312,7 @@ bool Engine::InitScene()
 		globalConstsCPU.lights[1].fallOffEnd = 20.0f;
 		globalConstsCPU.lights[1].radius = 0.02f;
 		globalConstsCPU.lights[1].type =
-			LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+			LIGHT_SPOT;// | LIGHT_SHADOW; // Point with shadow
 
 		// 조명 2는 꺼놓음
 		globalConstsCPU.lights[2].type = LIGHT_OFF;
@@ -394,9 +394,7 @@ void Engine::Update(float dt)
 {
 	MeshLoadHelper::LoadAllGpuUnloadedModel();
 
-	nvtxRangePushA("Wait BackBuffer Frame Ready");
 	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
-	nvtxRangePop();
 
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 	//m_wizard->Tick(dt);
@@ -420,7 +418,7 @@ void Engine::Update(float dt)
 
 void Engine::Render()
 {
-
+	//GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
 	RenderBegin();
 	RenderShadowMaps();
 	RenderOpaqueObjects();
