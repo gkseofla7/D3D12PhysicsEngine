@@ -23,52 +23,52 @@ https://github.com/user-attachments/assets/fdc8105b-ccfd-490a-adb7-9cc72e77898a
 - 최대한 CPU가 GPU 작업으로 Blocking 되지 않도록 고려
   - [https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9](https://daerimustudypage.notion.site/1b09eb57b07e8044a0cde073f58fd3ab)
 ![image](https://github.com/user-attachments/assets/815d2fa6-15c4-48d4-a53d-8dc72eb65a8d)
-## 🎯 비동기 리소스 로딩
+## 비동기 리소스 로딩
 
 ### ✅ Mesh 및 Animation 데이터 비동기 로딩
-📌 **비동기 로딩을 담당하는 헬퍼 클래스**
-- 🟢 `MeshLoadHelper` (`MeshLoadHelper2.h`) → **Mesh 로드 담당**
-- 🔵 `AnimHelper` (`AnimHelper2.h`) → **Animation 로드 담당**
-- ⚡ **Thread Pool 활용**하여 비동기 처리
+ **비동기 로딩을 담당하는 헬퍼 클래스**
+-  `MeshLoadHelper` (`MeshLoadHelper2.h`) → **Mesh 로드 담당**
+-  `AnimHelper` (`AnimHelper2.h`) → **Animation 로드 담당**
+-  **Thread Pool 활용**하여 비동기 처리
 
-### 🛠️ Resource Command Pool
-- 🎮 **리소스 로딩 스레드**가 **GPU 메모리 업로드 시**
+###  Resource Command Pool
+-  **리소스 로딩 스레드**가 **GPU 메모리 업로드 시**
 - **`Resource CommandList Pool`에서 명령 리스트(Command List)**를 가져와 **GPU 요청 처리**
 
 ---
 
-## 🧠 메모리 최적화
+##  메모리 최적화
 
-### 🎭 애니메이션 데이터 공유
-- 🏗️ **동일한 애니메이션 데이터를 사용하는 객체들은 CPU 메모리에서 공유**
-- 🎞️ **GPU 메모리에서는 개별적인 애니메이션 정보(예: Bone Weight, Local To World Matrix) 복사하여 사용**
+### 애니메이션 데이터 공유
+-  **동일한 애니메이션 데이터를 사용하는 객체들은 CPU 메모리에서 공유**
+-  **GPU 메모리에서는 개별적인 애니메이션 정보(예: Bone Weight, Local To World Matrix) 복사하여 사용**
 
-### 🔄 리소스 재사용 (`s_resourceMap`)
-- 🔁 **이미 로드된 리소스를 재사용**하여 **메모리 낭비 방지**
+### 리소스 재사용 (`s_resourceMap`)
+-  **이미 로드된 리소스를 재사용**하여 **메모리 낭비 방지**
 
 ---
 
-## 🎬 Actor State 시스템 (`ActorState.h`)
+##  Actor State 시스템 (`ActorState.h`)
 
-### 🎞️ 애니메이션 연동
-- 🎭 액터의 **상태(State)에 따라 자동으로 애니메이션 실행**
-- 🔗 **State와 Animation을 연결**하여 **상태 전환 시 애니메이션이 동기화**
+###  애니메이션 연동
+-  액터의 **상태(State)에 따라 자동으로 애니메이션 실행**
+-  **State와 Animation을 연결**하여 **상태 전환 시 애니메이션이 동기화**
 
-### 🎯 기능 구현
-- 🚀 **이동 로직 및 충돌 연출**  
+###  기능 구현
+-  **이동 로직 및 충돌 연출**  
   - 예: **Projectile 충돌 시 객체가 날아가는 효과 구현**
 
 ---
 
-## 🎯 Bullet3 물리 엔진 연동
+##  Bullet3 물리 엔진 연동
 
-### 🚀 왜 `PhysX` 대신 `Bullet3`?
-- ❌ **PhysX는 내부 코드를 볼 수 없음**
-- ✅ **Bullet3는 오픈소스이므로 모든 코드를 직접 확인 가능**
+###  왜 `PhysX` 대신 `Bullet3`?
+-  **PhysX는 내부 코드를 볼 수 없음**
+-  **Bullet3는 오픈소스이므로 모든 코드를 직접 확인 가능**
 
-### 🏹 현재 적용 사례
-- 🛠️ `Bullet3`를 활용한 **콜리전 체크**
-- 🔥 `FireBall` 충돌 시 **Collision 감지 후 FireBall 제거**
+###  현재 적용 사례
+-  `Bullet3`를 활용한 **콜리전 체크**
+-  `FireBall` 충돌 시 **Collision 감지 후 FireBall 제거**
 
 ---
 
