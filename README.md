@@ -23,8 +23,10 @@ https://github.com/user-attachments/assets/fdc8105b-ccfd-490a-adb7-9cc72e77898a
   - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상
 - 최대한 CPU가 GPU 작업으로 Blocking 되지 않도록 고려
   - [https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9](https://daerimustudypage.notion.site/1b09eb57b07e8044a0cde073f58fd3ab)
-![image](https://github.com/user-attachments/assets/815d2fa6-15c4-48d4-a53d-8dc72eb65a8d)
+ 
 ## 비동기 리소스 로딩
+![image](https://github.com/user-attachments/assets/815d2fa6-15c4-48d4-a53d-8dc72eb65a8d)
+
 
 ### ✅ Mesh 및 Animation 데이터 비동기 로딩
  **비동기 로딩을 담당하는 헬퍼 클래스**
