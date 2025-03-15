@@ -22,32 +22,41 @@ https://github.com/user-attachments/assets/fdc8105b-ccfd-490a-adb7-9cc72e77898a
   - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상
 - 최대한 CPU가 GPU 작업으로 Blocking 되지 않도록 고려
   - [https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9](https://daerimustudypage.notion.site/1b09eb57b07e8044a0cde073f58fd3ab)
-# 비동기 리소스 로딩
-- Mesh와 Animation 데이터를 비동기 로드:
-    - MeshLoadHelper 클래스(MeshLoadHelper2.h)가 Mesh 로드를 담당.
-    - AnimHelper 클래스(AnimHelper2.h)가 Animation 로드를 담당.
-- Thread Pool을 활용
-- Command List Pool 개발
-  - 리소스 로딩 스레드가 GPU 메모리 업로드 시, Resource CommandList Pool에서 명령 리스트(Command List)를 가져와 GPU 요청 처리.
+![image](https://github.com/user-attachments/assets/815d2fa6-15c4-48d4-a53d-8dc72eb65a8d)
+## 🎯 비동기 리소스 로딩
+
+### ✅ Mesh 및 Animation 데이터 비동기 로딩
+📌 **비동기 로딩을 담당하는 헬퍼 클래스**
+- 🟢 `MeshLoadHelper` (`MeshLoadHelper2.h`) → **Mesh 로드 담당**
+- 🔵 `AnimHelper` (`AnimHelper2.h`) → **Animation 로드 담당**
+- ⚡ **Thread Pool 활용**하여 비동기 처리
+
+### 🛠️ Resource Command Pool
+- 🎮 **리소스 로딩 스레드**가 **GPU 메모리 업로드 시**
+- **`Resource CommandList Pool`에서 명령 리스트(Command List)**를 가져와 **GPU 요청 처리**
+
+---
+
 # 메모리 최적화
 - 동일한 애니메이션 데이터를 사용하는 여러 객체는 CPU 메모리에서 데이터를 공유
 - 각 객체는 GPU 메모리에서 개별적인 애니메이션 정보(예: Bone Weight, Local To World Matrix)를 복사하여 사용.
-# Bullet3 물리 엔진 연동
-- physX를 사용하지 않은 이유는 내부 코드를 볼 수 없다고 들어 모든 코드를 들여댜볼 수 있는 bullet3를 사용
-- 현재 bullet3로 콜리전 체크해서 FireBall에 경우 Collision 발생시 FireBall를 제거하는 식으로 사용
+- s_resourceMap에서 리소스 재사용
 # Actor State 시스템(ActorState.h)
 - 애니메이션 연동
   - 액터의 상태(State)에 따라 자동으로 애니메이션을 실행하도록 구현.
   - State와 Animation을 연결하여 상태 전환 시 애니메이션이 동기화되도록 설계.
 - 기능 구현
   - 이동 로직 및 프로젝트 충돌 연출(예: Projectile 충돌 시 객체가 날아가는 효과 구현)
+# Bullet3 물리 엔진 연동
+- physX를 사용하지 않은 이유는 내부 코드를 볼 수 없다고 들어 모든 코드를 들여댜볼 수 있는 bullet3를 사용
+- 현재 bullet3로 콜리전 체크해서 FireBall에 경우 Collision 발생시 FireBall를 제거하는 식으로 사용
 # 애니메이션 시스템
 - 상체와 하체 애니메이션 분리:
   - 상체와 하체를 개별적으로 제어할 수 있는 애니메이션 분리 기능 추가.
 - 루트 모션 애니메이션:
   - 루트 모션 기반 애니메이션에서 이동한 Transform 값을 애니메이션 종료 시점에 **월드 좌표(World Transform)**에 합산하여 처리.
 # 앞으로 계획
-- 디퍼드 렌더링으로 교체
+- 디퍼드 렌더링으로 교체(빛 연산 없이 돌려봤을때 성능에 아직 큰 차이가 없어서 나중에 변경 예정)
 - 나무, 풀 등 추가
 - 액터에 대해 각 업데이트를 병렬처리로 수정하고, 각 액터마다 Tick을 Tick_Concurrency, Tick_GameThread 두개로 분리할 예정이다.
 - 물리에 관심이 있다보니, 좀 더 물리 관련 로직들을 짜고 싶다..
