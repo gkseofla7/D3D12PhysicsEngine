@@ -1,4 +1,28 @@
 # DaerimD3D12PhysicsEngine
+# 실행 유의사항
+
+본 프로젝트는 몇 가지 외부 라이브러리와 리소스 제한 사항으로 인해, 실행 전에 아래 내용을 꼭 확인해 주세요.
+
+## 주의사항
+- **Mixamo 파일**은 공유할 수 없는 관계로, 실행 시 텍스처 및 애니메이션 데이터를 정상적으로 로딩할 수 없는 문제가 발생할 수 있습니다.
+- 프로젝트는 **Direct3D 12** 기반으로 개발되었으며, 관련 라이브러리들이 사전에 설치되어 있어야 빌드 및 실행이 가능합니다.
+
+## 필수 라이브러리 설치
+
+다음 패키지들을 [vcpkg](https://github.com/microsoft/vcpkg)를 통해 설치해 주세요.
+
+```bash
+vcpkg install assimp:x64-windows
+vcpkg install directxtk[xaudio2-9]:x64-windows
+vcpkg install directxtex[openexr]:x64-windows
+vcpkg install directxmath:x64-windows
+vcpkg install fp16:x64-windows
+vcpkg install imgui[dx11-binding,win32-binding]:x64-windows   # ImGui 1.89.2 버전 사용
+vcpkg install glm:x64-windows
+vcpkg install directxmesh:x64-windows
+vcpkg install d3dx12:x64-windows
+vcpkg install bullet3:x64-windows
+```
 # 영상
 # 이전 D3D11 벡엔드 영상
 
