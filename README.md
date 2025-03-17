@@ -10,44 +10,84 @@ https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
 # D3D12로 백엔드 수정한 이후 영상
 
 
-https://github.com/user-attachments/assets/fdc8105b-ccfd-490a-adb7-9cc72e77898a
+https://github.com/user-attachments/assets/5290dd52-e389-4141-b9f0-5e657b9c1648
 
 
 # D3D12와 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
-# D3D12로 벡엔드 변경
+### D3D12로 벡엔드 변경
+![image](https://github.com/user-attachments/assets/65b19959-b5a5-4f06-b32d-67682d603b57)
 - 홍정모 그래픽스 새싹 코스 Part 4에서 제공된 Direct3D 11 기반 예제 코드를 Direct3D 12로 마이그레이션하였습니다.
-- 중첩 렌더링 지원
+- 중첩 렌더링 활용
   - 기존 구현에서는 GPU가 프레임을 렌더링할 때 CPU가 대기 상태에 놓이는 비효율적인 구조
-  - 새 구현에서는 프레임별 리소스를 분리하여 다중 버퍼링(Multi-buffering) 방식으로 전환
+  - 프레임별 리소스를 분리하여 다중 버퍼링(Multi-buffering) 방식으로 전환
   - CPU는 현재 GPU 작업과 병렬로 다음 프레임을 준비할 수 있어 작업 효율성이 향상
 - 최대한 CPU가 GPU 작업으로 Blocking 되지 않도록 고려
-  - https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9
-# 비동기 리소스 로딩
-- Mesh와 Animation 데이터를 비동기 로드:
-    - MeshLoadHelper 클래스(MeshLoadHelper2.h)가 Mesh 로드를 담당.
-    - AnimHelper 클래스(AnimHelper2.h)가 Animation 로드를 담당.
-- Thread Pool을 활용
-- Command List Pool 개발
-  - 리소스 로딩 스레드가 GPU 메모리 업로드 시, Resource CommandList Pool에서 명령 리스트(Command List)를 가져와 GPU 요청 처리.
-# 메모리 최적화
-- 동일한 애니메이션 데이터를 사용하는 여러 객체는 CPU 메모리에서 데이터를 공유
-- 각 객체는 GPU 메모리에서 개별적인 애니메이션 정보(예: Bone Weight, Local To World Matrix)를 복사하여 사용.
-# Bullet3 물리 엔진 연동
-- physX를 사용하지 않은 이유는 내부 코드를 볼 수 없다고 들어 모든 코드를 들여댜볼 수 있는 bullet3를 사용
-- 현재 bullet3로 콜리전 체크해서 FireBall에 경우 Collision 발생시 FireBall를 제거하는 식으로 사용
-# Actor State 시스템(ActorState.h)
-- 애니메이션 연동
-  - 액터의 상태(State)에 따라 자동으로 애니메이션을 실행하도록 구현.
-  - State와 Animation을 연결하여 상태 전환 시 애니메이션이 동기화되도록 설계.
-- 기능 구현
-  - 이동 로직 및 프로젝트 충돌 연출(예: Projectile 충돌 시 객체가 날아가는 효과 구현)
-# 애니메이션 시스템
-- 상체와 하체 애니메이션 분리:
-  - 상체와 하체를 개별적으로 제어할 수 있는 애니메이션 분리 기능 추가.
-- 루트 모션 애니메이션:
-  - 루트 모션 기반 애니메이션에서 이동한 Transform 값을 애니메이션 종료 시점에 **월드 좌표(World Transform)**에 합산하여 처리.
+  - [https://daerimustudypage.notion.site/1b19eb57b07e80aaa541c6f85dff0ee9](https://daerimustudypage.notion.site/1b09eb57b07e8044a0cde073f58fd3ab)
+ 
+## 비동기 리소스 로딩
+![image](https://github.com/user-attachments/assets/815d2fa6-15c4-48d4-a53d-8dc72eb65a8d)
+
+
+### Mesh 및 Animation 데이터 비동기 로딩
+ **비동기 로딩을 담당하는 헬퍼 클래스**
+-  `MeshLoadHelper` (`MeshLoadHelper2.h`) → **Mesh 로드 담당**
+-  `AnimHelper` (`AnimHelper2.h`) → **Animation 로드 담당**
+-  **Thread Pool 활용**하여 비동기 처리
+
+###  Resource Command Pool
+-  **리소스 로딩 스레드**가 **GPU 메모리 업로드 시**
+- **`Resource CommandList Pool`에서 명령 리스트(Command List)**를 가져와 **GPU 요청 처리**
+
+---
+
+##  메모리 최적화
+
+### 애니메이션 데이터 공유
+-  **동일한 애니메이션 데이터를 사용하는 객체들은 CPU 메모리에서 공유**
+-  **GPU 메모리에서는 개별적인 애니메이션 정보(예: Bone Weight, Local To World Matrix) 복사하여 사용**
+
+### 리소스 재사용 (`s_resourceMap`)
+-  **이미 로드된 리소스를 재사용**하여 **메모리 낭비 방지**
+
+---
+
+##  Actor State 시스템 (`ActorState.h`)
+
+###  애니메이션 연동
+-  액터의 **상태(State)에 따라 자동으로 애니메이션 실행**
+-  **State와 Animation을 연결**하여 **상태 전환 시 애니메이션이 동기화**
+
+###  기능 구현
+-  **이동 로직 및 충돌 연출**  
+  - 예: **Projectile 충돌 시 객체가 날아가는 효과 구현**
+
+---
+
+##  Bullet3 물리 엔진 연동
+
+###  왜 `PhysX` 대신 `Bullet3`?
+-  **PhysX는 내부 코드를 볼 수 없음**
+-  **Bullet3는 오픈소스이므로 모든 코드를 직접 확인 가능**
+
+###  현재 적용 사례
+-  `Bullet3`를 활용한 **콜리전 체크**
+-  `FireBall` 충돌 시 **Collision 감지 후 FireBall 제거**
+
+---
+
+## 애니메이션 시스템
+
+###  상체 & 하체 애니메이션 분리
+- **개별 제어 가능한 애니메이션 분리 기능 추가**
+  - 예: **상체는 공격 모션, 하체는 이동 모션**
+
+###  루트 모션 애니메이션
+- **루트 모션 기반 이동**
+- **애니메이션 종료 시 `Transform` 값을 월드 좌표(World Transform)에 합산하여 이동 처리**
+
+---
 # 앞으로 계획
-- 디퍼드 렌더링으로 교체
+- 디퍼드 렌더링으로 교체(빛 연산 없이 돌려봤을때 성능에 아직 큰 차이가 없어서 나중에 변경 예정)
 - 나무, 풀 등 추가
 - 액터에 대해 각 업데이트를 병렬처리로 수정하고, 각 액터마다 Tick을 Tick_Concurrency, Tick_GameThread 두개로 분리할 예정이다.
 - 물리에 관심이 있다보니, 좀 더 물리 관련 로직들을 짜고 싶다..
