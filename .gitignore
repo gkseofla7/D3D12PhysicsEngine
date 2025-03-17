@@ -32,4 +32,6 @@
 *.app
 
 Examples/x64/
+Examples/Examples/x64/
 Examples/.vs/
+Examples/packages

@@ -327,7 +327,7 @@ bool Engine::InitScene()
 	InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
-	for(int i = 0; i< 30; i++)
+	for(int i = 0; i< 5; i++)
 	{
 		std::string path = "../Assets/Characters/Mixamo/";
 		std::string characterName = "character.fbx";

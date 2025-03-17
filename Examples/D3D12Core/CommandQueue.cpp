@@ -101,7 +101,7 @@ void GraphicsCommandQueue::FenceFrame(int index)
 	m_lastFenceValue[index] = Fence();
 }
 
-uint64 GraphicsCommandQueue::Fence()
+uint64 GraphicsCommandQueue::Fence() 
 {
 	std::lock_guard<std::mutex> lock(m_fenceMutex);
 	// Advance the fence value to mark commands up to this fence point.

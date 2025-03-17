@@ -281,7 +281,6 @@ PixelShaderOutput main(PixelShaderInput input)
     float3 ambientLighting = AmbientLightingByIBL(albedo.rgb, normalWorld, pixelToEye, ao, metallic, roughness) * strengthIBL;
     
     float3 directLighting = float3(0, 0, 0);
-
     // 임시로 unroll 사용
     [unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
     for (int i = 0; i < MAX_LIGHTS; ++i)
