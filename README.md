@@ -39,7 +39,8 @@ https://github.com/user-attachments/assets/5290dd52-e389-4141-b9f0-5e657b9c1648
 
 # D3D12와 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
 ### D3D12로 벡엔드 변경
-![image](https://github.com/user-attachments/assets/65b19959-b5a5-4f06-b32d-67682d603b57)
+![image](https://github.com/user-attachments/assets/ed34cd02-fd8e-41fe-abb3-e40b5483336f)
+
 - 홍정모 그래픽스 새싹 코스 Part 4에서 제공된 Direct3D 11 기반 예제 코드를 Direct3D 12로 마이그레이션하였습니다.
 - 중첩 렌더링 활용
   - 기존 구현에서는 GPU가 프레임을 렌더링할 때 CPU가 대기 상태에 놓이는 비효율적인 구조
