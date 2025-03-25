@@ -34,12 +34,13 @@ https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
 # D3D12로 백엔드 수정한 이후 영상
 
 
-https://github.com/user-attachments/assets/5290dd52-e389-4141-b9f0-5e657b9c1648
+https://github.com/user-attachments/assets/2b9deb35-6019-4c3f-a493-dfc615000538
+
 
 
 # D3D12와 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
 ### D3D12로 벡엔드 변경
-![image](https://github.com/user-attachments/assets/ed34cd02-fd8e-41fe-abb3-e40b5483336f)
+![image](https://github.com/user-attachments/assets/9b7143b4-f690-4c62-a7bd-3e606bf8adfa)
 
 - 홍정모 그래픽스 새싹 코스 Part 4에서 제공된 Direct3D 11 기반 예제 코드를 Direct3D 12로 마이그레이션하였습니다.
 - 중첩 렌더링 활용
