@@ -335,7 +335,7 @@ bool Engine::InitScene()
 	{
 		std::string path = "../Assets/Characters/Mixamo/";
 		std::string characterName = "character.fbx";
-		Vector3 center(0.5f, 0.1f, 1.0f);
+		Vector3 center(0.5f, 0.1f, 1.0f); 
 		center.x -= i * 0.1f;
 		shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
 		MaterialConstants materialConsts;

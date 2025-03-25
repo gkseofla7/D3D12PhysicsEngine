@@ -4,6 +4,7 @@
 #include "Engine.h"
 #include "Samplers2.h"
 #include "Device.h"
+#include "GameCore/ThreadPool.h"
 #include "nvtx3/nvToolsExt.h"
 namespace dengine {
 
@@ -247,7 +248,7 @@ uint64 ResourceCommandQueue::Fence()
 
 uint64 ResourceCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList, bool bBlocking)
 {
-	nvtxRangePushA("FlushResourceCommandQueue");
+	//nvtxRangePushA("FlushResourceCommandQueue");
 	// CommandList는 여러 스레드가 동시에 접근 못함
 	rscCommandList.m_resCmdList->Close();
 
@@ -271,7 +272,9 @@ uint64 ResourceCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscC
 	}
 	else
 	{
-		std::thread([=]() {
+		nvtxRangePushA("MakeThread");
+		hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+		auto func = [=]() {
 			static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 			m_fence->SetEventOnCompletion(fenceValue, threadFenceEvent);
 			// GPU가 특정 FenceValue에 도달할 때까지 대기
@@ -283,10 +286,12 @@ uint64 ResourceCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscC
 				std::unique_lock<std::mutex> lock(m_rscMutex);
 				m_resCmdLists.push(rscCommandList);
 			}
-			m_rscCv.notify_one();
-			}).detach();
+			m_rscCv.notify_one(); };
+		tPool.EnqueueRenderJob(func);
+
+		nvtxRangePop();
 	}
-	nvtxRangePop();
+	//nvtxRangePop();
 	return fenceValue;
 }
 

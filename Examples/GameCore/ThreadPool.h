@@ -19,7 +19,7 @@ namespace hlab {
     public:
         static ThreadPool& getInstance()
         {
-            static ThreadPool threadPool(5);
+            static ThreadPool threadPool(10);
             return threadPool;
         }
         ThreadPool(size_t num_threads);
