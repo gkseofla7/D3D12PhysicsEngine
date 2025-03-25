@@ -88,9 +88,6 @@ private:
 	void RenderOpaqueObjects();
 	void RenderShadowMaps();
 
-
-
-
 	//void CreateConstantBuffer(CBV_REGISTER reg, uint32 bufferSize, uint32 count);
 	void CreateRenderTargetGroups();
 	virtual void OnMouseMove(int mouseX, int mouseY);

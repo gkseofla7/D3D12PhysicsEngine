@@ -204,7 +204,7 @@ void Engine::InitGraphics()
 	m_graphicsCmdQueue->SetSwapChain(m_swapChain);
 
 	m_graphicsDescHeap = std::make_shared< GraphicsDescriptorHeap>();
-	m_graphicsDescHeap->Init(256);
+	m_graphicsDescHeap->Init(256*2);
 
 	m_shader = std::make_shared<Shader>();
 	m_shader->Init();
@@ -331,25 +331,30 @@ bool Engine::InitScene()
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
-	for (int i = 0; i < 30; i++)
+	for (int i = 0; i < 10; i++)
 	{
-		std::string path = "../Assets/Characters/Mixamo/";
-		std::string characterName = "character.fbx";
-		Vector3 center(0.5f, 0.1f, 1.0f); 
-		center.x -= i * 0.1f;
-		shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
-		MaterialConstants materialConsts;
-		materialConsts.albedoFactor = Vector3(1.0f);
-		materialConsts.roughnessFactor = 0.8f;
-		materialConsts.metallicFactor = 0.0f;
-		wizardModel->SetMaterialConstants(materialConsts);
-		wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
-			Matrix::CreateTranslation(center));
-		wizardModel->SetScale(0.2f);
-		shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
-		wizard->Initialize(wizardModel);
-		m_actorList.push_back(wizard);
-		m_activateActor = m_wizard;
+		for (int j = 0; j < 10; j++)
+		{
+			std::string path = "../Assets/Characters/Mixamo/";
+			std::string characterName = "character.fbx";
+			Vector3 center(0.5f, 0.1f, 1.0f);
+			center.x -= i * 0.1f;
+			center.z -= j * 0.1f;
+			shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
+			MaterialConstants materialConsts;
+			materialConsts.albedoFactor = Vector3(1.0f);
+			materialConsts.roughnessFactor = 0.8f;
+			materialConsts.metallicFactor = 0.0f;
+			wizardModel->SetMaterialConstants(materialConsts);
+			wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+				Matrix::CreateTranslation(center));
+			wizardModel->SetScale(0.2f);
+			shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
+			wizard->Initialize(wizardModel);
+			m_actorList.push_back(wizard);
+			m_activateActor = m_wizard;
+		}
+
 	}
 
 	{
@@ -427,7 +432,6 @@ void Engine::Update(float dt)
 	MeshLoadHelper::LoadAllGpuUnloadedModel();
 	// 리소스 버퍼에서만 Upload 전에 모두 사용하면 업데이트하도록한다.
 	GetResourceCmdQueue()->WaitFrameSyncGpu(BACKBUFFER_INDEX);
-	//GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 	//m_wizard->Tick(dt);
 	nvtxRangePushA("ActorTick");
