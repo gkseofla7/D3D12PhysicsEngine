@@ -24,18 +24,19 @@ vcpkg install d3dx12:x64-windows
 vcpkg install bullet3:x64-windows
 ```
 # 영상
+# D3D12로 백엔드 수정한 이후 영상
+
+
+
+https://github.com/user-attachments/assets/d7cf5f9c-05bc-430f-ab43-12be0d1e616a
+
+
 # 이전 D3D11 벡엔드 영상
 
 https://github.com/user-attachments/assets/0dd9a327-22c1-4db6-9243-89e9853470e1
 
 
 https://github.com/user-attachments/assets/f9bd73a5-053a-4edb-bad3-0ba8e6f9acf8
-
-# D3D12로 백엔드 수정한 이후 영상
-
-
-https://github.com/user-attachments/assets/2b9deb35-6019-4c3f-a493-dfc615000538
-
 
 
 # D3D12와 Bullet3 Physics 엔진을 사용해서 만든 게임 엔진
