@@ -195,6 +195,9 @@ void Engine::InitGraphics()
 	m_graphicsCmdQueue = std::make_shared<GraphicsCommandQueue>();
 	m_graphicsCmdQueue->Init(m_device->GetDevice());
 
+	m_resourceCmdQueue = std::make_shared<ResourceCommandQueue>();
+	m_resourceCmdQueue->Init(m_device->GetDevice());
+
 	m_swapChain = std::make_shared< SwapChain>();
 	m_swapChain->Init(m_window, m_device->GetDevice(), m_device->GetDXGI(), m_graphicsCmdQueue->GetCmdQueue());
 
@@ -243,7 +246,7 @@ void Engine::InitPSO()
 void Engine::InitGlobalBuffer()
 {
 	m_globalConstsBuffer = std::make_shared<ConstantBuffer<GlobalConstants>>();
-	m_globalConstsBuffer->Init(CBV_REGISTER::b0, SWAP_CHAIN_BUFFER_COUNT);
+	m_globalConstsBuffer->Init(CBV_REGISTER::b0, SWAP_CHAIN_BUFFER_COUNT); 
 
 	for (int i = 0; i < MAX_LIGHTS_COUNT; i++)
 	{
@@ -327,7 +330,8 @@ bool Engine::InitScene()
 	InitCubemaps(L"../Assets/Textures/Cubemaps/HDRI/",
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
-	for(int i = 0; i< 5; i++)
+
+	for (int i = 0; i < 30; i++)
 	{
 		std::string path = "../Assets/Characters/Mixamo/";
 		std::string characterName = "character.fbx";
@@ -342,7 +346,6 @@ bool Engine::InitScene()
 		wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
 			Matrix::CreateTranslation(center));
 		wizardModel->SetScale(0.2f);
-
 		shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
 		wizard->Initialize(wizardModel);
 		m_actorList.push_back(wizard);
@@ -390,12 +393,41 @@ bool Engine::InitScene()
 	return true;
 }
 
+void Engine::CreateWizard()
+{
+	static int i = 0;
+	std::string path = "../Assets/Characters/Mixamo/";
+	std::string characterName = "character.fbx";
+	if (i != 0)
+	{
+		characterName ="character" +to_string(i)+".fbx";
+	}
+	Vector3 center(0.5f, 0.1f, 1.0f);
+	center.x -= i * 0.1f;
+	shared_ptr<DSkinnedMeshModel> wizardModel = std::make_shared<DSkinnedMeshModel>(path, characterName);
+	MaterialConstants materialConsts;
+	materialConsts.albedoFactor = Vector3(1.0f);
+	materialConsts.roughnessFactor = 0.8f;
+	materialConsts.metallicFactor = 0.0f;
+	wizardModel->SetMaterialConstants(materialConsts);
+	wizardModel->UpdateWorldRow(Matrix::CreateScale(0.2f) *
+		Matrix::CreateTranslation(center));
+	wizardModel->SetScale(0.2f);
+
+	shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
+	wizard->Initialize(wizardModel);
+	m_actorList.push_back(wizard);
+	m_activateActor = m_wizard;
+
+	i++;
+}
+
 void Engine::Update(float dt)
 {
 	MeshLoadHelper::LoadAllGpuUnloadedModel();
-
-	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
-
+	// 리소스 버퍼에서만 Upload 전에 모두 사용하면 업데이트하도록한다.
+	GetResourceCmdQueue()->WaitFrameSyncGpu(BACKBUFFER_INDEX);
+	//GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
 	//m_wizard->Tick(dt);
 	nvtxRangePushA("ActorTick");
@@ -404,6 +436,7 @@ void Engine::Update(float dt)
 		actor->Tick(dt);
 	}
 	nvtxRangePop();
+	nvtxRangePushA("ObjectTick");
 	for (shared_ptr<Object> object: m_objectList)
 	{
 		object->Tick(dt);
@@ -412,13 +445,16 @@ void Engine::Update(float dt)
 	m_skybox->Tick(dt);
 	m_screenSquare->Tick(dt);
 	m_ground->Tick(dt);
+	nvtxRangePop();
 
+	nvtxRangePushA("UpdateGlobalConstants");
 	UpdateGlobalConstants(dt);
+	nvtxRangePop();
 }
 
 void Engine::Render()
 {
-	//GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
+	GetGraphicsCmdQueue()->WaitFrameSync(BACKBUFFER_INDEX);
 	RenderBegin();
 	RenderShadowMaps();
 	RenderOpaqueObjects();
@@ -965,6 +1001,10 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				return true;
 			}
+		}
+		if (wParam == VK_NUMPAD0)
+		{
+			CreateWizard();
 		}
 		m_keyPressed[wParam] = true;
 		//if (wParam == VK_ESCAPE) { // ESC키 종료

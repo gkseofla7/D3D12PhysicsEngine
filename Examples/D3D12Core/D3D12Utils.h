@@ -2,6 +2,7 @@
 #include "EnginePch.h"
 #include "Engine.h"
 #include "GameCore/ThreadPool.h"
+#include "CommandQueue.h"
 #include <shared_mutex>
 #include <mutex>
 // AppBase와 ExampleApp을 정리하기 위해
@@ -57,37 +58,93 @@ class D3D12Utils {
         ComPtr<ID3D12Resource>& indexBuffer,
         D3D12_INDEX_BUFFER_VIEW& indexBufferView);
 
-
+ 
     template <typename T_VERTEX>
-    static void CreateVertexBuffer(ComPtr<ID3D12Device> device,
+    static void CreateVertexBuffer(
+        ComPtr<ID3D12Device> device,
         const vector<T_VERTEX>& vertices,
-        ComPtr<ID3D12Resource>&	vertexBuffer,
-        D3D12_VERTEX_BUFFER_VIEW& vertexBufferView) {
-        uint32 bufferSize = vertices.size() * sizeof(T_VERTEX);
+        ComPtr<ID3D12Resource>& vertexBuffer,
+        D3D12_VERTEX_BUFFER_VIEW& vertexBufferView)
+    {
+        uint32 bufferSize = static_cast<uint32>(vertices.size() * sizeof(T_VERTEX));
 
-        D3D12_HEAP_PROPERTIES heapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+        CD3DX12_HEAP_PROPERTIES defaultHeapProps(D3D12_HEAP_TYPE_DEFAULT);
+        CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
 
-        DEVICE->CreateCommittedResource(
-            &heapProperty,
+        device->CreateCommittedResource(
+            &defaultHeapProps,
             D3D12_HEAP_FLAG_NONE,
-            &desc,
-            D3D12_RESOURCE_STATE_GENERIC_READ,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_COMMON,
             nullptr,
             IID_PPV_ARGS(&vertexBuffer));
+        ResourceCommandList rscCommandList = RESOURCE_CMD_LIST;
+        CD3DX12_RESOURCE_BARRIER toCopyDest = CD3DX12_RESOURCE_BARRIER::Transition(
+            vertexBuffer.Get(),
+            D3D12_RESOURCE_STATE_COMMON,
+            D3D12_RESOURCE_STATE_COPY_DEST);
+        rscCommandList.m_resCmdList->ResourceBarrier(1, &toCopyDest);
 
-        // Copy the triangle data to the vertex buffer.
-        void* vertexDataBuffer = nullptr;
-        CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
-        vertexBuffer->Map(0, &readRange, &vertexDataBuffer);
-        ::memcpy(vertexDataBuffer, &vertices[0], bufferSize);
-        vertexBuffer->Unmap(0, nullptr);
+        CD3DX12_HEAP_PROPERTIES uploadHeapProps(D3D12_HEAP_TYPE_UPLOAD);
+        ComPtr<ID3D12Resource> vertexUploadBuffer;
+        device->CreateCommittedResource(
+            &uploadHeapProps,
+            D3D12_HEAP_FLAG_NONE,
+            &bufferDesc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&vertexUploadBuffer));
 
-        // Initialize the vertex buffer view.
+        void* mappedData = nullptr;
+        CD3DX12_RANGE readRange(0, 0); // 읽지 않을 거라서
+        vertexUploadBuffer->Map(0, &readRange, &mappedData);
+        memcpy(mappedData, vertices.data(), bufferSize);
+        vertexUploadBuffer->Unmap(0, nullptr);
+        rscCommandList.m_resCmdList->CopyBufferRegion(vertexBuffer.Get(), 0, vertexUploadBuffer.Get(), 0, bufferSize);
+
+        CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+            vertexBuffer.Get(),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        rscCommandList.m_resCmdList->ResourceBarrier(1, &barrier);
+
+        // 6. Vertex Buffer View 설정
         vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-        vertexBufferView.StrideInBytes = sizeof(T_VERTEX); // 정점 1개 크기
-        vertexBufferView.SizeInBytes = bufferSize; // 버퍼의 크기	
+        vertexBufferView.StrideInBytes = sizeof(T_VERTEX);
+        vertexBufferView.SizeInBytes = bufferSize;
+        GEngine->GetResourceCmdQueue()->FlushResourceCommandQueue(rscCommandList, true);
     }
+
+    //template <typename T_VERTEX>
+    //static void CreateVertexBuffer(ComPtr<ID3D12Device> device,
+    //    const vector<T_VERTEX>& vertices,
+    //    ComPtr<ID3D12Resource>&	vertexBuffer,
+    //    D3D12_VERTEX_BUFFER_VIEW& vertexBufferView) {
+    //    uint32 bufferSize = vertices.size() * sizeof(T_VERTEX);
+
+    //    D3D12_HEAP_PROPERTIES heapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    //    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+
+    //    DEVICE->CreateCommittedResource(
+    //        &heapProperty,
+    //        D3D12_HEAP_FLAG_NONE,
+    //        &desc,
+    //        D3D12_RESOURCE_STATE_GENERIC_READ,
+    //        nullptr,
+    //        IID_PPV_ARGS(&vertexBuffer));
+
+    //     //Copy the triangle data to the vertex buffer.
+    //    void* vertexDataBuffer = nullptr;
+    //    CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
+    //    vertexBuffer->Map(0, &readRange, &vertexDataBuffer);
+    //    ::memcpy(vertexDataBuffer, &vertices[0], bufferSize);
+    //    vertexBuffer->Unmap(0, nullptr);
+
+    //     //Initialize the vertex buffer view.
+    //    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+    //    vertexBufferView.StrideInBytes = sizeof(T_VERTEX); // 정점 1개 크기
+    //    vertexBufferView.SizeInBytes = bufferSize; // 버퍼의 크기	
+    //}
 
 
 

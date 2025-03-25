@@ -19,20 +19,12 @@ void GraphicsCommandQueue::Init(ComPtr<ID3D12Device> device)
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_cmdQueue));
 	
+
 	for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; i++)
 	{
 		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&m_cmdAlloc[i]));
 		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, m_cmdAlloc[i].Get(), nullptr, IID_PPV_ARGS(&m_cmdList[i]));
 		m_cmdList[i]->Close();
-	}
-
-	const int resourceThreadCount = 5;
-	for (int i = 0; i < resourceThreadCount; i++)
-	{
-		ResourceCommandList ResCommandList;
-		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
-		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, ResCommandList.m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&ResCommandList.m_resCmdList));
-		m_resCmdLists.push(ResCommandList);
 	}
 
 	// CreateFence
@@ -67,12 +59,16 @@ void GraphicsCommandQueue::WaitSync(uint64 fenceValue)
 }
 void GraphicsCommandQueue::WaitSyncGPU(uint64 fenceValue)
 {
-	if (m_cmdQueue && fenceValue > m_fence->GetCompletedValue())
-	{
-		m_cmdQueue->Wait(m_fence.Get(), fenceValue);
-	}
-
+	WaitSyncGPU(m_fence, fenceValue);
 }
+void GraphicsCommandQueue::WaitSyncGPU(ComPtr<ID3D12Fence> fence, uint64 fenceValue)
+{
+	if (m_cmdQueue && fenceValue > fence->GetCompletedValue())
+	{
+		m_cmdQueue->Wait(fence.Get(), fenceValue);
+	}
+}
+
 void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
 {
 	nvtxRangePushA("WaitFrameSync");
@@ -88,13 +84,18 @@ void GraphicsCommandQueue::WaitFrameSync(int frameIndex)
 	nvtxRangePop();
 }
 
+
 void GraphicsCommandQueue::WaitFrameSyncGPU(int frameIndex)
 {
 	WaitSyncGPU(m_lastFenceValue[frameIndex]);
 }
 void GraphicsCommandQueue::WaitGPUResourceSync()
 {
-	WaitSyncGPU(m_lastResUploadFenceValue);
+	WaitSyncGPU(GEngine->GetResourceCmdQueue()->GetFence(), GEngine->GetResourceCmdQueue()->GetLastFenceValue());
+}
+uint64 GraphicsCommandQueue::GetFrameFenceValue(int frameIndex)
+{
+	return m_lastFenceValue[frameIndex];
 }
 void GraphicsCommandQueue::FenceFrame(int index)
 {
@@ -160,7 +161,91 @@ void GraphicsCommandQueue::RenderEnd()
 	m_swapChain->SwapIndex();
 }
 
-void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList, bool bBlocking)
+///////////////////////////////////////////////////
+
+ResourceCommandQueue::~ResourceCommandQueue()
+{
+	::CloseHandle(m_fenceEvent);
+}
+
+void ResourceCommandQueue::Init(ComPtr<ID3D12Device> device)
+{
+	D3D12_COMMAND_QUEUE_DESC queueDesc = {};
+	queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
+	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
+	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_cmdQueue));
+
+	const int resourceThreadCount = 5;
+	for (int i = 0; i < resourceThreadCount; i++)
+	{
+		ResourceCommandList ResCommandList;
+		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
+		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, ResCommandList.m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&ResCommandList.m_resCmdList));
+		m_resCmdLists.push(ResCommandList);
+	}
+
+	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+	m_fenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+}
+
+void ResourceCommandQueue::WaitSync()
+{
+	uint64 fenceValue = Fence();
+	WaitSync(fenceValue);
+}
+
+void ResourceCommandQueue::WaitSync(uint64 fenceValue)
+{
+	nvtxRangePushA("ResourceQueue:WaitSync");
+	static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+	// Wait until the GPU has completed commands up to this fence point.
+	if (m_fence->GetCompletedValue() < m_fenceValue)
+	{
+		// Fire event when GPU hits current fence.  
+		m_fence->SetEventOnCompletion(m_fenceValue, threadFenceEvent);
+
+		// Wait until the GPU hits current fence event is fired.
+		::WaitForSingleObject(threadFenceEvent, INFINITE);
+	}
+	nvtxRangePop();
+}
+void ResourceCommandQueue::WaitSyncGPU(uint64 fenceValue)
+{
+	WaitSyncGPU(m_fence, fenceValue);
+}
+void ResourceCommandQueue::WaitSyncGPU(ComPtr<ID3D12Fence> fence, uint64 fenceValue)
+{
+	if (m_cmdQueue && fenceValue > fence->GetCompletedValue())
+	{
+		m_cmdQueue->Wait(fence.Get(), fenceValue);
+	}
+}
+void ResourceCommandQueue::WaitFrameSyncGpu(int32 frameIndex)
+{
+	WaitSyncGPU(GEngine->GetGraphicsCmdQueue()->GetFence(), GEngine->GetGraphicsCmdQueue()->GetFrameFenceValue(frameIndex));
+}
+
+void ResourceCommandQueue::WaitGPUResourceSync()
+{
+	WaitSyncGPU(m_lastResUploadFenceValue);
+}
+
+uint64 ResourceCommandQueue::Fence()
+{
+	std::lock_guard<std::mutex> lock(m_fenceMutex);
+	// Advance the fence value to mark commands up to this fence point.
+	m_fenceValue++;
+
+	// Add an instruction to the command queue to set a new fence point.  Because we 
+	// are on the GPU timeline, the new fence point won't be set until the GPU finishes
+	// processing all the commands prior to this Signal().
+	m_cmdQueue->Signal(m_fence.Get(), m_fenceValue);
+	return m_fenceValue;
+}
+
+
+
+uint64 ResourceCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList, bool bBlocking)
 {
 	nvtxRangePushA("FlushResourceCommandQueue");
 	// CommandList는 여러 스레드가 동시에 접근 못함
@@ -171,7 +256,7 @@ void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCom
 	// 스레드가 Pool로 들어가는 시점이 늦어지는 이슈
 	ID3D12CommandList* cmdListArr[] = { rscCommandList.m_resCmdList.Get() };
 	m_cmdQueue->ExecuteCommandLists(_countof(cmdListArr), cmdListArr);
-	
+
 	uint64 fenceValue = Fence();
 	if (bBlocking)
 	{
@@ -186,7 +271,6 @@ void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCom
 	}
 	else
 	{
-		m_lastResUploadFenceValue = fenceValue;
 		std::thread([=]() {
 			static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 			m_fence->SetEventOnCompletion(fenceValue, threadFenceEvent);
@@ -203,9 +287,10 @@ void GraphicsCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCom
 			}).detach();
 	}
 	nvtxRangePop();
+	return fenceValue;
 }
 
-ResourceCommandList GraphicsCommandQueue::GetResourceCmdList()
+ResourceCommandList ResourceCommandQueue::GetResourceCmdList()
 {
 	std::unique_lock<std::mutex> lock(m_rscMutex);
 	if (m_resCmdLists.empty())
@@ -221,4 +306,5 @@ ResourceCommandList GraphicsCommandQueue::GetResourceCmdList()
 	m_resCmdLists.pop();
 	return rcsCommandList;
 }
+
 }

@@ -131,7 +131,7 @@ public:
 			rscCommandList.m_resCmdList->ResourceBarrier(1, &barrier);
 		}
 
-		GEngine->GetGraphicsCmdQueue()->FlushResourceCommandQueue(rscCommandList);
+		GEngine->GetResourceCmdQueue()->FlushResourceCommandQueue(rscCommandList);
 		m_resourceState = D3D12_RESOURCE_STATE_COMMON;
 	}
 

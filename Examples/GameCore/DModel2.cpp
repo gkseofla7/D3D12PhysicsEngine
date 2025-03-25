@@ -172,7 +172,10 @@ void DModel::Render()
             GEngine->GetGraphicsDescHeap()->CommitTable();
             GRAPHICS_CMD_LIST->IASetVertexBuffers(0, 1, &mesh.vertexBufferView); // Slot: (0~15)
             GRAPHICS_CMD_LIST->IASetIndexBuffer(&mesh.indexBufferView);
-            GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, 1, 0, 0, 0);
+
+            GRAPHICS_CMD_LIST->BeginEvent(0, L"DrawIndexed", sizeof(L"DrawIndexed"));
+            GRAPHICS_CMD_LIST->DrawIndexedInstanced(mesh.indexCount, instanceCount, 0, 0, 0);
+            GRAPHICS_CMD_LIST->EndEvent();
         }
     }
 }

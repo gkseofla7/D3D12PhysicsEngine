@@ -10,7 +10,7 @@ void SwapChain::Present()
 {
 	// Present the frame.
 	nvtxRangePushA("Present");
-	m_swapChain->Present(1, 0);
+	m_swapChain->Present(0, 0);
 	nvtxRangePop();
 }
 

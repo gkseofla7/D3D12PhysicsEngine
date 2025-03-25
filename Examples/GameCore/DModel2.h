@@ -87,6 +87,8 @@ private:
 
     ConstantBuffer<MeshConstants> m_meshConsts;
     ConstantBuffer<MaterialConstants> m_materialConsts;
+public:
+    int instanceCount = 1;
 };
 
 } // namespace dengine

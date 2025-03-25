@@ -14,6 +14,7 @@ class Device;
 class CommandQueue;
 class RootSignature;
 class GraphicsCommandQueue;
+class ResourceCommandQueue;
 class SwapChain;
 class Shader;
 class GraphicsPipelineState;
@@ -42,6 +43,7 @@ public:
 	const WindowInfo& GetWindow() { return m_window; }
 	shared_ptr<Device> GetDevice() { return m_device; }
 	shared_ptr<GraphicsCommandQueue> GetGraphicsCmdQueue() { return m_graphicsCmdQueue; }
+	shared_ptr<ResourceCommandQueue> GetResourceCmdQueue() { return m_resourceCmdQueue; }
 	shared_ptr<SwapChain> GetSwapChain() { return m_swapChain; }
 	shared_ptr<RootSignature> GetRootSignature() { return m_rootSignature; }
 	shared_ptr<GraphicsDescriptorHeap> GetGraphicsDescHeap() { return m_graphicsDescHeap; }
@@ -93,6 +95,8 @@ private:
 	void CreateRenderTargetGroups();
 	virtual void OnMouseMove(int mouseX, int mouseY);
 	virtual void OnMouseClick(int mouseX, int mouseY);
+
+	void CreateWizard();
 private:
 	// 그래픽스 관련
 	D3D12_VIEWPORT	m_viewport = {};
@@ -101,6 +105,7 @@ private:
 	shared_ptr<Device> m_device;// = make_shared<Device>();
 	shared_ptr<SwapChain> m_swapChain;// = make_shared<SwapChain>();
 	shared_ptr<GraphicsCommandQueue> m_graphicsCmdQueue;// = make_shared<GraphicsCommandQueue>();
+	shared_ptr<ResourceCommandQueue> m_resourceCmdQueue;// = make_shared<ResourceCommandQueue>();
 	shared_ptr<GraphicsDescriptorHeap> m_graphicsDescHeap;// = make_shared<GraphicsDescriptorHeap>();
 	shared_ptr<Shader> m_shader;
 	shared_ptr<RootSignature> m_rootSignature;// = make_shared<RootSignature>();

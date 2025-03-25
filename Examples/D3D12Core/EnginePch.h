@@ -144,7 +144,7 @@ public:								\
 #define ROOTSIGNATURE		GEngine->GetRootSignature()
 #define SHADER				GEngine->GetShader()
 #define GRAPHICS_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetCurrentGraphicsCmdList()
-#define RESOURCE_CMD_LIST	GEngine->GetGraphicsCmdQueue()->GetResourceCmdList()
+#define RESOURCE_CMD_LIST	GEngine->GetResourceCmdQueue()->GetResourceCmdList()
 #define BACKBUFFER_INDEX	GEngine->GetSwapChain()->GetBackBufferIndex()
 #define MAX_LIGHTS_COUNT 3
 using Microsoft::WRL::ComPtr;
