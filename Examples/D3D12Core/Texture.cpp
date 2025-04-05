@@ -33,10 +33,7 @@ void Texture::CreateFromResource(ComPtr<ID3D12Resource> tex2D)
 	m_tex2D = tex2D;
 	m_desc = tex2D->GetDesc();
 	m_format = tex2D->GetDesc().Format;
-	// 주요 조합
-	// - DSV 단독 (조합X)
-	// - SRV
-	// - RTV + SRV
+
 	if (m_desc.Flags & D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL)
 	{
 		// DSV

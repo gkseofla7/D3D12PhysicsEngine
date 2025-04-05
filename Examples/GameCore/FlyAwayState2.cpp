@@ -24,7 +24,7 @@ namespace dengine {
 	{
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
-		actorLock->SetState(EActorStateType::Idle);
+		actorLock->RequestStateChange(EActorStateType::Idle);
 		actorLock->ResetExternalForce();
 	}
 	// 인풋 받아 리천

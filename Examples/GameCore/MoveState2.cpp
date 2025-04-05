@@ -67,7 +67,7 @@ namespace dengine {
 	{
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
-		actorLock->SetState(EActorStateType::Idle);
+		actorLock->RequestStateChange(EActorStateType::Idle);
 		// 이후 난 죽음..ㅋㅋ 액터 틱에서 펜딩 걸어주는게 좋을듯 보인다
 	}
 	// 인풋 받아 리천

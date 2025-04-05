@@ -5,12 +5,6 @@
 #include "CommandQueue.h"
 #include <shared_mutex>
 #include <mutex>
-// AppBase와 ExampleApp을 정리하기 위해
-// 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
-// Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만
-// device는 문맥상의 중요성 때문에 예외로 맨 앞에 뒀습니다.
-// 강의가 진행되면서 조금씩 기능이 추가됩니다.
-
 namespace dengine {
 
 using Microsoft::WRL::ComPtr;
@@ -33,7 +27,7 @@ struct ResourceInfo
 {
     ELoadType loadType = ELoadType::NotLoaded;
     ComPtr<ID3D12Resource> resource;
-    vector<shared_ptr<Resource>> pendingResources;
+    vector<shared_ptr<Resource>> awaitingSetResources;
 
 
     std::shared_mutex resMutex;
@@ -58,7 +52,6 @@ class D3D12Utils {
         ComPtr<ID3D12Resource>& indexBuffer,
         D3D12_INDEX_BUFFER_VIEW& indexBufferView);
 
- 
     template <typename T_VERTEX>
     static void CreateVertexBuffer(
         ComPtr<ID3D12Device> device,
@@ -115,39 +108,6 @@ class D3D12Utils {
         GEngine->GetResourceCmdQueue()->FlushResourceCommandQueue(rscCommandList, true);
     }
 
-    //template <typename T_VERTEX>
-    //static void CreateVertexBuffer(ComPtr<ID3D12Device> device,
-    //    const vector<T_VERTEX>& vertices,
-    //    ComPtr<ID3D12Resource>&	vertexBuffer,
-    //    D3D12_VERTEX_BUFFER_VIEW& vertexBufferView) {
-    //    uint32 bufferSize = vertices.size() * sizeof(T_VERTEX);
-
-    //    D3D12_HEAP_PROPERTIES heapProperty = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-    //    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-
-    //    DEVICE->CreateCommittedResource(
-    //        &heapProperty,
-    //        D3D12_HEAP_FLAG_NONE,
-    //        &desc,
-    //        D3D12_RESOURCE_STATE_GENERIC_READ,
-    //        nullptr,
-    //        IID_PPV_ARGS(&vertexBuffer));
-
-    //     //Copy the triangle data to the vertex buffer.
-    //    void* vertexDataBuffer = nullptr;
-    //    CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
-    //    vertexBuffer->Map(0, &readRange, &vertexDataBuffer);
-    //    ::memcpy(vertexDataBuffer, &vertices[0], bufferSize);
-    //    vertexBuffer->Unmap(0, nullptr);
-
-    //     //Initialize the vertex buffer view.
-    //    vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-    //    vertexBufferView.StrideInBytes = sizeof(T_VERTEX); // 정점 1개 크기
-    //    vertexBufferView.SizeInBytes = bufferSize; // 버퍼의 크기	
-    //}
-
-
-
     // Texture
     static void LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
         shared_ptr<Resource> outResource);
@@ -158,21 +118,18 @@ class D3D12Utils {
         const std::string roughnessFilename, ComPtr<ID3D12Resource>& texture);
     static void CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
         D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor, shared_ptr<Resource> outResource);
-
-    static void CreateTextureHelper(ComPtr<ID3D12Device>& device,
-        const int width, const int height, const vector<uint8_t>& image,
-        const DXGI_FORMAT pixelFormat, ComPtr<ID3D12Resource>& texture);
-
-
     static void CreateDDSTexture(ComPtr<ID3D12Device> &device, ComPtr<ID3D12CommandQueue> m_commandQueue,
                                  const wstring&&filename, const bool isCubeMap);
-
 
     static size_t GetPixelSize(DXGI_FORMAT pixelFormat);
 
 private:
     static void LoadTextureImpl(const std::wstring path, const bool usSRGB);
     static void LoadTextureNotUsingScratchImage(const std::wstring path, const bool usSRGB);
+
+    static void CreateTextureFromImage(ComPtr<ID3D12Device>& device,
+        const int width, const int height, const vector<uint8_t>& image,
+        const DXGI_FORMAT pixelFormat, ComPtr<ID3D12Resource>& texture);
 private:
     static std::mutex s_imageMapMutex;
     static std::unordered_map<std::string, std::unique_ptr<ImageInfo>> imageMap;

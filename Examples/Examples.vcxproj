@@ -163,6 +163,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BitonicSort.cpp" />
+    <ClCompile Include="D3D12Core\CommandAllocatorPool.cpp" />
     <ClCompile Include="D3D12Core\CommandQueue.cpp" />
     <ClCompile Include="D3D12Core\ConstantBuffer.cpp" />
     <ClCompile Include="D3D12Core\D3D12Utils.cpp" />
@@ -244,6 +245,7 @@
     <ClInclude Include="AnimStateDef.h" />
     <ClInclude Include="BitonicSort.h" />
     <ClInclude Include="ComputePSO.h" />
+    <ClInclude Include="D3D12Core\CommandAllocatorPool.h" />
     <ClInclude Include="D3D12Core\CommandQueue.h" />
     <ClInclude Include="D3D12Core\ConstantBuffer.h" />
     <ClInclude Include="D3D12Core\D3D12Utils.h" />

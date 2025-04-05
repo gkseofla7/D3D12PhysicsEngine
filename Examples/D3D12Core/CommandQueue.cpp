@@ -7,7 +7,6 @@
 #include "GameCore/ThreadPool.h"
 #include "nvtx3/nvToolsExt.h"
 namespace dengine {
-
 GraphicsCommandQueue::~GraphicsCommandQueue()
 {
 	::CloseHandle(m_fenceEvent);
@@ -163,7 +162,11 @@ void GraphicsCommandQueue::RenderEnd()
 }
 
 ///////////////////////////////////////////////////
+ResourceCommandQueue::ResourceCommandQueue()
+	:m_AllocatorPool(D3D12_COMMAND_LIST_TYPE::D3D12_COMMAND_LIST_TYPE_DIRECT)
+{
 
+}
 ResourceCommandQueue::~ResourceCommandQueue()
 {
 	::CloseHandle(m_fenceEvent);
@@ -176,17 +179,17 @@ void ResourceCommandQueue::Init(ComPtr<ID3D12Device> device)
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	device->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&m_cmdQueue));
 
+	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
+	m_fenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+
 	const int resourceThreadCount = 5;
 	for (int i = 0; i < resourceThreadCount; i++)
 	{
 		ResourceCommandList ResCommandList;
-		device->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
+		ResCommandList.m_resCmdAlloc = RequestAllocator();
 		device->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, ResCommandList.m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&ResCommandList.m_resCmdList));
 		m_resCmdLists.push(ResCommandList);
 	}
-
-	device->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&m_fence));
-	m_fenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
 }
 
 void ResourceCommandQueue::WaitSync()
@@ -244,8 +247,6 @@ uint64 ResourceCommandQueue::Fence()
 	return m_fenceValue;
 }
 
-
-
 uint64 ResourceCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscCommandList, bool bBlocking)
 {
 	//nvtxRangePushA("FlushResourceCommandQueue");
@@ -268,28 +269,17 @@ uint64 ResourceCommandQueue::FlushResourceCommandQueue(ResourceCommandList& rscC
 			std::unique_lock<std::mutex> lock(m_rscMutex);
 			m_resCmdLists.push(rscCommandList);
 		}
-		m_rscCv.notify_one();
 	}
 	else
 	{
-		nvtxRangePushA("MakeThread");
-		hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-		auto func = [=]() {
-			static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
-			m_fence->SetEventOnCompletion(fenceValue, threadFenceEvent);
-			// GPU가 특정 FenceValue에 도달할 때까지 대기
-			WaitForSingleObject(threadFenceEvent, INFINITE);
-
-			rscCommandList.m_resCmdAlloc->Reset();
-			rscCommandList.m_resCmdList->Reset(rscCommandList.m_resCmdAlloc.Get(), nullptr);
-			{
-				std::unique_lock<std::mutex> lock(m_rscMutex);
-				m_resCmdLists.push(rscCommandList);
-			}
-			m_rscCv.notify_one(); };
-		tPool.EnqueueRenderJob(func);
-
-		nvtxRangePop();
+		static thread_local HANDLE threadFenceEvent = ::CreateEvent(nullptr, FALSE, FALSE, nullptr);
+		m_fence->SetEventOnCompletion(fenceValue, threadFenceEvent);
+		DiscardAllocator(fenceValue, rscCommandList.m_resCmdAlloc.Get());
+		rscCommandList.m_resCmdAlloc = nullptr;
+		{
+			std::unique_lock<std::mutex> lock(m_rscMutex);
+			m_resCmdLists.push(rscCommandList);
+		}
 	}
 	//nvtxRangePop();
 	return fenceValue;
@@ -301,15 +291,34 @@ ResourceCommandList ResourceCommandQueue::GetResourceCmdList()
 	if (m_resCmdLists.empty())
 	{
 		ResourceCommandList ResCommandList;
-		DEVICE->CreateCommandAllocator(D3D12_COMMAND_LIST_TYPE_DIRECT, IID_PPV_ARGS(&ResCommandList.m_resCmdAlloc));
+		ResCommandList.m_resCmdAlloc = RequestAllocator();
 		DEVICE->CreateCommandList(0, D3D12_COMMAND_LIST_TYPE_DIRECT, ResCommandList.m_resCmdAlloc.Get(), nullptr, IID_PPV_ARGS(&ResCommandList.m_resCmdList));
 		m_resCmdLists.push(ResCommandList);
 	}
-	//m_rscCv.wait(lock, [this]() { return !m_resCmdLists.empty(); });
 
 	ResourceCommandList rcsCommandList = m_resCmdLists.front();
 	m_resCmdLists.pop();
+	if (rcsCommandList.m_resCmdAlloc == nullptr)
+	{
+		rcsCommandList.m_resCmdAlloc = RequestAllocator();
+		rcsCommandList.m_resCmdList->Reset(rcsCommandList.m_resCmdAlloc.Get(), nullptr);
+	}
+	
+
 	return rcsCommandList;
 }
 
+ID3D12CommandAllocator* ResourceCommandQueue::RequestAllocator()
+{
+	uint64_t CompletedFence = m_fence->GetCompletedValue();
+
+	return m_AllocatorPool.RequestAllocator(CompletedFence);
 }
+
+void ResourceCommandQueue::DiscardAllocator(uint64_t FenceValue, ID3D12CommandAllocator* Allocator)
+{
+	m_AllocatorPool.DiscardAllocator(FenceValue, Allocator);
+}
+
+}
+

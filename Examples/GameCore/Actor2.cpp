@@ -76,6 +76,11 @@ void Actor::Tick(float dt)
     UpdateState();
 }
 
+void Actor::RequestStateChange(EActorStateType InType)
+{
+    SetState(InType);
+}
+
 //Camera ฐüทร
 void Actor::ActiveCamera()
 {

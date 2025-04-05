@@ -21,7 +21,7 @@ namespace dengine {
 	{
 		ActorState::Finish();
 		std::shared_ptr<Actor> actorLock = m_actor.lock();
-		actorLock->SetState(EActorStateType::Idle);
+		actorLock->RequestStateChange(EActorStateType::Idle);
 	}
 	// 인풋 받아 리천
 	void AttackState::Transition()

@@ -35,7 +35,7 @@ BoundingBox GetBoundingBoxFromVertices(const vector<dengine::Vertex>& vertices) 
     return BoundingBox(center, extents);
 }
 
-void GetExtendBoundingBox2(const BoundingBox& inBox, BoundingBox& outBox) {
+void GetExtendBoundingBox(const BoundingBox& inBox, BoundingBox& outBox) {
 
     Vector3 minCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
     Vector3 maxCorner = Vector3(inBox.Center) - Vector3(inBox.Extents);
@@ -435,7 +435,7 @@ void MeshLoadHelper::LoadModelGpuData(const string& key)
         meshBlock.boundingBox = GetBoundingBoxFromVertices(meshDatas[0].vertices);
         for (size_t i = 1; i < meshDatas.size(); i++) {
             auto bb = GetBoundingBoxFromVertices(meshDatas[0].vertices);
-            GetExtendBoundingBox2(bb, meshBlock.boundingBox);
+            GetExtendBoundingBox(bb, meshBlock.boundingBox);
         }
 
         auto meshData = GeometryGenerator::MakeWireBox(

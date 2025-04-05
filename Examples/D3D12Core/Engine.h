@@ -10,6 +10,8 @@
 #include "RenderTargetGroup.h"
 #include "../Legacy/Camera.h"
 namespace dengine {
+using DirectX::SimpleMath::Ray;
+
 class Device;
 class CommandQueue;
 class RootSignature;
@@ -54,6 +56,8 @@ public:
 
 public:
 	float GetAspectRatio() const;
+	void ProcessMouseControl();
+	void SelectClosestActor(const Ray& pickingRay, float& minDist);
 	void SetMainViewport();
 	void ResizeWindow(int32 width, int32 height);
 	

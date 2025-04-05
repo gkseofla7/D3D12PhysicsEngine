@@ -10,7 +10,7 @@ public:
 	virtual ~Texture();
 
 	void LoadTexture(const wstring& path, const bool isCubeMap = false, const bool usSRGB = false, const bool async = true );
-	virtual shared_ptr<Texture> GetTexture() { return std::dynamic_pointer_cast<Texture>(shared_from_this()); }
+	virtual shared_ptr<Texture> CastTexture() override { return std::dynamic_pointer_cast<Texture>(shared_from_this()); }
 public:
 	void Create(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty, 
 		D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor = Vector4());

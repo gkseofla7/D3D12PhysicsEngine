@@ -333,7 +333,7 @@ bool Engine::InitScene()
 
 	for (int i = 0; i < 10; i++)
 	{
-		for (int j = 0; j < 10; j++)
+		for (int j = 0; j < 3; j++)
 		{
 			std::string path = "../Assets/Characters/Mixamo/";
 			std::string characterName = "character.fbx";
@@ -352,7 +352,6 @@ bool Engine::InitScene()
 			shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
 			wizard->Initialize(wizardModel);
 			m_actorList.push_back(wizard);
-			m_activateActor = m_wizard;
 		}
 
 	}
@@ -422,7 +421,6 @@ void Engine::CreateWizard()
 	shared_ptr<Wizard> wizard = make_shared<Wizard>(wizardModel);
 	wizard->Initialize(wizardModel);
 	m_actorList.push_back(wizard);
-	m_activateActor = m_wizard;
 
 	i++;
 }
@@ -432,15 +430,15 @@ void Engine::Update(float dt)
 	MeshLoadHelper::LoadAllGpuUnloadedModel();
 	// 리소스 버퍼에서만 Upload 전에 모두 사용하면 업데이트하도록한다.
 	GetResourceCmdQueue()->WaitFrameSyncGpu(BACKBUFFER_INDEX);
+	ProcessMouseControl();
+
 	m_camera.UpdateKeyboard(dt, m_keyPressed);
-	//m_wizard->Tick(dt);
-	nvtxRangePushA("ActorTick");
 	for (shared_ptr<Actor> actor : m_actorList)
 	{
 		actor->Tick(dt);
 	}
-	nvtxRangePop();
-	nvtxRangePushA("ObjectTick");
+
+
 	for (shared_ptr<Object> object: m_objectList)
 	{
 		object->Tick(dt);
@@ -449,11 +447,9 @@ void Engine::Update(float dt)
 	m_skybox->Tick(dt);
 	m_screenSquare->Tick(dt);
 	m_ground->Tick(dt);
-	nvtxRangePop();
 
-	nvtxRangePushA("UpdateGlobalConstants");
+
 	UpdateGlobalConstants(dt);
-	nvtxRangePop();
 }
 
 void Engine::Render()
@@ -1052,7 +1048,45 @@ float Engine::GetAspectRatio() const
 {
 	return float(m_window.width) / m_window.height;
 }
+void Engine::ProcessMouseControl() 
+{
+	if (m_leftButton || m_rightButton) 
+	{
+		const Matrix viewRow = m_camera.GetViewRow();
+		const Matrix projRow = m_camera.GetProjRow();
+		const Vector3 ndcNear = Vector3(m_mouseNdcX, m_mouseNdcY, 0.0f);
+		const Vector3 ndcFar = Vector3(m_mouseNdcX, m_mouseNdcY, 1.0f);
+		const Matrix invProjView = (viewRow * projRow).Invert();
+		const Vector3 worldNear = Vector3::Transform(ndcNear, invProjView);
+		const Vector3 worldFar = Vector3::Transform(ndcFar, invProjView);
+		Vector3 dir = worldFar - worldNear;
+		dir.Normalize();
+		const Ray curRay = SimpleMath::Ray(worldNear, dir);
 
+		float dist = 0.0f;
+		SelectClosestActor(curRay, dist);
+	}
+}
+
+void Engine::SelectClosestActor(const Ray& pickingRay, float& minDist) 
+{
+	minDist = 1e5f;
+	for (auto& actor : m_actorList) {
+		if (actor == nullptr)
+		{
+			continue;
+		}
+		float dist = 0.0f;
+		std::shared_ptr<DModel> model = actor->GetModel();
+
+		if (actor->IsPickable() &&
+			pickingRay.Intersects(model->m_boundingSphere, dist) &&
+			dist < minDist) {
+			m_activateActor = actor;
+			minDist = dist;
+		}
+	}
+}
 
 void ResolveMSAATexture(
 	ID3D12GraphicsCommandList* commandList,

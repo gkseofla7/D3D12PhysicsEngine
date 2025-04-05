@@ -16,7 +16,7 @@ public:
 	void RegisterOnLoadCallback(Callback callback) {
 		m_loadCallback = callback;
 	}
-	virtual shared_ptr<Texture> GetTexture() { return nullptr; }
+	virtual shared_ptr<Texture> CastTexture() { return nullptr; }
 private:
 	ELoadType m_loadType = ELoadType::NotLoaded;
 	EResourceType m_resourceType = EResourceType::None;

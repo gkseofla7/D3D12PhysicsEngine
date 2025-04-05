@@ -12,13 +12,12 @@ namespace dengine {
 	//using std::map;
 class Actor : public Object, public std::enable_shared_from_this<Actor> {
 public:
+	
 	Actor();
 	Actor(shared_ptr<DModel> inModel);
 	virtual void Initialize(shared_ptr<DModel> inModel);
 	virtual void Tick(float dt);
-	
-	// State
-	void SetState(EActorStateType InType);
+	void RequestStateChange(EActorStateType InType);
 	EActorStateType GetPrevState() { return m_prevStateType; }
 	// Camera
 	void ActiveCamera();
@@ -33,9 +32,9 @@ public:
 private:
 	void UpdateState();
 public:
-	//ActorState GetActorState() { return m_actorState; }
 protected:
 	virtual void InitBoundingKey() {};
+	void SetState(EActorStateType InType);
 protected:
 	shared_ptr<class Camera> m_camera;
 	Matrix m_cameraCorrection;

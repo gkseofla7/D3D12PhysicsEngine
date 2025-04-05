@@ -96,7 +96,7 @@ bool MeshLoadHelper::LoadModel( const string& inPath, const string& inName)
 bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
 {
     string key = inPath + inName;
-    return GetMaterial(key, inName, InConstants);
+    return GetMaterial(key, InConstants);
 }
 bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InConstants)
 {

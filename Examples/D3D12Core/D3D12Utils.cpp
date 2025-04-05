@@ -237,7 +237,7 @@ void ReadImage(const std::string albedoFilename,
         }
 }
 
-void D3D12Utils::CreateTextureHelper(ComPtr<ID3D12Device>& device,
+void D3D12Utils::CreateTextureFromImage(ComPtr<ID3D12Device>& device,
     const int width, const int height, const vector<uint8_t>& image,
     const DXGI_FORMAT pixelFormat, ComPtr<ID3D12Resource>& texture)
 {
@@ -354,14 +354,14 @@ void D3D12Utils::LoadMetallicRoughnessTexture(
             }
         }
     }
-    CreateTextureHelper(device, imageMap[filename]->width, imageMap[filename]->height, imageMap[filename]->image,
+    CreateTextureFromImage(device, imageMap[filename]->width, imageMap[filename]->height, imageMap[filename]->image,
         DXGI_FORMAT_R8G8B8A8_UNORM, texture);
 }
 
 void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bAsync,
     shared_ptr<Resource> outResource)
 {
-    std::shared_ptr<Texture> outTexture = outResource->GetTexture();
+    std::shared_ptr<Texture> outTexture = outResource->CastTexture();
     if (outTexture == nullptr)
     {
         return;
@@ -378,7 +378,7 @@ void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bA
             // 로드하기
             std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
             s_resourceMap[path].loadType = ELoadType::Loading;
-            s_resourceMap[path].pendingResources.push_back(outResource);
+            s_resourceMap[path].awaitingSetResources.push_back(outResource);
         }
         if (bAsync)
         {
@@ -398,7 +398,7 @@ void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bA
         std::unique_lock<std::shared_mutex> writeLock(s_resourceMap[path].resMutex);
         if (s_resourceMap[path].loadType == ELoadType::Loading)
         {
-            s_resourceMap[path].pendingResources.push_back(outResource);
+            s_resourceMap[path].awaitingSetResources.push_back(outResource);
         }
         else
         {
@@ -415,7 +415,7 @@ void D3D12Utils::LoadTexture(const std::wstring path, const bool usSRGB, bool bA
 void D3D12Utils::CreateTexture(D3D12_RESOURCE_DESC resourceDesc, const D3D12_HEAP_PROPERTIES& heapProperty,
     D3D12_HEAP_FLAGS heapFlags, D3D12_RESOURCE_FLAGS resFlags, Vector4 clearColor, shared_ptr<Resource> outResource)
 {
-    std::shared_ptr<Texture> outTexture = outResource->GetTexture();
+    std::shared_ptr<Texture> outTexture = outResource->CastTexture();
     if (outTexture == nullptr)
     {
         return;
@@ -529,7 +529,7 @@ void D3D12Utils::LoadTextureImpl(const std::wstring path, const bool usSRGB)
         s_resourceMap[path].resource = texture;
         s_resourceMap[path].loadType = ELoadType::Loaded;
 
-        for (shared_ptr<Resource>& resource : s_resourceMap[path].pendingResources)
+        for (shared_ptr<Resource>& resource : s_resourceMap[path].awaitingSetResources)
         {
             std::shared_ptr<Texture> resTex = std::dynamic_pointer_cast<Texture>(resource);
             if (resTex == nullptr)
@@ -538,7 +538,7 @@ void D3D12Utils::LoadTextureImpl(const std::wstring path, const bool usSRGB)
             }
             resTex->CreateFromResource(texture);
         }
-        s_resourceMap[path].pendingResources.clear();
+        s_resourceMap[path].awaitingSetResources.clear();
     }
 }
 
@@ -620,7 +620,7 @@ void D3D12Utils::LoadTextureNotUsingScratchImage(const std::wstring path, const 
         s_resourceMap[path].resource = texture;
         s_resourceMap[path].loadType = ELoadType::Loaded;
 
-        for (shared_ptr<Resource>& resource : s_resourceMap[path].pendingResources)
+        for (shared_ptr<Resource>& resource : s_resourceMap[path].awaitingSetResources)
         {
             std::shared_ptr<Texture> resTex = std::dynamic_pointer_cast<Texture>(resource);
             if (resTex == nullptr)
@@ -629,7 +629,7 @@ void D3D12Utils::LoadTextureNotUsingScratchImage(const std::wstring path, const 
             }
             resTex->CreateFromResource(texture);
         }
-        s_resourceMap[path].pendingResources.clear();
+        s_resourceMap[path].awaitingSetResources.clear();
     }
 
 }
@@ -659,7 +659,7 @@ void D3D12Utils::LoadAlbedoOpacityTexture(ComPtr<ID3D12Device> device, const std
             ReadImage(albedoFilename, opacityFilename, imageMap[filename]->image, imageMap[filename]->width, imageMap[filename]->height);
         }
     }
-    CreateTextureHelper(device, imageMap[filename]->width, imageMap[filename]->height, imageMap[filename]->image, imageMap[filename]->pixelFormat,
+    CreateTextureFromImage(device, imageMap[filename]->width, imageMap[filename]->height, imageMap[filename]->image, imageMap[filename]->pixelFormat,
         texture);
 }
 

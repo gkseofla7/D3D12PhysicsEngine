@@ -51,11 +51,11 @@ namespace dengine {
 
 		if (m_jumpState == EJumpStateType::JumpStateInPlace)
 		{
-			actorLock->SetState(EActorStateType::Idle);
+			actorLock->RequestStateChange(EActorStateType::Idle);
 		}
 		else if (m_jumpState == EJumpStateType::JumpStateRunning)
 		{
-			actorLock->SetState(EActorStateType::Move);
+			actorLock->RequestStateChange(EActorStateType::Move);
 		}
 	}
 	// 인풋 받아 리천

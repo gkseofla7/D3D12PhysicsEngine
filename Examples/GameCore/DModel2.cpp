@@ -233,8 +233,10 @@ bool DModel::LoadMesh()
         //m_boundingBoxMesh->meshConstsGPU = m_meshConsts.Get();
         //m_boundingBoxMesh->materialConstsGPU = m_materialConsts.Get();
 
+        m_boundingSphere.Center = this->m_worldRow.Translation();
         m_boundingSphere.Radius = m_scale * m_boundingSphere.Radius;
 
+        m_boundingBox.Center = this->m_worldRow.Translation();
         m_boundingBox.Extents = XMFLOAT3(m_boundingBox.Extents.x * m_scale, m_boundingBox.Extents.y * m_scale, m_boundingBox.Extents.z * m_scale);
     }
     else
