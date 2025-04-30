@@ -68,6 +68,7 @@ Engine::~Engine()
 
 void Engine::Init(const WindowInfo& info)
 {
+	g_MainThreadId = std::this_thread::get_id();
 	m_window = info;
 
 	InitMainWindow();
@@ -432,7 +433,6 @@ void Engine::CreateWizard()
 
 void Engine::Update(float dt)
 {
-	MeshLoadHelper::LoadAllGpuUnloadedModel();
 	// 리소스 버퍼에서만 Upload 전에 모두 사용하면 업데이트하도록한다.
 	GetResourceCmdQueue()->WaitFrameSyncGpu(BACKBUFFER_INDEX);
 	ProcessMouseControl();

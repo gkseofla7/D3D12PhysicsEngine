@@ -168,6 +168,9 @@ public:
 
 	shared_ptr<InputController> m_inputController;
 	// EDaerimGTA
+
+
+
 };
 }
 

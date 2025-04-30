@@ -12,6 +12,7 @@
 #include <windows.h>
 #include <wrl/client.h> // ComPtr
 #include <unordered_map>
+#include <thread>
 //#include "ThreadPool.h"
 #include <array>
 #include <comdef.h>  // _com_error를 사용하여 HRESULT 메시지 변환
@@ -146,6 +147,7 @@ public:								\
 #define RESOURCE_CMD_LIST	GEngine->GetResourceCmdQueue()->GetResourceCmdList()
 #define BACKBUFFER_INDEX	GEngine->GetSwapChain()->GetBackBufferIndex()
 #define MAX_LIGHTS_COUNT 3
+#define MAIN_THREAD_ID g_MainThreadId
 using Microsoft::WRL::ComPtr;
 using std::shared_ptr;
 using std::wstring;
@@ -158,7 +160,7 @@ using DirectX::SimpleMath::Matrix;
 
 
 extern std::unique_ptr<class Engine> GEngine;
-
+extern std::thread::id g_MainThreadId;
 
 //inline void ThrowIfFailed(HRESULT hr) {
 //	if (FAILED(hr)) {

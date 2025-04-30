@@ -49,10 +49,10 @@ void GetExtendBoundingBox(const BoundingBox& inBox, BoundingBox& outBox) {
     outBox.Extents = maxCorner - outBox.Center;
 }
 
-vector<dengine::MeshData> CreateMeshData(MeshBlock& OutMeshBlock)
+vector<dengine::MeshData> CreateMeshData(const string& inPathName, const string& inFileName)
 { 
 	auto [mesheDatas, _] =
-		GeometryGenerator::ReadAnimationFromFile(OutMeshBlock.PathName, OutMeshBlock.FileName);
+		GeometryGenerator::ReadAnimationFromFile(inPathName, inFileName);
     return mesheDatas;
 }
 AnimationData ReadAnimationFromFile2(string path, string name)
@@ -62,24 +62,35 @@ AnimationData ReadAnimationFromFile2(string path, string name)
 	return ani;
 }
 
-void MeshLoadHelper::LoadAllGpuUnloadedModel()
-{
-    for (auto& Pair : s_meshMap)
-    {
-        MeshBlock& mBloock = Pair.second;
-        if (mBloock.MeshDataLoadType == hlab::ELoadType::Loading && mBloock.Loader._Is_ready() == true)
-        {
-            hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-            auto func = [&Pair]() {
-                return LoadModelGpuData(Pair.first); };
-            tPool.EnqueueJob(func);
-        } 
-    }
-}
-
 bool MeshLoadHelper::LoadModel(const string& inPath, const string& inName)
 {
-    return LoadModelCpuData(inPath, inName);
+    if (std::this_thread::get_id() != MAIN_THREAD_ID)
+    {
+        std::cerr << "[FATAL] This function must be called from the main thread!" << std::endl;
+        assert(false);
+    }
+    string key = inPath + inName;
+    if (s_meshMap.find(key) == s_meshMap.end())
+    {
+        s_meshMap[key] = MeshBlock();
+
+        MeshBlock& meshBlocks = s_meshMap[key];
+        meshBlocks.key = key;
+        meshBlocks.PathName = inPath;
+        meshBlocks.FileName = inName;
+        meshBlocks.MeshDataLoadType = ELoadType::Loading;
+        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
+        auto func = [&meshBlocks]()
+            {
+                meshBlocks.MeshDatas = CreateMeshData(meshBlocks.PathName, meshBlocks.FileName);
+                meshBlocks.MeshDataLoadType = ELoadType::Loaded;
+                LoadModelGpuData(meshBlocks.key);
+            };
+       tPool.EnqueueJob(func);
+        s_meshMap[key].MeshDataLoadType = ELoadType::Loading;
+        return false;
+    }
+    return s_meshMap[key].MeshDataLoadType == ELoadType::Loaded;
 }
 bool MeshLoadHelper::GetMaterial(const string& inPath, const string& inName, MaterialConstants& InConstants)
 {
@@ -93,7 +104,7 @@ bool MeshLoadHelper::GetMaterial(const string& InMeshKey, MaterialConstants& InC
     {
         return false;
     }
-    if (s_meshMap[InMeshKey].MeshDataLoadType != hlab::ELoadType::Loaded)
+    if (s_meshMap[InMeshKey].MeshDataLoadType != ELoadType::Loaded)
     {
         return false;
     }
@@ -114,7 +125,7 @@ void MeshLoadHelper::LoadModel(const string& InKey, vector<dengine::MeshData> Me
     }
     std::vector<MeshData>& meshDatas = s_meshMap[InKey].MeshDatas;
     meshDatas = MeshDatas;
-    s_meshMap[InKey].MeshDataLoadType = hlab::ELoadType::Loaded;
+    s_meshMap[InKey].MeshDataLoadType = ELoadType::Loaded;
     LoadModelGpuData(InKey);
 }
 
@@ -130,7 +141,7 @@ bool MeshLoadHelper::GetMesh(const string& InKey, vector<DMesh>*& OutMesh)
     {
         return false;
     }
-    if (s_meshMap[InKey].MeshLoadType != hlab::ELoadType::Loaded)
+    if (s_meshMap[InKey].MeshLoadType != ELoadType::Loaded)
     {
         return false;
     }
@@ -153,7 +164,7 @@ bool MeshLoadHelper::GetBoundingMesh(const string& InMeshKey,
     {
         return false;
     }
-    if (s_meshMap[InMeshKey].MeshLoadType != hlab::ELoadType::Loaded)
+    if (s_meshMap[InMeshKey].MeshLoadType != ELoadType::Loaded)
     {
         return false;
     }
@@ -170,13 +181,14 @@ string MeshLoadHelper::LoadBoxMesh(float InHalfExtent, bool bIndicesReverse)
     string Key = "Box"  + std::to_string(InHalfExtent);
     if (s_meshMap.find(Key) == s_meshMap.end())
     {
+        s_meshMap[Key].key = Key;
         std::vector<MeshData>& meshDatas = s_meshMap[Key].MeshDatas;
         meshDatas = { GeometryGenerator::MakeBox(InHalfExtent) };
         if (bIndicesReverse)
         {
             std::reverse(meshDatas[0].indices.begin(), meshDatas[0].indices.end());
         }
-        s_meshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
+        s_meshMap[Key].MeshDataLoadType = ELoadType::Loaded;
 
         auto func = [Key]() {
             return LoadModelGpuData(Key); };
@@ -192,9 +204,10 @@ string MeshLoadHelper::LoadSquareMesh(const float scale, const Vector2 texScale)
     string Key = "Square" + std::to_string(scale);
     if (s_meshMap.find(Key) == s_meshMap.end())
     {
+        s_meshMap[Key].key = Key;
         std::vector<MeshData>& meshDatas = s_meshMap[Key].MeshDatas;
         meshDatas = { GeometryGenerator::MakeSquare(scale, texScale) };
-        s_meshMap[Key].MeshDataLoadType = hlab::ELoadType::Loaded;
+        s_meshMap[Key].MeshDataLoadType = ELoadType::Loaded;
 
         auto func = [Key]() {
             return LoadModelGpuData(Key); };
@@ -204,63 +217,30 @@ string MeshLoadHelper::LoadSquareMesh(const float scale, const Vector2 texScale)
     return Key;
 }
 
-bool MeshLoadHelper::LoadModelCpuData(const string& inPath, const string& inName)
-{
-    string key = inPath + inName;
-    if (s_meshMap.find(key) == s_meshMap.end())
-    {
-        s_meshMap[key] = MeshBlock();
-
-        MeshBlock& meshBlocks = s_meshMap[key];
-        meshBlocks.PathName = inPath;
-        meshBlocks.FileName = inName;
-
-        hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-        auto func = [&meshBlocks]() 
-            {
-                return CreateMeshData(meshBlocks);
-            };
-        s_meshMap[key].Loader = tPool.EnqueueJob(func);
-        s_meshMap[key].MeshDataLoadType = hlab::ELoadType::Loading;
-        return false;
-    }
-    return s_meshMap[key].MeshDataLoadType == hlab::ELoadType::Loaded;
-}
-
 
 void MeshLoadHelper::LoadModelGpuData(const string& key)
 {
     {
         std::lock_guard<std::mutex> lock(MeshLoadHelper::s_meshMapGuard);
-
-        // cpu 데이터 로드 안됨
+        // CPU 데이터가 로드되지 않은 경우
         if (s_meshMap.find(key) == s_meshMap.end()
-            || s_meshMap[key].MeshDataLoadType == hlab::ELoadType::NotLoaded)
+            || s_meshMap[key].MeshDataLoadType != ELoadType::Loaded )
         {
             return;
         }
-
-        // cpu 데이터 로딩중
-        if (s_meshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && s_meshMap[key].Loader._Is_ready() == false)
+        // GPU 데이터가 이미 로딩중이거나 로드 된경우
+        if (s_meshMap[key].MeshLoadType == ELoadType::Loading)
         {
             return;
         }
-        // 이미 gpu 데이터 로딩중 or Loaded
-        if (s_meshMap[key].MeshLoadType == hlab::ELoadType::Loading
-            || s_meshMap[key].MeshLoadType == hlab::ELoadType::Loaded)
+        if (s_meshMap[key].MeshLoadType == ELoadType::Loaded)
         {
             return;
         }
-        s_meshMap[key].MeshLoadType = hlab::ELoadType::Loading;
+        s_meshMap[key].MeshLoadType = ELoadType::Loading;
     }
 
     std::vector<MeshData>& meshDatas = s_meshMap[key].MeshDatas;
-    if (s_meshMap[key].MeshDataLoadType == hlab::ELoadType::Loading && s_meshMap[key].Loader._Is_ready() == true)
-    {
-        meshDatas = s_meshMap[key].Loader.get();
-        s_meshMap[key].MeshDataLoadType = hlab::ELoadType::Loaded;
-    }
-
     MeshBlock& meshBlock = s_meshMap[key];
     vector<DMesh>& meshes = meshBlock.Meshes;
     int index = 0;
@@ -478,7 +458,7 @@ void MeshLoadHelper::LoadModelGpuData(const string& key)
         D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
             meshBlock.boundingSphereMesh->indexBuffer, meshBlock.boundingSphereMesh->indexBufferView);
     }
-    s_meshMap[key].MeshLoadType = hlab::ELoadType::Loaded;
+    s_meshMap[key].MeshLoadType = ELoadType::Loaded;
 }
 
 }
