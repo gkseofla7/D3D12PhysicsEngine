@@ -28,6 +28,7 @@ class DSkinnedMeshModel;
 class Actor;
 class Wizard;
 class Object;
+class InputController;
 template <typename T_CONSTS> class ConstantBuffer;
 struct GlobalConstants;
 
@@ -115,6 +116,7 @@ private:
 
 	shared_ptr<GraphicsPSO> m_defaultGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_skinnedGraphicsPSO;
+	shared_ptr<GraphicsPSO> m_billboardGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_skyboxGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_postEffectGraphicsPSO;
 	shared_ptr<GraphicsPSO> m_shadowGraphicsPSO;
@@ -150,8 +152,6 @@ public:
 	bool m_rightButton = false;
 	bool m_dragStartFlag = false;
 
-	bool m_keyPressed[256] = {false,};
-
 	// ÄÁÅÙÃ÷ °ü·Ã
 	hlab::Camera m_camera;
 	// DaerimGTA
@@ -166,7 +166,7 @@ public:
 	vector<shared_ptr<Actor>> m_actorList;
 	vector<shared_ptr<Object>> m_objectList;
 
-	shared_ptr<Actor> m_activateActor;
+	shared_ptr<InputController> m_inputController;
 	// EDaerimGTA
 };
 }

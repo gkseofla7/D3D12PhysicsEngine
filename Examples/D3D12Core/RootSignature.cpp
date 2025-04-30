@@ -10,6 +10,7 @@ void RootSignature::Init()
 	//CreateSkinnedRootSignature();
 	CreateSkyboxRootSignature();
 	CreateSamplingRootSignature();
+	CreateBillboardRootSignature();
 	//CreateShadowRootSignature();
 }
 
@@ -79,6 +80,56 @@ void RootSignature::CreateDefaultRootSignature()
 
 	CreateRootSignature(m_defaultRootSignature, rootParameters);
 }
+
+void RootSignature::CreateBillboardRootSignature()
+{
+	const size_t ROOT_PARAM_COUNT = 7;
+	std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters(ROOT_PARAM_COUNT);
+	{
+		size_t sampleSize = GEngine->GetSamples()->GetSampleDesc().size();
+		sampleSize = std::min(sampleSize, size_t(7)); // 최대 7개 제한
+		CD3DX12_DESCRIPTOR_RANGE1 sampleRanges[7] = {};
+		for (size_t i = 0; i < sampleSize; ++i) {
+			sampleRanges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, static_cast<UINT>(i));
+		}
+		rootParameters[0].InitAsDescriptorTable(static_cast<UINT>(sampleSize), &sampleRanges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	// t10, t11, t12, t13
+	{
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[4] = {};
+		for (int i = 0; i < 4; ++i) {
+			ranges[i].Init(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 10 + i);
+			ranges[i].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+		}
+		rootParameters[1].InitAsDescriptorTable(4, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	// 공용 데이터
+	// b0, GlobalConstants
+	{
+		rootParameters[2].InitAsConstantBufferView(static_cast<uint32>(CBV_REGISTER::b0)); // b0
+		//rootParameters[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_CBV;
+	}
+	// 로컬 데이터
+	// b1 : MeshConstants, b2 : MaterialConstants
+	{
+		//CD3DX12_DESCRIPTOR_RANGE1 ranges[2] = {};
+		//ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+		//ranges[0].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		//ranges[1].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 2);
+		//ranges[1].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		//rootParameters[3].InitAsDescriptorTable(2, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+	// b1 : BillboardConstants
+	{
+		CD3DX12_DESCRIPTOR_RANGE1 ranges[1] = {};
+		ranges[0].Init(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, 1);
+		ranges[0].Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		rootParameters[3].InitAsDescriptorTable(1, &ranges[0], D3D12_SHADER_VISIBILITY_ALL);
+	}
+
+	CreateRootSignature(m_billboardRootSignature, rootParameters);
+}
+
 
 void RootSignature::CreateSkyboxRootSignature()
 {

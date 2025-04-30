@@ -57,7 +57,7 @@ void D3D12Utils::CreateVertexShader(
 
     UINT compileFlags = 0;
 #if defined(DEBUG) || defined(_DEBUG)
-    //compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
     ComPtr<ID3DBlob> errorBlob;
@@ -75,7 +75,7 @@ void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device> device,
     ComPtr<ID3DBlob> errorBlob;
     UINT compileFlags = 0;
 #if defined(DEBUG) || defined(_DEBUG)
-    //compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
 #endif
 
     // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
@@ -86,6 +86,27 @@ void D3D12Utils::CreatePixelShader(ComPtr<ID3D12Device> device,
 
     CheckResult(hr, errorBlob.Get());
 }
+
+void D3D12Utils::CreateGeometryShader(
+    ComPtr<ID3D12Device> device, const wstring& filename,
+    ComPtr<ID3DBlob>& geometryShader)
+{
+    ComPtr<ID3DBlob> errorBlob;
+
+    UINT compileFlags = 0;
+#if defined(DEBUG) || defined(_DEBUG)
+    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+#endif
+
+    // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
+    // D3D_COMPILE_STANDARD_FILE_INCLUDE 추가: 쉐이더에서 include 사용
+    HRESULT hr = D3DCompileFromFile(
+        filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main",
+        "gs_5_0", compileFlags, 0, &geometryShader, &errorBlob);
+
+    CheckResult(hr, errorBlob.Get());
+}
+
 
 void D3D12Utils::CreatePipelineState(ComPtr<ID3D12Device>& device, D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc, ComPtr<ID3D12PipelineState>& OutPipelineState)
 {

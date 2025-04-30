@@ -12,10 +12,11 @@
 #include <pix.h>
 #include "nvtx3/nvToolsExt.h"
 // 아래는 추후 다 제거 예정
-#include "../GameCore/DSkinnedMeshModel2.h"
-#include "../GameCore/MeshLoadHelper2.h"
-#include "../GameCore/GeometryGenerator2.h"
-#include "../GameCore/Wizard2.h"
+#include "GameCore/DSkinnedMeshModel2.h"
+#include "GameCore/MeshLoadHelper2.h"
+#include "GameCore/GeometryGenerator2.h"
+#include "GameCore/Wizard2.h"
+#include "GameCore/InputController.h"
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd,
 	UINT msg,
 	WPARAM wParam,
@@ -230,6 +231,9 @@ void Engine::InitPSO()
 	m_skinnedGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_skinnedGraphicsPSO->Init(m_rootSignature->GetGraphicsRootSignature(), m_graphicsPipelineState->GetSkinnedPipelineState(), PSOType::DEFAULT);
 
+	m_billboardGraphicsPSO = std::make_shared< GraphicsPSO>();
+	m_billboardGraphicsPSO->Init(m_rootSignature->GetBillboardRootSignature(), m_graphicsPipelineState->GetSkinnedPipelineState(), PSOType::DEFAULT);
+
 	m_skyboxGraphicsPSO = std::make_shared< GraphicsPSO>();
 	m_skyboxGraphicsPSO->Init(m_rootSignature->GetSkyboxRootSignature(), m_graphicsPipelineState->GetSkyboxPipelineState(), PSOType::SKYBOX);
 
@@ -331,9 +335,10 @@ bool Engine::InitScene()
 		L"SampleEnvHDR.dds", L"SampleSpecularHDR.dds",
 		L"SampleDiffuseHDR.dds", L"SampleBrdf.dds");
 
-	for (int i = 0; i < 10; i++)
+	m_inputController = make_shared<InputController>();
+	for (int i = 0; i < 1; i++)
 	{
-		for (int j = 0; j < 3; j++)
+		for (int j = 0; j < 1; j++)
 		{
 			std::string path = "../Assets/Characters/Mixamo/";
 			std::string characterName = "character.fbx";
@@ -432,7 +437,7 @@ void Engine::Update(float dt)
 	GetResourceCmdQueue()->WaitFrameSyncGpu(BACKBUFFER_INDEX);
 	ProcessMouseControl();
 
-	m_camera.UpdateKeyboard(dt, m_keyPressed);
+	//m_camera.UpdateKeyboard(dt, m_keyPressed);
 	for (shared_ptr<Actor> actor : m_actorList)
 	{
 		actor->Tick(dt);
@@ -995,38 +1000,11 @@ LRESULT Engine::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		m_rightButton = false;
 		break;
 	case WM_KEYDOWN:
-		if (m_activateActor != nullptr)
-		{
-			if (m_activateActor->MsgProc(wParam, true))
-			{
-				return true;
-			}
-		}
-		if (wParam == VK_NUMPAD0)
-		{
-			CreateWizard();
-		}
-		m_keyPressed[wParam] = true;
-		//if (wParam == VK_ESCAPE) { // ESC키 종료
-		//	DestroyWindow(hwnd);
-		//}
-		//if (wParam == VK_SPACE) {
-		//	m_lightRotate = !m_lightRotate;
-		//}
-		break;
 	case WM_KEYUP:
-		if (m_activateActor != nullptr)
+		if (m_inputController->MsgProc(msg, wParam, lParam))
 		{
-			if (m_activateActor->MsgProc(wParam, false))
-			{
-				return true;
-			}
+			return true;
 		}
-		if (wParam == 'F') { // f키 일인칭 시점
-			m_camera.m_useFirstPersonView = !m_camera.m_useFirstPersonView;
-		}
-
-		m_keyPressed[wParam] = false;
 		break;
 	case WM_MOUSEWHEEL:
 		m_wheelDelta = GET_WHEEL_DELTA_WPARAM(wParam);
@@ -1082,7 +1060,7 @@ void Engine::SelectClosestActor(const Ray& pickingRay, float& minDist)
 		if (actor->IsPickable() &&
 			pickingRay.Intersects(model->m_boundingSphere, dist) &&
 			dist < minDist) {
-			m_activateActor = actor;
+			m_inputController->Possess(actor);
 			minDist = dist;
 		}
 	}

@@ -40,11 +40,11 @@ void Wizard::Tick(float dt)
     {
         if (bLeft)
         {
-            UpdateRotationY((3.141592f * 60.0f / 180.0f * dt));
+            UpdateRotationY(-(3.141592f * 60.0f / 180.0f * dt));
         }
         if (bRight)
         {
-            UpdateRotationY(-(3.141592f * 60.0f / 180.0f * dt));
+            UpdateRotationY((3.141592f * 60.0f / 180.0f * dt));
         }
     }
 }

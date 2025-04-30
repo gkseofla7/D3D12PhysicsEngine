@@ -206,7 +206,6 @@ string MeshLoadHelper::LoadSquareMesh(const float scale, const Vector2 texScale)
 
 bool MeshLoadHelper::LoadModelCpuData(const string& inPath, const string& inName)
 {
-    // NOTICE. 메인 스레드에서만 실행중이라 아직은 동시 접근이 안됨
     string key = inPath + inName;
     if (s_meshMap.find(key) == s_meshMap.end())
     {
@@ -217,8 +216,10 @@ bool MeshLoadHelper::LoadModelCpuData(const string& inPath, const string& inName
         meshBlocks.FileName = inName;
 
         hlab::ThreadPool& tPool = hlab::ThreadPool::getInstance();
-        auto func = [&meshBlocks]() {
-            return CreateMeshData(meshBlocks); };
+        auto func = [&meshBlocks]() 
+            {
+                return CreateMeshData(meshBlocks);
+            };
         s_meshMap[key].Loader = tPool.EnqueueJob(func);
         s_meshMap[key].MeshDataLoadType = hlab::ELoadType::Loading;
         return false;

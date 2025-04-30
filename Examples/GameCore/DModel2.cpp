@@ -20,18 +20,6 @@ DModel::DModel(const string& meshKey)
     Initialize(meshKey);
 }
 
-void DModel::InitMeshBuffers(const MeshData& meshData,
-    shared_ptr<DMesh>& newMesh)
-{
-    D3D12Utils::CreateVertexBuffer(DEVICE, meshData.vertices,
-        newMesh->vertexBuffer, newMesh->vertexBufferView);
-    newMesh->indexCount = UINT(meshData.indices.size());
-    newMesh->vertexCount = UINT(meshData.vertices.size());
-    newMesh->stride = UINT(sizeof(Vertex));
-    D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
-        newMesh->indexBuffer, newMesh->indexBufferView);
-}
-
 void DModel::Initialize(const std::string& basePath,
     const std::string& filename) {
     // 일반적으로는 DMesh들이 m_mesh/materialConsts를 각자 소유 가능

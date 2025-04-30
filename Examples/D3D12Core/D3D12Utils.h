@@ -39,6 +39,9 @@ class D3D12Utils {
           ComPtr<ID3D12Device> device, wstring filename,
           ComPtr<ID3DBlob>& vertexShader,
           const vector<D3D_SHADER_MACRO> shaderMacros = {/* Empty default */ });
+      static void CreateGeometryShader(
+          ComPtr<ID3D12Device> device, const wstring& filename,
+              ComPtr<ID3DBlob>& geometryShader);
       static void CreatePixelShader(ComPtr<ID3D12Device> device,
           const wstring& filename,
           ComPtr<ID3DBlob>& pixelShader);

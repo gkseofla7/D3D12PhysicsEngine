@@ -21,8 +21,6 @@ public:
     virtual void Initialize(const string& basePath,
         const string& filename);
     void Initialize(const string& meshKey);
-    virtual void InitMeshBuffers(const MeshData& meshData,
-        shared_ptr<DMesh>& newMesh);
     virtual void Tick(float dt);
     virtual void UpdatePosition(const Vector3& inDelta);
     void SetWorldPosition(const Vector3& InPos);
@@ -70,11 +68,10 @@ public:
 protected:
     // Node : 이 값이 true여도 gpu 메모리에 올라간것은 보장되지 않는다.
     bool m_initializeMesh = false;
+    string m_meshKey;
 private:
     string m_basePath;
     string m_filename;
-
-    string m_meshKey;
 
     shared_ptr<DMesh> m_boundingBoxMesh;
     shared_ptr<DMesh> m_boundingSphereMesh;

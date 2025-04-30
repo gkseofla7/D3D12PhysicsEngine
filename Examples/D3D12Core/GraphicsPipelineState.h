@@ -15,6 +15,7 @@ public:
 private:
 	ComPtr<ID3D12PipelineState> m_defaultPipelineState;
 	ComPtr<ID3D12PipelineState> m_skinnedPipelineState;
+	ComPtr<ID3D12PipelineState> m_billboardPipelineState;
 	ComPtr<ID3D12PipelineState> m_skyboxPipelineState;
 	ComPtr<ID3D12PipelineState> m_postEffectPipelineState;
 	ComPtr<ID3D12PipelineState> m_shadowPipelineState;

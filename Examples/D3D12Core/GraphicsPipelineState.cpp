@@ -6,7 +6,7 @@
 namespace dengine {
 void GraphicsPipelineState::Init()
 {
-	D3D12_INPUT_ELEMENT_DESC basicIEs[] = {
+	const D3D12_INPUT_ELEMENT_DESC basicIEs[] = {
 	{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
 	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12,
@@ -17,7 +17,7 @@ void GraphicsPipelineState::Init()
 	D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
 
-	D3D12_INPUT_ELEMENT_DESC skinnedIEs[] = {
+	const D3D12_INPUT_ELEMENT_DESC skinnedIEs[] = {
 	{"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,
 	 D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12,
@@ -35,6 +35,8 @@ void GraphicsPipelineState::Init()
 	{"BLENDINDICES", 1, DXGI_FORMAT_R8G8B8A8_UINT, 0, 80,
 	 D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
 	};
+
+
 	D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
 	{
 		D3D12_RASTERIZER_DESC solidRSDesc; // front only
@@ -74,6 +76,19 @@ void GraphicsPipelineState::Init()
 		skinnedPsoDesc.InputLayout = { skinnedIEs, _countof(skinnedIEs) };
 		skinnedPsoDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetSkinnedVS().Get());
 		ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&skinnedPsoDesc, IID_PPV_ARGS(&m_skinnedPipelineState)));
+	}
+
+	{
+		//const D3D12_INPUT_ELEMENT_DESC billboardIEs[] = {
+		//	{"POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, // Vector4
+		//	 D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0} };
+		//D3D12_GRAPHICS_PIPELINE_STATE_DESC billboardPsoDesc = psoDesc;
+		//billboardPsoDesc.InputLayout = { billboardIEs, _countof(billboardIEs) };
+		//billboardPsoDesc.pRootSignature = ROOTSIGNATURE->GetBillboardRootSignature().Get();
+		//billboardPsoDesc.VS = CD3DX12_SHADER_BYTECODE(SHADER->GetBillboardVS().Get());
+		//billboardPsoDesc.GS = CD3DX12_SHADER_BYTECODE(SHADER->GetBillboardGS().Get());
+		//billboardPsoDesc.PS = CD3DX12_SHADER_BYTECODE(SHADER->GetBillboardPS().Get());
+		//ThrowIfFailed(DEVICE->CreateGraphicsPipelineState(&billboardPsoDesc, IID_PPV_ARGS(&m_billboardPipelineState)));
 	}
 
 	{

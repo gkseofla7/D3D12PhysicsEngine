@@ -19,6 +19,7 @@ void Shader::Init()
 	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/BasicVS.hlsl", m_basicVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/BasicVS.hlsl", m_skinnedVS,
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
+	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/BillboardVS.hlsl", m_billboardVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/SkyboxVS.hlsl", m_skyboxVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/SamplingVS.hlsl", m_samplingVS);
 	D3D12Utils::CreateVertexShader(DEVICE, L"D3D12Core/Shaders/DepthOnlyVS.hlsl", m_depthOnlyVS);
@@ -26,8 +27,12 @@ void Shader::Init()
 		vector<D3D_SHADER_MACRO>{ {"SKINNED", "1"}, { NULL, NULL }});
 
 
+	// Geometry Shader
+	D3D12Utils::CreateGeometryShader(DEVICE, L"D3D12Core/Shaders/BillboardGS.hlsl", m_billboardGS);
+
 	// Pixel Shader
 	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/BasicPS.hlsl", m_basicPS);
+	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/FireballPS.hlsl", m_billboardPS);
 	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/SkyboxPS.hlsl", m_skyboxPS);
 	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/SamplingPS.hlsl", m_samplingPS);
 	D3D12Utils::CreatePixelShader(DEVICE, L"D3D12Core/Shaders/PostEffectsPS.hlsl", m_postEffectsPS);

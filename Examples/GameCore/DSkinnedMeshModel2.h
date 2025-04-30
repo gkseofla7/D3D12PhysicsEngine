@@ -10,7 +10,6 @@ class DSkinnedMeshModel : public DModel {
 public:
     DSkinnedMeshModel(const string& basePath,
         const string& filename);
-    virtual void InitMeshBuffers(const MeshData& meshData, shared_ptr<DMesh>& newMesh) override;
     virtual void Tick(float dt) override;
     virtual void Render() override;
 

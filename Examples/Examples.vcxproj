@@ -188,18 +188,21 @@
     <ClCompile Include="GameCore\ActorStateFactory2.cpp" />
     <ClCompile Include="GameCore\AnimHelper2.cpp" />
     <ClCompile Include="GameCore\AttackState2.cpp" />
+    <ClCompile Include="GameCore\BillboardModel2.cpp" />
     <ClCompile Include="GameCore\DaerimGame.cpp" />
     <ClCompile Include="GameCore\DModel2.cpp" />
     <ClCompile Include="GameCore\DSkinnedMeshModel2.cpp" />
     <ClCompile Include="GameCore\FlyAwayState2.cpp" />
     <ClCompile Include="GameCore\GeometryGenerator2.cpp" />
     <ClCompile Include="GameCore\IdleState2.cpp" />
+    <ClCompile Include="GameCore\InputController.cpp" />
     <ClCompile Include="GameCore\JumpState2.cpp" />
     <ClCompile Include="GameCore\MeshLoadHelper2.cpp" />
     <ClCompile Include="GameCore\ModelLoader2.cpp" />
     <ClCompile Include="GameCore\MoveState2.cpp" />
     <ClCompile Include="GameCore\Object2.cpp" />
     <ClCompile Include="GameCore\PhysicsCore.cpp" />
+    <ClCompile Include="GameCore\ProjectileManager2.cpp" />
     <ClCompile Include="GameCore\Scene.cpp" />
     <ClCompile Include="GameCore\ThreadPool.cpp" />
     <ClCompile Include="GameCore\Wizard2.cpp" />
@@ -273,6 +276,7 @@
     <ClInclude Include="GameCore\AnimationClip.h" />
     <ClInclude Include="GameCore\AnimHelper2.h" />
     <ClInclude Include="GameCore\AttackState2.h" />
+    <ClInclude Include="GameCore\BillboardModel2.h" />
     <ClInclude Include="GameCore\DaerimGame.h" />
     <ClInclude Include="GameCore\DModel2.h" />
     <ClInclude Include="GameCore\DSkinnedMeshModel2.h" />
@@ -280,6 +284,7 @@
     <ClInclude Include="GameCore\GameDef2.h" />
     <ClInclude Include="GameCore\GeometryGenerator2.h" />
     <ClInclude Include="GameCore\IdleState2.h" />
+    <ClInclude Include="GameCore\InputController.h" />
     <ClInclude Include="GameCore\JumpState2.h" />
     <ClInclude Include="GameCore\Mesh2.h" />
     <ClInclude Include="GameCore\MeshData.h" />
@@ -288,6 +293,7 @@
     <ClInclude Include="GameCore\MoveState2.h" />
     <ClInclude Include="GameCore\Object2.h" />
     <ClInclude Include="GameCore\PhysicsCore.h" />
+    <ClInclude Include="GameCore\ProjectileManager2.h" />
     <ClInclude Include="GameCore\Scene.h" />
     <ClInclude Include="GameCore\ThreadPool.h" />
     <ClInclude Include="GameCore\Vertex.h" />

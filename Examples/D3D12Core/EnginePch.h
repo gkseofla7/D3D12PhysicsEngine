@@ -13,7 +13,6 @@
 #include <wrl/client.h> // ComPtr
 #include <unordered_map>
 //#include "ThreadPool.h"
-#include <memory>
 #include <array>
 #include <comdef.h>  // _com_error를 사용하여 HRESULT 메시지 변환
 #include <filesystem>

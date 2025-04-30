@@ -256,6 +256,15 @@
     <ClCompile Include="D3D12Core\CommandAllocatorPool.cpp">
       <Filter>D3D12Core</Filter>
     </ClCompile>
+    <ClCompile Include="GameCore\InputController.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\ProjectileManager2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
+    <ClCompile Include="GameCore\BillboardModel2.cpp">
+      <Filter>GameCore</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImageFilter.h" />
@@ -549,6 +558,15 @@
     </ClInclude>
     <ClInclude Include="D3D12Core\CommandAllocatorPool.h">
       <Filter>D3D12Core</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\InputController.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\ProjectileManager2.h">
+      <Filter>GameCore</Filter>
+    </ClInclude>
+    <ClInclude Include="GameCore\BillboardModel2.h">
+      <Filter>GameCore</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

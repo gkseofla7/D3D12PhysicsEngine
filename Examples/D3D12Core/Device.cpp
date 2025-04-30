@@ -11,16 +11,16 @@ void Device::Init()
 	// - riid : 디바이스의 COM ID
 	// - ppDevice : 생성된 장치가 매개변수에 설정
 #ifdef _DEBUG
-	//D3D12GetDebugInterface(IID_PPV_ARGS(&m_debugController));
-	//m_debugController->EnableDebugLayer();
+	D3D12GetDebugInterface(IID_PPV_ARGS(&m_debugController));
+	m_debugController->EnableDebugLayer();
 
-	//ID3D12Debug5* pDebugController5 = nullptr;
-	//if (S_OK == m_debugController->QueryInterface(IID_PPV_ARGS(&pDebugController5)))
-	//{
-	//	pDebugController5->SetEnableGPUBasedValidation(TRUE);
-	//	pDebugController5->SetEnableAutoName(TRUE);
-	//	pDebugController5->Release();
-	//}
+	ID3D12Debug5* pDebugController5 = nullptr;
+	if (S_OK == m_debugController->QueryInterface(IID_PPV_ARGS(&pDebugController5)))
+	{
+		pDebugController5->SetEnableGPUBasedValidation(TRUE);
+		pDebugController5->SetEnableAutoName(TRUE);
+		pDebugController5->Release();
+	}
 #endif
 
 	// DXGI(DirectX Graphics Infrastructure)

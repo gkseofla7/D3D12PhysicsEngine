@@ -94,6 +94,7 @@ private:
 	std::atomic<uint64> m_lastResUploadFenceValue = 0;
 
 	CommandAllocatorPool  m_AllocatorPool;
+
 };
 
 }

@@ -12,22 +12,9 @@ DSkinnedMeshModel::DSkinnedMeshModel(const string& basePath, const string& filen
     Initialize(basePath, filename);
 }
 
-void DSkinnedMeshModel::InitMeshBuffers(const MeshData& meshData,
-    shared_ptr<DMesh>& newMesh)
-{
-    D3D12Utils::CreateVertexBuffer(DEVICE, meshData.skinnedVertices,
-        newMesh->vertexBuffer, newMesh->vertexBufferView);
-    newMesh->indexCount = UINT(meshData.indices.size());
-    newMesh->vertexCount = UINT(meshData.skinnedVertices.size());
-    newMesh->stride = UINT(sizeof(SkinnedVertex));
-    D3D12Utils::CreateIndexBuffer(DEVICE, meshData.indices,
-        newMesh->indexBuffer, newMesh->indexBufferView);
-}
 void DSkinnedMeshModel::Tick(float dt)
 {
     DModel::Tick(dt);
-
-
 }
 void DSkinnedMeshModel::Render()
 {
